@@ -18,7 +18,7 @@ Mine _will_ support following features:
 
  * RSA (Encrypt, Decrypt, Sign and Verify) [[RFC-3447](https://tools.ietf.org/html/rfc3447)]
  * AES-CBC [[RFC-3602](https://tools.ietf.org/html/rfc3602)]
- * ZLib (Depend upon libz, eventually implement [[RFC-1950](https://tools.ietf.org/html/rfc3602)]
+ * ZLib (Depend upon libz, eventually implement [RFC-1950](https://tools.ietf.org/html/rfc3602))
  * Base-64 (Encode, Decode)
  * Hex (Encode, Decode)
  
