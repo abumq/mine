@@ -102,6 +102,6 @@ add_executable(mine-unit-tests
 target_link_libraries(mine-unit-tests gtest gtest_main)
 
 # Extra linking for the project.
-target_link_libraries(mine-unit-tests ${CRYPTOPP_LIBRARIES})
+target_link_libraries(mine-unit-tests ${CRYPTOPP_LIBRARIES} ripe)
 
 add_test(NAME mineUnitTests COMMAND mine-unit-tests)

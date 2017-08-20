@@ -4,6 +4,8 @@
 #include "include/mine.h"
 #include "test.h"
 
+#include <Ripe.h>
+
 // numb, expected
 static TestData<Mine::BigInteger, bool> IsPrimeData = {
     TestCase(1, false),
@@ -106,6 +108,14 @@ TEST(MineRSATest, InvModulo)
     }
 }
 
+TEST(MineRSATest, FakeTest)
+{
+    auto item = RawKeyData.at(7);
+    Mine::KeyPair k(PARAM(0), PARAM(1), PARAM(3));
+    std::cout << Mine::encrypt(k.publicKey(), std::string("Test message")) << std::endl;
+    std::cout << Mine::decrypt<std::string>(k.privateKey(), std::string("68A7FE65FBD933522CDD321B0062DBA910AE5C1E73D46F7EB4A26773963963AE59F614D514E75773A8E6B67EACDC7C9F4172A94D58522CBB96FC79A836DB5343"));
+}
+
 TEST(MineRSATest, KeyAndEncryptionDecryption)
 {
     for (const auto& item : RawKeyData) {
@@ -121,7 +131,7 @@ TEST(MineRSATest, KeyAndEncryptionDecryption)
         ASSERT_EQ(k.publicKey()->e(), k.e());
 
         if (bits > 32) {
-            std::cout << "Key DER: " << std::endl << k.exportDER() << std::endl;
+            // std::cout << "Key DER: " << std::endl << k.exportDER() << std::endl;
         }
 
         for (const auto& item2 : RSAEncryptionData) {
