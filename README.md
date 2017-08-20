@@ -3,8 +3,8 @@
 # Mine
 Mine is minimal cryptography implementation of [RFC-3447](https://tools.ietf.org/html/rfc3447) and [RFC-3602](https://tools.ietf.org/html/rfc3602).
 
-[![Build Status (Develop)](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
+[![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/MuflihunDotCom/25)
 
 # Introduction
