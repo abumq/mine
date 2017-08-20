@@ -1,0 +1,51 @@
+language: cpp
+compiler:
+  - clang
+dist: trusty
+before_install:
+ - sudo add-apt-repository ppa:kubuntu-ppa/backports -y
+ - sudo apt-get -qq update
+ - sudo apt-get install -y libssl-dev libgtest-dev valgrind
+ - sudo apt-get install --only-upgrade cmake
+ - cmake --version 
+ # Crypto++ (We manually install it because we need Pem Pack as well)
+ - wget https://raw.githubusercontent.com/muflihun/muflihun.github.io/master/downloads/cryptocpp.tar.gz
+ - tar xf cryptocpp.tar.gz
+ - cd cryptopp-CRYPTOPP_5_6_5
+ - wget https://raw.githubusercontent.com/muflihun/muflihun.github.io/master/downloads/pem_pack.zip
+ - unzip pem_pack.zip
+ - cmake .
+ - make
+ - sudo make install
+ # GTest
+ - wget -O gtest.tar.gz https://github.com/google/googletest/archive/release-1.7.0.tar.gz
+ - tar xf gtest.tar.gz
+ - cd googletest-release-1.7.0
+ - cmake -DBUILD_SHARED_LIBS=ON .
+ - make
+ - sudo cp -a include/gtest /usr/include
+ - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
+ - cd ..
+ ## Easylogging++
+ - wget https://github.com/muflihun/easyloggingpp/archive/master.zip
+ - unzip master.zip
+ - cd easyloggingpp-master
+ - cmake .
+ - make
+ - sudo make install
+ ## Build
+ - cd "${TRAVIS_BUILD_DIR}"
+ - mkdir build
+ - cd build
+ - pwd
+ - ls -l
+ - ls -l ..
+ - cmake -Dtest=ON -Dtravis=ON ..
+ - make
+ - sudo make install
+
+script: "./mine-unit-tests"
+branches:
+  only:
+    - develop
+

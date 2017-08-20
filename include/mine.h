@@ -13,7 +13,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-#include <Ripe.h>
 #include <cryptopp/integer.h>
 
 ///
