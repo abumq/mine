@@ -47,21 +47,18 @@ public:
     public:
         static const unsigned int DEFAULT_PUBLIC_EXPONENT = 65537;
 
-        RawKey(BigInteger p, BigInteger q, int e = DEFAULT_PUBLIC_EXPONENT, bool skipPrimeCheck = true) :
+        RawKey(const BigInteger& p, const BigInteger& q, int e = DEFAULT_PUBLIC_EXPONENT) :
             m_p(p),
             m_q(q),
             m_e(e)
         {
-            if (!skipPrimeCheck && (!isPrime(p) || !isPrime(q))) {
-                throw std::invalid_argument("p and q must be prime numbers unique to each other");
-            }
             if (p == q || p == 0 || q == 0) {
                 throw std::invalid_argument("p and q must be prime numbers unique to each other");
             }
 
-            BigInteger pMinus1 = m_p - 1;
-            BigInteger qMinus1 = m_q - 1;
-            BigInteger phi = pMinus1 * qMinus1;
+            const BigInteger pMinus1 = m_p - 1;
+            const BigInteger qMinus1 = m_q - 1;
+            const BigInteger phi = pMinus1 * qMinus1;
 
             if (gcd(m_e, phi) != 1) {
                 throw std::invalid_argument("Invalid exponent, it must not share factor with phi");
@@ -129,7 +126,7 @@ public:
 
     class KeyPair : public RawKey {
     public:
-        KeyPair(BigInteger p, BigInteger q, unsigned int exp = DEFAULT_PUBLIC_EXPONENT) :
+        KeyPair(const BigInteger& p, const BigInteger& q, unsigned int exp = DEFAULT_PUBLIC_EXPONENT) :
             RawKey(p, q, exp) {
             m_publicKey = PublicKey(n(), e());
         }
