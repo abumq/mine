@@ -211,7 +211,7 @@ public:
     static bool verify(const PublicKey* publicKey, const std::string& message,
                        const std::string& signature)
     {
-        /* TODO: Add it to test
+        // TODO: Add it to test
         std::vector<byte> f = getByteArray(18537);
         BigInteger s = i2osp(f, 2);
         BigInteger os = os2ip(18537); // 105
@@ -226,7 +226,12 @@ public:
         std::cout << s2 << std::endl;
         std::cout << os2 << std::endl;
 
-        return true;*/
+        std::cout << changeBase(54735, 8) << std::endl;
+
+        std::cout << std::hex << 16 << std::endl;
+        std::cout << std::oct << 72 << std::endl;
+
+        return true;
 
         std::string readableSign = "0x" + signature;
         BigInteger sign(readableSign.c_str());
@@ -267,9 +272,28 @@ public:
 
 private:
 
+    ///
+    /// \brief Octet string to integer
+    ///
     static BigInteger os2ip(const BigInteger& x)
     {
-        return x & 0xff;
+        return os2ip(getByteArray(x));
+    }
+
+    ///
+    /// Octet-string to integer
+    ///
+    template <typename Byte = byte>
+    static BigInteger os2ip(const std::vector<Byte>& x)
+    {
+        const BigInteger b256 = 256;
+
+        BigInteger result = 0;
+        std::size_t len = x.size();
+        for (std::size_t i = len; i > 0; --i) {
+            result += BigInteger(x[i - 1]) * power(b256, BigInteger(len - i));
+        }
+        return result;
     }
 
     ///
@@ -293,6 +317,8 @@ private:
         for (std::size_t i = len; i > 0; --i) {
             result += BigInteger(x[i - 1]) * power(b256, BigInteger(len - i));
         }
+        // TODO: Fix this!
+
         return result;
     }
 
@@ -366,6 +392,7 @@ private:
 
         byteArray[--n] = 0;
 
+        // todo: check if there are any more specs for randoms in standard
         srand(time(NULL));
         int r = rand() % 100 + 1;
         while (n > 2) {
@@ -375,6 +402,7 @@ private:
             }
             byteArray[--n] = r;
         }
+        // first two bytes of padding are 0x2 (second) and 0x0 (first)
         byteArray[--n] = 2;
         byteArray[--n] = 0;
         return i2osp(byteArray, n);
@@ -390,27 +418,27 @@ private:
     {
         std::vector<byte> ba = getByteArray(m, n);
         std::size_t baLen = ba.size();
-        int i = 0;
-        while (i < baLen && ba[i] == 0) {
-            // ignore first zeros
-            ++i;
-        }
-        if (baLen - 1 != n - 1 // reached end
-                || ba[i] != 2) { // next available char is not 2 as per padding standard
+        if (baLen <= 2 || ba[0] != 0 || ba[1] != 2) {
             throw std::runtime_error("Incorrect padding PKCS#1");
         }
-        ++i; // we're all good so far,
+        int i = 2; // passed first two characters (0x0 and 0x2) test
         // lets check for the <PS>
 
-        // if we hit end while still we're still with zeros, it's a padding error
+        // if we hit end while still we're still with non-zeros, it's a padding error
+        // 0x0 (done)
+        // 0x2 (done)
+        // <non-zero randoms>
+        // 0x0
         while (ba[i] != 0) {
             if (++i >= baLen) { // already ended!
                 throw std::runtime_error("Incorrect padding PKCS#1");
             }
         }
+        // last zero
         ++i;
+
         // now we should be at the first non-zero byte
-        // which is our first item, we concat all
+        // which is our first item, concat them as char | wchar_t
 
         std::basic_stringstream<typename T::value_type> ss;
         for (; i < baLen; ++i) {
@@ -467,11 +495,12 @@ private:
     ///
     /// \brief Power of numb i.e, b ^ e
     ///
-    static BigInteger power(BigInteger b, BigInteger e)
+    template <typename T>
+    static T power(T b, T e)
     {
-        BigInteger result = 1;
+        T result = 1;
         while (e > 0) {
-            if (e.IsOdd()) {
+            if (e % 2 == 1) {
                 // we decrement exponent to make it even
                 e--;
                 // store this multiplication directly to the
@@ -547,12 +576,12 @@ private:
     }
 
     ///
-    /// \brief Decimal to specific base
+    /// \brief Specific base to specified base
     /// \param n Number
-    /// \param b Base - default is 8 (octet)
+    /// \param b Target base (default: 16 - Hex)
     ///
     template <typename T>
-    static T d2o(T n, T b = 8)
+    static T changeBase(T n, T b = 16)
     {
         T r, i = 1, o = 0;
         while (n != 0) {
@@ -560,24 +589,6 @@ private:
             n /= b;
             o += r * i;
             i *= 10;
-        }
-        return o;
-    }
-
-    ///
-    /// \brief Specific base to decimal
-    /// \param n Number
-    /// \param b Base - default is from octet (base 8)
-    ///
-    template <typename T>
-    static T o2d(T n, T b = 8)
-    {
-        T r, i = 0, o = 0;
-        while (n != 0) {
-            r = n % 10;
-            n /= 10;
-            o += r * power(b, i);
-            ++i;
         }
         return o;
     }

@@ -62,6 +62,8 @@ static TestData<std::wstring> RSAEncryptionData = {
     TestCase(L"G'day"),
     TestCase(L"Hi"),
     TestCase(L"Hello竜"),
+    TestCase(L"大家好"),
+    TestCase(L"کیا میں آپکی مدد کر سکتاہوں"),
 };
 // msg
 static TestData<std::string> RSAEncryptionStringData = {
