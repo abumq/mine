@@ -17,6 +17,16 @@ before_install:
  - cmake .
  - make
  - sudo make install
+## Ripe
+ - RIPE_VERSION=4.0.0
+ - RIPE_VERSION_URL="$RIPE_VERSION"
+ - wget -O ripe-code.zip https://github.com/muflihun/ripe/archive/$RIPE_VERSION_URL.zip
+ - unzip ripe-code.zip
+ - cd ripe-$RIPE_VERSION
+ - cmake .
+ - make
+ - ls -l
+ - sudo make install
  # GTest
  - wget -O gtest.tar.gz https://github.com/google/googletest/archive/release-1.7.0.tar.gz
  - tar xf gtest.tar.gz
