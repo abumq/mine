@@ -19,7 +19,7 @@ before_install:
  - sudo make install
 ## Ripe
  - RIPE_VERSION=4.0.0
- - RIPE_VERSION_URL="$RIPE_VERSION"
+ - RIPE_VERSION_URL="v$RIPE_VERSION"
  - wget -O ripe-code.zip https://github.com/muflihun/ripe/archive/$RIPE_VERSION_URL.zip
  - unzip ripe-code.zip
  - cd ripe-$RIPE_VERSION
