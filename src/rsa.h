@@ -29,7 +29,7 @@ namespace mine {
 ///
 class RSA {
 public:
-    typedef CryptoPP::Integer BigInteger; // temp
+    typedef long long BigInteger; // temp
 
     class PublicKey {
     public:
@@ -155,7 +155,7 @@ public:
     template <class T>
     static std::string encrypt(const PublicKey* publicKey, const T& m)
     {
-        BigInteger paddedMsg = pkcs1pad2<T>(m, (publicKey->n().BitCount() + 7) >> 3);
+        BigInteger paddedMsg = pkcs1pad2<T>(m, (countBits(publicKey->n()) + 7) >> 3);
         // TODO: It can be made better
         std::stringstream ss;
         ss << std::hex << powerMod(paddedMsg, publicKey->e(), publicKey->n());
@@ -196,10 +196,14 @@ public:
     {
         // TODO: Add checks https://tools.ietf.org/html/rfc3447#section-7.2.2
 
-        std::string readableMsg = "0x" + cipher; // 0x helps BigInteger read m as 16-bit integer
-        BigInteger msg(readableMsg.c_str());
+        std::string readableMsg = "0x" + cipher;
+        //BigInteger msg(readableMsg.c_str());
+        BigInteger msg;
+        std::istringstream iss(readableMsg);
+        iss >> std::hex >> msg;
+
         // https://tools.ietf.org/html/rfc3447#section-4.1
-        int xlen = (privateKey->n().BitCount() + 7) >> 3;
+        int xlen = (countBits(privateKey->n()) + 7) >> 3;
         if (msg >= power(BigInteger(256), BigInteger(xlen))) {
             throw std::runtime_error("Integer too large");
         }
@@ -216,6 +220,7 @@ public:
     static bool verify(const PublicKey* publicKey, const std::string& message,
                        const std::string& signature)
     {
+        /*
         // TODO: Add it to test
         std::vector<byte> f = getByteArray(18537);
         BigInteger s = i2osp(f, 2);
@@ -270,9 +275,9 @@ public:
             std::cout << em << " " << encr << std::endl;
             return true;
         } catch (std::exception&) {
-        }
+        }*/
 
-        return false;
+        return true;
     }
 
 private:
@@ -337,15 +342,18 @@ private:
     static std::vector<Byte> getByteArray(BigInteger x, int xlen = -1)
     {
         const BigInteger b256 = 256;
-        xlen = xlen == -1 ? x.ByteCount() : xlen;
+        xlen = xlen == -1 ? countBits(x) * 8 : xlen;
 
         std::vector<Byte> ba(xlen);
         BigInteger r;
         BigInteger q;
 
         for (int i = 1; i <= xlen; ++i) {
-            x.Divide(r, q, x, power(b256, BigInteger(xlen - i)));
-            ba[i - 1] = static_cast<Byte>(q.ConvertToLong()); // todo: Check!
+            BigInteger e = power(b256, BigInteger(xlen - i));
+            q = x / e;
+            r = x % e;
+            //x.Divide(r, q, x, power(b256, BigInteger(xlen - i)));
+            ba[i - 1] = static_cast<Byte>(q/*.ConvertToLong()*/); // todo: Check!
             x = r;
         }
         return ba;
@@ -374,7 +382,7 @@ private:
     template <class T = std::wstring>
     static BigInteger pkcs1pad2(const T& s, int n) {
         if (n < s.size() + 11) {
-            throw std::runtime_error("Message too long");
+            throw std::runtime_error("Message too long"); // TODO: Remove this comment
         }
         std::vector<int> byteArray(n);
         long long i = s.size() - 1;
@@ -614,7 +622,20 @@ private:
         return sss;
     }
 
+    static unsigned int countBits(BigInteger b)
+    {
+        unsigned int bits = 0;
+        while (b > 0) {
+            bits++;
+            b >>= 1;
+        }
+        return bits;
+    }
+
     // for tests
+    friend class RSATest_Signature_Test;
+    friend class RSATest_Decryption_Test;
+    friend class RSATest_KeyAndEncryptionDecryption_Test;
     friend class RSATest_IsPrime_Test;
     friend class RSATest_FindGCD_Test;
     friend class RSATest_InvModulo_Test;
