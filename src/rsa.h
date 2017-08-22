@@ -1,11 +1,14 @@
 //
-//  mine.h
+//  rsa.h
+//  Part of Mine library
+//
+//  Copyright 2017 Muflihun Labs
 //
 //  https://github.com/muflihun/mine
 //
 
-#ifndef MINE_H
-#define MINE_H
+#ifndef RSA_H
+#define RSA_H
 
 #include <cmath>
 #include <stdexcept>
@@ -15,12 +18,13 @@
 #include <vector>
 #include <cryptopp/integer.h>
 
-///
-/// PLEASE NOTE, DO NOT USE UNTIL THE FIRST RELEASE
-///
-class Mine {
-public:
+namespace mine {
 
+///
+/// \brief Provides RSA crypto functionalities
+///
+class RSA {
+public:
     typedef CryptoPP::Integer BigInteger; // temp
 
     class PublicKey {
@@ -604,10 +608,12 @@ private:
     }
 
     // for tests
-    friend class MineRSATest_IsPrime_Test;
-    friend class MineRSATest_FindGCD_Test;
-    friend class MineRSATest_InvModulo_Test;
-    friend class MineRSATest_PowerMod_Test;
+    friend class RSATest_IsPrime_Test;
+    friend class RSATest_FindGCD_Test;
+    friend class RSATest_InvModulo_Test;
+    friend class RSATest_PowerMod_Test;
 };
+}
 
-#endif // MINE_H
+
+#endif // RSA_H

@@ -1,5 +1,6 @@
 #include "test.h"
 #include "rsa-test.h"
+#include "aes-test.h"
 
 INITIALIZE_EASYLOGGINGPP
 
