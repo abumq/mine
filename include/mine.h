@@ -1,22 +1,22 @@
 //
-//  rsa.h
-//  Part of Mine library
+//  mine.h
+//  Mine crypto library
 //
 //  Copyright 2017 Muflihun Labs
 //
 //  https://github.com/muflihun/mine
 //
 
-#ifndef RSA_H
-#define RSA_H
+#ifndef MINE_H
+#define MINE_H
 
-#include <cmath>
-#include <stdexcept>
-#include <map>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <cryptopp/integer.h>
+#include include <cmath>
+#include include <stdexcept>
+#include include <map>
+#include include <string>
+#include include <sstream>
+#include include <vector>
+#include include <cryptopp/integer.h>
 
 namespace mine {
 
@@ -613,7 +613,14 @@ private:
     friend class RSATest_InvModulo_Test;
     friend class RSATest_PowerMod_Test;
 };
-} // end namespace mine
 
+///
+/// \brief Provides AES crypto functionalities
+///
+class AES {
+public:
 
-#endif // RSA_H
+};
+
+} // namespace mine
+#endif // MINE_H

@@ -21,7 +21,7 @@ class AES {
 public:
 
 };
-}
+} // end namespace mine
 
 
 #endif // AES_H
