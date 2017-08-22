@@ -6,14 +6,23 @@
 /// modules for ease of development
 ///
 
+$lib_version = "Unreleased";
+
 $output_template = <<<EOT
 //
-//  mine.h
-//  Mine crypto library
+//  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Copyright 2017 Muflihun Labs
+//  Mine ({{version}})
+//  Single header minimal cryptography library
+//
+//  Copyright (c) 2017 Muflihun Labs
+//
+//  This library is released under the Apache 2.0 license
+//  https://github.com/muflihun/mine/blob/master/LICENSE
 //
 //  https://github.com/muflihun/mine
+//  https://muflihun.github.io/mine
+//  https://muflihun.com
 //
 
 #ifndef MINE_H
@@ -41,16 +50,16 @@ $lines = "";
 foreach ($src_list as $filename) {
     $fd = @fopen($filename, "r");
     if ($fd) {
-		$namespace_started = false;
+        $namespace_started = false;
         while (($line = fgets($fd, 2048)) !== false) {
             if ($pos = (strpos($line, "#include")) === 0) {
-                $includes[] = substr($line, $pos);
+                $includes[] = substr($line, $pos + strlen("#include"));
             } else if ($pos = (strpos($line, "namespace mine {")) === 0) {
-				$namespace_started = true;
+                $namespace_started = true;
             } else if ($pos = (strpos($line, "} // end namespace mine")) === 0) {
-				$namespace_started = false;
-            } else if ($namespace_started) {
-            	$lines .= $line;
+                $namespace_started = false;
+            } else if ($namespace_started && strpos($line, "#include") === false) {
+                $lines .= $line;
             }
         }
         if (!feof($fd)) {
@@ -64,11 +73,12 @@ foreach ($src_list as $filename) {
 $includes = array_unique($includes, SORT_STRING);
 $includes_str = "";
 foreach ($includes as $incl) {
-	$includes_str .= "#include $incl";
+    $includes_str .= "#include $incl";
 }
 
 $final = str_replace("{{includes}}", $includes_str, $output_template);
 
 $final = str_replace("{{code}}", $lines, $final);
+$final = str_replace("{{version}}", $lib_version, $final);
 
 file_put_contents("include/mine.h", $final);

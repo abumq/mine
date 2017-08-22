@@ -1,22 +1,29 @@
 //
-//  mine.h
-//  Mine crypto library
+//  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Copyright 2017 Muflihun Labs
+//  Mine (Unreleased)
+//  Single header minimal cryptography library
+//
+//  Copyright (c) 2017 Muflihun Labs
+//
+//  This library is released under the Apache 2.0 license
+//  https://github.com/muflihun/mine/blob/master/LICENSE
 //
 //  https://github.com/muflihun/mine
+//  https://muflihun.github.io/mine
+//  https://muflihun.com
 //
 
 #ifndef MINE_H
 #define MINE_H
 
-#include include <cmath>
-#include include <stdexcept>
-#include include <map>
-#include include <string>
-#include include <sstream>
-#include include <vector>
-#include include <cryptopp/integer.h>
+#include <cmath>
+#include <stdexcept>
+#include <map>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <cryptopp/integer.h>
 
 namespace mine {
 

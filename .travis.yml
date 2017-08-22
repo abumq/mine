@@ -50,9 +50,8 @@ before_install:
  - pwd
  - ls -l
  - ls -l ..
- - cmake -Dtest=ON -Dtravis=ON ..
+ - cmake ..
  - make
- - sudo make install
 
 script: "./mine-unit-tests"
 branches:
