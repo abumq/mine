@@ -1,5 +1,11 @@
 <?php
 
+///
+/// This script generates include/mine.h
+/// file. Development is done on separate
+/// modules for ease of development
+///
+
 $output_template = <<<EOT
 //
 //  mine.h
