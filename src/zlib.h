@@ -11,6 +11,10 @@
 //  https://github.com/muflihun/mine
 //
 
+#ifdef MINE_CRYPTO_H
+#   error "Please use mine.h file. this file is only to aid the development"
+#endif
+
 #ifndef ZLib_H
 #define ZLib_H
 

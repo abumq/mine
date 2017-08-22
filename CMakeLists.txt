@@ -100,6 +100,7 @@ add_executable(mine-unit-tests
     src/base16.cc
     src/base64.cc
     src/zlib.cc
+    include/mine.cc
     ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
 )
 

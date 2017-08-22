@@ -14,6 +14,7 @@
 //  https://muflihun.com
 //
 
+#include "mine.h"
 
 using namespace mine;
 

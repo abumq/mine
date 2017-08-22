@@ -11,6 +11,10 @@
 //  https://github.com/muflihun/mine
 //
 
+#ifdef MINE_CRYPTO_H
+#   error "Please use mine.h file. this file is only to aid the development"
+#endif
+
 #ifndef RSA_H
 #define RSA_H
 
@@ -594,7 +598,7 @@ private:
     /// \return message representative, an integer between 0 and n - 1
     /// \see https://tools.ietf.org/html/rfc3447#section-5.2.2
     ///
-    BigInteger createVerificationPrimitive(const VirtualPublicKey<BigInteger> *publicKey, const BigInteger &signature)
+    BigInteger createVerificationPrimitive(const VirtualPublicKey<BigInteger>* publicKey, const BigInteger& signature)
     {
         if (signature < 0 || signature > publicKey->n() - 1) {
             throw std::runtime_error("signature representative out of range");
@@ -614,15 +618,16 @@ private:
 /// implementation.
 ///
 /// Big integer that is used here must have following public functions
-///     operator-() [subtraction]
-///     operator+() [addition]
-///     operator+=() [short-hand addition]
-///     operator*() [multiply]
-///     operator/() [divide]
-///     operator%() [mod]
-///     operator>>() [right-shift]
-///     operator>>=() [short-hand right-shift]
-///     long ConvertToLong()
+///  -  operator-() [subtraction]
+///  -  operator+() [addition]
+///  -  operator+=() [short-hand addition]
+///  -  operator*() [multiply]
+///  -  operator/() [divide]
+///  -  operator%() [mod]
+///  -  operator>>() [right-shift]
+///  -  operator>>=() [short-hand right-shift]
+///  -  long ConvertToLong()
+///  -  support for std::hex
 ///
 #define DECLARE_MINE_RSA(BIG_INTEGER_IMPLEMENTATION)                      \
 using BigInteger = BIG_INTEGER_IMPLEMENTATION;             \

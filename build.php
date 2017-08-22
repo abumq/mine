@@ -25,14 +25,14 @@ $header_template = <<<EOT
 //  https://muflihun.com
 //
 
-#ifndef MINE_H
-#define MINE_H
+#ifndef MINE_CRYPTO_H
+#define MINE_CRYPTO_H
 
 {{includes}}
 namespace mine {
 {{code}}
 } // namespace mine
-#endif // MINE_H
+#endif // MINE_CRYPTO_H
 
 EOT;
 
@@ -52,8 +52,9 @@ $source_template = <<<EOT
 //  https://muflihun.github.io/mine
 //  https://muflihun.com
 //
-
 {{includes}}
+#include "mine.h"
+
 using namespace mine;
 {{code}}
 EOT;
