@@ -276,6 +276,9 @@ public:
     }
 
 private:
+    RSA() = delete;
+    RSA(const RSA&) = delete;
+    RSA& operator=(const RSA&) = delete;
 
     ///
     /// \brief Octet string to integer

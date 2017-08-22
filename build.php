@@ -28,8 +28,11 @@ namespace mine {
 EOT;
 
 $src_list = array(
+    "src/base16.h",
+    "src/base64.h",
+    "src/aes.h",
     "src/rsa.h",
-    "src/aes.h"
+    "src/zlib.h",
 );
 
 $includes = array();

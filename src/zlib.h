@@ -1,5 +1,5 @@
 //
-//  aes.h
+//  zlib.h
 //  Part of Mine crypto library
 //
 //  You should not use this file, use include/mine.h
@@ -11,22 +11,22 @@
 //  https://github.com/muflihun/mine
 //
 
-#ifndef AES_H
-#define AES_H
+#ifndef ZLib_H
+#define ZLib_H
 
 namespace mine {
 
 ///
-/// \brief Provides AES crypto functionalities
+/// \brief Provides Zlib functionality for inflate and deflate
 ///
-class AES {
+class ZLib {
 public:
 
 private:
-    AES() = delete;
-    AES(const AES&) = delete;
-    AES& operator=(const AES&) = delete;
+    ZLib() = delete;
+    ZLib(const ZLib&) = delete;
+    ZLib& operator=(const ZLib&) = delete;
 };
 } // end namespace mine
 
-#endif // AES_H
+#endif // ZLib_H

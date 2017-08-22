@@ -21,6 +21,42 @@
 namespace mine {
 
 ///
+/// \brief Provides base16 encoding / decoding
+///
+class Base16 {
+public:
+
+private:
+    Base16() = delete;
+    Base16(const Base16&) = delete;
+    Base16& operator=(const Base16&) = delete;
+};
+
+///
+/// \brief Provides base64 encoding / decoding
+///
+class Base64 {
+public:
+
+private:
+    Base64() = delete;
+    Base64(const Base64&) = delete;
+    Base64& operator=(const Base64&) = delete;
+};
+
+///
+/// \brief Provides AES crypto functionalities
+///
+class AES {
+public:
+
+private:
+    AES() = delete;
+    AES(const AES&) = delete;
+    AES& operator=(const AES&) = delete;
+};
+
+///
 /// \brief Provides RSA crypto functionalities
 ///
 class RSA {
@@ -272,6 +308,9 @@ public:
     }
 
 private:
+    RSA() = delete;
+    RSA(const RSA&) = delete;
+    RSA& operator=(const RSA&) = delete;
 
     ///
     /// \brief Octet string to integer
@@ -615,11 +654,15 @@ private:
 };
 
 ///
-/// \brief Provides AES crypto functionalities
+/// \brief Provides Zlib functionality for inflate and deflate
 ///
-class AES {
+class ZLib {
 public:
 
+private:
+    ZLib() = delete;
+    ZLib(const ZLib&) = delete;
+    ZLib& operator=(const ZLib&) = delete;
 };
 
 } // namespace mine

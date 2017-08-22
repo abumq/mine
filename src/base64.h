@@ -1,5 +1,5 @@
 //
-//  aes.h
+//  base64.h
 //  Part of Mine crypto library
 //
 //  You should not use this file, use include/mine.h
@@ -11,22 +11,23 @@
 //  https://github.com/muflihun/mine
 //
 
-#ifndef AES_H
-#define AES_H
+#ifndef Base64_H
+#define Base64_H
 
 namespace mine {
 
 ///
-/// \brief Provides AES crypto functionalities
+/// \brief Provides base64 encoding / decoding
 ///
-class AES {
+class Base64 {
 public:
 
 private:
-    AES() = delete;
-    AES(const AES&) = delete;
-    AES& operator=(const AES&) = delete;
+    Base64() = delete;
+    Base64(const Base64&) = delete;
+    Base64& operator=(const Base64&) = delete;
 };
 } // end namespace mine
 
-#endif // AES_H
+
+#endif // Base64_H
