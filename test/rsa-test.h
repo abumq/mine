@@ -3,8 +3,15 @@
 
 #include "src/rsa.h"
 #include "test.h"
+#include <type_traits>
+#include <cryptopp/integer.h>
+
 
 namespace mine {
+
+using BigInteger = CryptoPP::Integer;
+
+DECLARE_MINE_RSA(BigInteger)
 
 // numb, expected
 static TestData<BigInteger, bool> IsPrimeData = {
@@ -46,10 +53,10 @@ static TestData<int, int, int> GCDData = {
 // p, q, d, e
 static TestData<BigInteger, BigInteger, BigInteger, unsigned int> RawKeyData = {
     TestCase(173, 149, 16971, 3),
-    TestCase(7, 11, 53, DEFAULT_PUBLIC_EXPONENT),
+    TestCase(7, 11, 53, kDefaultPublicExponent),
     TestCase(53, 59, 2011, 3),
-    TestCase(3, 11, 13, DEFAULT_PUBLIC_EXPONENT),
-    TestCase(11, 3, 13, DEFAULT_PUBLIC_EXPONENT),
+    TestCase(3, 11, 13, kDefaultPublicExponent),
+    TestCase(11, 3, 13, kDefaultPublicExponent),
     TestCase(11, 17, 107, 3),
     TestCase(60779, 53003, 1986380529, 65537),
     TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"), BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"), BigInteger("6582637129463060155009365989980507690389844347218288265898882119918384609608605061080359962338234258873604135082233881579524605068749537845926158658339195"), 3), // << - this is what we tested based upon
@@ -86,36 +93,28 @@ TEST(RSATest, FindGCD)
 {
     for (const auto& item : GCDData) {
         LOG(INFO) << "Finding GCD for " << PARAM(0) << " and " << PARAM(1);
-        ASSERT_EQ(RSA::instance().gcd(PARAM(0), PARAM(1)), PARAM(2));
-    }
-}
-
-TEST(RSATest, IsPrime)
-{
-    for (const auto& item : IsPrimeData) {
-        // LOG(INFO) << "Testing " << PARAM(0) << " == prime: to be " << std::boolalpha << PARAM(1);
-        ASSERT_EQ(RSA::instance().isPrime(PARAM(0)), PARAM(1));
+        ASSERT_EQ(Helper::gcd(PARAM(0), PARAM(1)), PARAM(2));
     }
 }
 
 TEST(RSATest, PowerMod)
 {
     for (const auto& item : PowerModData) {
-        ASSERT_EQ(RSA::instance().powerMod(PARAM(0), PARAM(1), PARAM(2)), PARAM(3));
+        ASSERT_EQ(Helper::powerMod(PARAM(0), PARAM(1), PARAM(2)), PARAM(3));
     }
 }
 
 TEST(RSATest, InvModulo)
 {
     for (const auto& item : InvModuloData) {
-        ASSERT_EQ(RSA::instance().modInverse(PARAM(0), PARAM(1)), PARAM(2));
+        ASSERT_EQ(Helper::modInverse(PARAM(0), PARAM(1)), PARAM(2));
     }
 }
 
 TEST(RSATest, KeyAndEncryptionDecryption)
 {
     for (const auto& item : RawKeyData) {
-        int bits = RSA::instance().countBits(PARAM(0)) + RSA::instance().countBits(PARAM(1));
+        int bits = Helper::countBits(PARAM(0)) + Helper::countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(3));
@@ -159,7 +158,7 @@ TEST(RSATest, KeyAndEncryptionDecryption)
 TEST(RSATest, Decryption)
 {
     for (const auto& item : RSADecryptionData) {
-        int bits = RSA::instance().countBits(PARAM(0)) + RSA::instance().countBits(PARAM(1));
+        int bits = Helper::countBits(PARAM(0)) + Helper::countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(2));
@@ -187,7 +186,7 @@ TEST(RSATest, FakeTest)
 TEST(RSATest, Signature)
 {
     for (const auto& item : RSASignatureData) {
-        int bits = RSA::instance().countBits(PARAM(0)) + RSA::instance().countBits(PARAM(1));
+        int bits = Helper::countBits(PARAM(0)) + Helper::countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(2));
