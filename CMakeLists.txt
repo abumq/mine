@@ -95,6 +95,11 @@ enable_testing()
 
 add_executable(mine-unit-tests
     test/main.cc
+    src/rsa.cc
+    src/aes.cc
+    src/base16.cc
+    src/base64.cc
+    src/zlib.cc
     ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
 )
 
