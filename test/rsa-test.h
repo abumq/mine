@@ -11,7 +11,39 @@ namespace mine {
 
 using BigInteger = CryptoPP::Integer;
 
-DECLARE_MINE_RSA(BigInteger)
+class Helper : public GenericHelper<BigInteger>
+{
+public:
+    virtual byte bigIntegerToByte(const BigInteger& b) override
+    {
+        return static_cast<byte>(b.ConvertToLong());
+    }
+
+    virtual std::string bigIntegerToHex(const BigInteger& b) override
+    {
+        std::stringstream ss;
+        ss << std::hex << b;
+        std::string h(ss.str());
+        h.erase(h.end() - 1);
+        return h;
+    }
+};
+
+class RSA : public GenericRSA<BigInteger, Helper>{
+
+};
+
+class KeyPair : public GenericKeyPair<BigInteger, Helper>{
+public:
+    KeyPair(const BigInteger& p, const BigInteger& q,
+            unsigned int exp = kDefaultPublicExponent) :
+        GenericKeyPair<BigInteger, Helper>(p, q, exp) {}
+};
+class PublicKey : public GenericPublicKey<BigInteger, Helper>{};
+class PrivateKey : public GenericPrivateKey<BigInteger, Helper>{};
+
+static RSA rsaManager;
+static Helper rsaHelper;
 
 // numb, expected
 static TestData<BigInteger, bool> IsPrimeData = {
@@ -93,28 +125,28 @@ TEST(RSATest, FindGCD)
 {
     for (const auto& item : GCDData) {
         LOG(INFO) << "Finding GCD for " << PARAM(0) << " and " << PARAM(1);
-        ASSERT_EQ(Helper::gcd(PARAM(0), PARAM(1)), PARAM(2));
+        ASSERT_EQ(rsaHelper.gcd(PARAM(0), PARAM(1)), PARAM(2));
     }
 }
 
 TEST(RSATest, PowerMod)
 {
     for (const auto& item : PowerModData) {
-        ASSERT_EQ(Helper::powerMod(PARAM(0), PARAM(1), PARAM(2)), PARAM(3));
+        ASSERT_EQ(rsaHelper.powerMod(PARAM(0), PARAM(1), PARAM(2)), PARAM(3));
     }
 }
 
 TEST(RSATest, InvModulo)
 {
     for (const auto& item : InvModuloData) {
-        ASSERT_EQ(Helper::modInverse(PARAM(0), PARAM(1)), PARAM(2));
+        ASSERT_EQ(rsaHelper.modInverse(PARAM(0), PARAM(1)), PARAM(2));
     }
 }
 
 TEST(RSATest, KeyAndEncryptionDecryption)
 {
     for (const auto& item : RawKeyData) {
-        int bits = Helper::countBits(PARAM(0)) + Helper::countBits(PARAM(1));
+        int bits = rsaHelper.countBits(PARAM(0)) + rsaHelper.countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(3));
@@ -128,12 +160,12 @@ TEST(RSATest, KeyAndEncryptionDecryption)
         for (const auto& item2 : RSAEncryptionData) {
             std::wstring msg = std::get<0>(item2);
             if (bits <= 32) {
-                EXPECT_THROW(RSA::instance().encrypt(k.publicKey(), msg), std::runtime_error);
+                EXPECT_THROW(rsaManager.encrypt(k.publicKey(), msg), std::runtime_error);
             } else {
                 LOG(INFO) << "Plain: " << msg;
-                std::string encr = RSA::instance().encrypt(k.publicKey(), msg);
+                std::string encr = rsaManager.encrypt(k.publicKey(), msg);
                 LOG(INFO) << "Encr: " << encr;
-                std::wstring decr = RSA::instance().decrypt(k.privateKey(), encr);
+                std::wstring decr = rsaManager.decrypt(k.privateKey(), encr);
                 LOG(INFO) << "Decr: " << decr;
                 ASSERT_STREQ(decr.c_str(), msg.c_str());
             }
@@ -142,12 +174,12 @@ TEST(RSATest, KeyAndEncryptionDecryption)
         for (const auto& item2 : RSAEncryptionStringData) {
             std::string msg = std::get<0>(item2);
             if (bits <= 32) {
-                EXPECT_THROW(RSA::instance().encrypt(k.publicKey(), msg), std::runtime_error);
+                EXPECT_THROW(rsaManager.encrypt(k.publicKey(), msg), std::runtime_error);
             } else {
                 LOG(INFO) << "Plain: " << msg;
-                std::string encr = RSA::instance().encrypt(k.publicKey(), msg);
+                std::string encr = rsaManager.encrypt(k.publicKey(), msg);
                 LOG(INFO) << "Encr: " << encr;
-                std::string decr = RSA::instance().decrypt<std::string>(k.privateKey(), encr);
+                std::string decr = rsaManager.decrypt<std::string>(k.privateKey(), encr);
                 LOG(INFO) << "Decr: " << decr;
                 ASSERT_STREQ(decr.c_str(), msg.c_str());
             }
@@ -158,7 +190,7 @@ TEST(RSATest, KeyAndEncryptionDecryption)
 TEST(RSATest, Decryption)
 {
     for (const auto& item : RSADecryptionData) {
-        int bits = Helper::countBits(PARAM(0)) + Helper::countBits(PARAM(1));
+        int bits = rsaHelper.countBits(PARAM(0)) + rsaHelper.countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(2));
@@ -167,9 +199,9 @@ TEST(RSATest, Decryption)
         std::wstring expected = PARAM(4);
         LOG(INFO) << "Testing: " << cipher;
         if (bits <= 32) {
-            EXPECT_THROW(RSA::instance().decrypt(k.privateKey(), cipher), std::runtime_error);
+            EXPECT_THROW(rsaManager.decrypt(k.privateKey(), cipher), std::runtime_error);
         } else {
-            std::wstring decr = RSA::instance().decrypt(k.privateKey(), cipher);
+            std::wstring decr = rsaManager.decrypt(k.privateKey(), cipher);
             ASSERT_STREQ(decr.c_str(), expected.c_str());
         }
     }
@@ -179,14 +211,14 @@ TEST(RSATest, FakeTest)
 {
     auto item = RawKeyData.at(7);
     KeyPair k(PARAM(0), PARAM(1), PARAM(3));
-    std::cout << RSA::instance().encrypt(k.publicKey(), std::string("Test message")) << std::endl;
-    std::cout << RSA::instance().decrypt<std::string>(k.privateKey(), std::string("68A7FE65FBD933522CDD321B0062DBA910AE5C1E73D46F7EB4A26773963963AE59F614D514E75773A8E6B67EACDC7C9F4172A94D58522CBB96FC79A836DB5343"));
+    std::cout << rsaManager.encrypt(k.publicKey(), std::string("Test message")) << std::endl;
+    std::cout << rsaManager.decrypt<std::string>(k.privateKey(), std::string("68A7FE65FBD933522CDD321B0062DBA910AE5C1E73D46F7EB4A26773963963AE59F614D514E75773A8E6B67EACDC7C9F4172A94D58522CBB96FC79A836DB5343"));
 }
 
 TEST(RSATest, Signature)
 {
     for (const auto& item : RSASignatureData) {
-        int bits = Helper::countBits(PARAM(0)) + Helper::countBits(PARAM(1));
+        int bits = rsaHelper.countBits(PARAM(0)) + rsaHelper.countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(2));
@@ -195,9 +227,9 @@ TEST(RSATest, Signature)
         std::string text = PARAM(4);
         LOG(INFO) << "Testing: " << text;
         if (bits <= 32) {
-            EXPECT_THROW(RSA::instance().verify(k.publicKey(), text, sign), std::runtime_error);
+            EXPECT_THROW(rsaManager.verify(k.publicKey(), text, sign), std::runtime_error);
         } else {
-            ASSERT_TRUE(RSA::instance().verify(k.publicKey(),text, sign));
+            ASSERT_TRUE(rsaManager.verify(k.publicKey(),text, sign));
         }
     }
 }
