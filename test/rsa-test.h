@@ -118,12 +118,12 @@ TEST(RSATest, KeyAndEncryptionDecryption)
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(3));
-        ASSERT_EQ(k.p(), PARAM(0));
-        ASSERT_EQ(k.q(), PARAM(1));
-        ASSERT_EQ(k.d(), PARAM(2));
-        ASSERT_EQ(k.e(), PARAM(3));
-        ASSERT_EQ(k.publicKey()->n(), k.n());
-        ASSERT_EQ(k.publicKey()->e(), k.e());
+        ASSERT_EQ(k.privateKey()->p(), PARAM(0));
+        ASSERT_EQ(k.privateKey()->q(), PARAM(1));
+        ASSERT_EQ(k.privateKey()->d(), PARAM(2));
+        ASSERT_EQ(k.privateKey()->e(), PARAM(3));
+        ASSERT_EQ(k.publicKey()->n(), k.privateKey()->n());
+        ASSERT_EQ(k.publicKey()->e(), k.privateKey()->e());
 
         for (const auto& item2 : RSAEncryptionData) {
             std::wstring msg = std::get<0>(item2);
