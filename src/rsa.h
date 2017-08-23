@@ -22,10 +22,9 @@
 #include <stdexcept>
 #include <map>
 #include <string>
-#include <iostream>
+#include <algorithm>
 #include <sstream>
 #include <vector>
-#include <type_traits>
 
 namespace mine {
 
@@ -34,6 +33,10 @@ namespace mine {
 /// User will provide their own implementation of big integer
 /// or use existing one.
 ///
+/// This is implemeted from instructions on
+/// https://tools.ietf.org/html/rfc3447#section-7.2
+///
+/// Mine uses pkcs#1 v1.5 padding scheme
 ///
 /// Big integer must support have following functions implemented
 ///  -  operator-() [subtraction]
@@ -63,7 +66,7 @@ static const unsigned int kDefaultPublicExponent = 65537;
 using byte = unsigned char;
 
 ///
-/// \brief Simple byte array def used by mine
+/// \brief Simple raw string (a.k.a octet string)
 ///
 using RawString = std::vector<byte>;
 
@@ -73,6 +76,9 @@ using RawString = std::vector<byte>;
 template <class BigInteger>
 class BigIntegerHelper {
 public:
+
+    static const BigInteger kBigInteger256;
+
     BigIntegerHelper() = default;
     virtual ~BigIntegerHelper() = default;
 
@@ -188,6 +194,9 @@ public:
         return result;
     }
 
+    ///
+    /// \brief Counts number of bits in big integer
+    ///
     virtual unsigned int countBits(BigInteger b) const
     {
         unsigned int bits = 0;
@@ -198,30 +207,23 @@ public:
         return bits;
     }
 
+    ///
+    /// \brief Count number of bytes in big integer
+    ///
     virtual unsigned int countBytes(BigInteger b) const
     {
         return countBits(b) * 8;
     }
 
     ///
-    /// \brief Octet string to integer
-    ///
-    /*virtual inline BigInteger os2ip(const BigInteger& x) const
-    {
-        return os2ip(getByteArray(x));
-    }*/
-
-    ///
     /// Raw-string to integer (a.k.a os2ip)
     ///
     BigInteger rawStringToInteger(const RawString& x) const
     {
-        const BigInteger b256 = 256;
-
         BigInteger result = 0;
         std::size_t len = x.size();
         for (std::size_t i = len; i > 0; --i) {
-            result += BigInteger(x[i - 1]) * power(b256, BigInteger(len - i));
+            result += BigInteger(x[i - 1]) * power(kBigInteger256, BigInteger(len - i));
         }
         return result;
     }
@@ -231,7 +233,6 @@ public:
     ///
     RawString integerToRaw(BigInteger x, int xlen = -1) const
     {
-        const BigInteger b256 = 256;
         xlen = xlen == -1 ? countBytes(x) : xlen;
 
         RawString ba(xlen);
@@ -241,7 +242,7 @@ public:
         int i = 1;
 
         for (; i <= xlen; ++i) {
-            divideBigNumber(x, power(b256, BigInteger(xlen - i)), &q, &r);
+            divideBigNumber(x, power(kBigInteger256, BigInteger(xlen - i)), &q, &r);
             ba[i - 1] = bigIntegerToByte(q);
             x = r;
         }
@@ -304,7 +305,13 @@ public:
 };
 
 ///
-/// Public key object with generic big integer
+/// \brief Big Integer = 256 (static declaration)
+///
+template <typename BigInteger>
+const BigInteger BigIntegerHelper<BigInteger>::kBigInteger256 = 256;
+
+///
+/// \brief Public key object with generic big integer
 ///
 template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
 class GenericPublicKey {
@@ -336,9 +343,7 @@ protected:
 };
 
 ///
-/// Raw key object with generic big integer
-///
-/// This is like
+/// \brief Private key object with generic big integer
 ///
 template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
 class GenericPrivateKey {
@@ -372,8 +377,9 @@ public:
           m_d = m_helper.modInverse(m_e, phi);
 
           // note:
-          // https://www.ipa.go.jp/security/rfc/RFC3447EN.html#2 says to use m_e
-          // openssl says to use m_d
+          // https://tools.ietf.org/html/rfc3447#section-2 says to use m_e
+          // openssl says to use m_d - which one?!
+          //
           m_dp = BigInteger(m_d) % pMinus1;
           m_dq = BigInteger(m_d) % qMinus1;
       }
@@ -434,6 +440,9 @@ protected:
     unsigned int m_k;
 };
 
+///
+/// \brief Key pair (containing public and private key objects) with generic big integer
+///
 template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
 class GenericKeyPair {
 public:
@@ -623,15 +632,16 @@ private:
         // now padding i.e, 0x00 || 0x02 || PS || 0x00
         // see point #2 on https://tools.ietf.org/html/rfc3447#section-7.2.1 => EME-PKCS1-v1_5 encoding
 
+        const int kLengthOfRandom = 127;
+
         byteArray[--n] = 0;
 
-        // todo: check if there are any more specs for randoms in standard
         srand(time(NULL));
-        int r = rand() % 100 + 1;
+        int r = rand() % kLengthOfRandom + 1;
         while (n > 2) {
             r = 0;
             while (r == 0) {
-                r = rand() % 100 + 1;
+                r = rand() % kLengthOfRandom + 1;
             }
             byteArray[--n] = r;
         }
