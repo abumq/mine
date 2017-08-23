@@ -206,12 +206,12 @@ public:
     ///
     /// \brief Get byte array from big integer
     ///
-    virtual ByteArray getByteArray(BigInteger x, int xlen = -1) const
+    std::vector<int> getByteArray(BigInteger x, int xlen = -1) const
     {
         const BigInteger b256 = 256;
         xlen = xlen == -1 ? countBytes(x) : xlen;
 
-        ByteArray ba(xlen);
+        std::vector<int> ba(xlen);
         BigInteger r;
         BigInteger q;
 
@@ -236,7 +236,7 @@ public:
     ///
     /// Octet-string to integer
     ///
-    template <typename Byte = byte>
+    template <typename Byte>
     BigInteger os2ip(const std::vector<Byte>& x) const
     {
         const BigInteger b256 = 256;
@@ -399,6 +399,13 @@ public:
         return ss;
     }
 
+    ///
+    /// \brief You can use this to export the key via
+    /// openssl-cli using
+    ///     openssl asn1parse -genconf exported.asn -out imp.der
+    ///     openssl rsa -in imp.der -inform der -text -check
+    /// \return
+    ///
     virtual std::string exportASNSequence() const
     {
         std::stringstream ss;
@@ -570,7 +577,7 @@ public:
                 // throw std::runtime_error("Integer too large"); // Needed??! Where in RFC?
             }
 
-            ByteArray em = m_helper.getByteArray(vp, xlen);
+            std::vector<int> em = m_helper.getByteArray(vp, xlen);
 
 
             // todo: add check for following (as per https://tools.ietf.org/html/rfc3447#section-8.1.2)
@@ -609,7 +616,7 @@ private:
             int c = static_cast<int>(s.at(i--));
             if (c < 128) {
                 // utf
-                byteArray[--n] = c;
+                byteArray[--n] = static_cast<int>(c);
             } else if ((c > 127) && (c < 2048)) {
                 // 16-bit
                 byteArray[--n] = (c & 63) | 128;
@@ -651,7 +658,7 @@ private:
     template <class T = std::wstring>
     T pkcs1unpad2(const BigInteger& m, unsigned long n)
     {
-        ByteArray ba = m_helper.getByteArray(m, n);
+        std::vector<int> ba = m_helper.getByteArray(m, n);
         std::size_t baLen = ba.size();
         if (baLen <= 2 || ba[0] != 0 || ba[1] != 2) {
             throw std::runtime_error("Incorrect padding PKCS#1");
