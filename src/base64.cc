@@ -14,3 +14,5 @@
 #include "src/base64.h"
 
 using namespace mine;
+
+const std::string Base64::kValidChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
