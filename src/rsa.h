@@ -683,15 +683,15 @@ private:
         for (; i < baLen; ++i) {
             // reference: http://en.cppreference.com/w/cpp/language/types -> range of values
             int c = ba[i] & 0xFF;
-            if (c < 128) {
+            if (c <= 0x7f) {
                 ss << static_cast<CharacterType>(c);
-            } else if (c > 191 && c < 224) {
+            } else if (c > 0xbf && c < 0xe0) {
                 ss << static_cast<CharacterType>(
                           ((c & 31) << 6) |
                           (ba[i+1] & 63)
                       );
                 ++i;
-            } else if ((c < 191) || (c >= 224 && c < 240)) { // utf-16 char
+            } else if ((c < 0xbf) || (c >= 0xe0 && c < 0xf0)) { // utf-16 char
                 ss << static_cast<CharacterType>(
                           ((c & 15) << 12) |
                           ((ba[i+1] & 63) << 6) |
