@@ -614,18 +614,23 @@ private:
         long long i = s.size() - 1;
         while(i >= 0 && n > 0) {
             int c = static_cast<int>(s.at(i--));
-            if (c < 128) {
+            if (c <= 127) {
                 // utf
                 byteArray[--n] = static_cast<int>(c);
-            } else if ((c > 127) && (c < 2048)) {
-                // 16-bit
+            } else if (c <= 2047) {
                 byteArray[--n] = (c & 63) | 128;
                 byteArray[--n] = (c >> 6) | 192;
-            } else {
-                // 24-bit
+            } else if (c <= 65535) {
+                // utf-16
                 byteArray[--n] = (c & 63) | 128;
                 byteArray[--n] = ((c >> 6) & 63) | 128;
                 byteArray[--n] = (c >> 12) | 224;
+            } else {
+                // utf-32
+                byteArray[--n] = (c & 63) | 128;
+                byteArray[--n] = ((c >> 6) & 63) | 128;
+                byteArray[--n] = ((c >> 12) & 63) | 128;
+                byteArray[--n] = (c >> 18) | 240;
             }
         }
 
@@ -679,19 +684,34 @@ private:
         // now we should be at the first non-zero byte
         // which is our first item, concat them as char | wchar_t
 
-        std::basic_stringstream<typename T::value_type> ss;
+        using CharacterType = typename T::value_type;
+        std::basic_stringstream<CharacterType> ss;
         for (; i < baLen; ++i) {
             // reference: http://en.cppreference.com/w/cpp/language/types -> range of values
             int c = ba[i] & 0xFF;
             if (c < 128) {
-                // utf-8
-                ss << static_cast<char>(c);
-            } else if ((c > 191) && (c < 224)) { // 16-bit char
-                ss << static_cast<wchar_t>(((c & 31) << 6) | (ba[i+1] & 63));
+                ss << static_cast<CharacterType>(c);
+            } else if (c > 191 && c < 224) {
+                ss << static_cast<CharacterType>(
+                          ((c & 31) << 6) |
+                          (ba[i+1] & 63)
+                      );
                 ++i;
-            } else { // 24-bit char
-                ss << static_cast<wchar_t>(((c & 15) << 12) | ((ba[i+1] & 63) << 6) | (ba[i+2] & 63));
+            } else if ((c < 191) || (c >= 224 && c < 240)) { // utf-16 char
+                ss << static_cast<CharacterType>(
+                          ((c & 15) << 12) |
+                          ((ba[i+1] & 63) << 6) |
+                          (ba[i+2] & 63)
+                        );
                 i += 2;
+            } else { // utf-32 char
+                ss << static_cast<CharacterType>(
+                          ((c & 7) << 18) |
+                          ((ba[i+1] & 63) << 12) |
+                          ((ba[i+2] & 63) << 6) |
+                          (ba[i+3] & 63)
+                        );
+                i += 3;
             }
         }
         return ss.str();

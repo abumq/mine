@@ -113,7 +113,8 @@ static TestData<std::wstring> RSAEncryptionData = {
     TestCase(L"大家好"), // total 10 bytes
     TestCase(L"Postal mark face 〠"), // contains 4 byte char [\u3020] total 21
     TestCase(L"کیا میں آپکی مدد کر سکتاہوں"), // total 50 bytes
-   // TestCase(L"Another rocket 🚀flying high"), // contains 5 byte char [\u1F680] total 31 byte
+    TestCase(L"Rocket 🚀 is flying"), // contains 5 byte char [\u1F680]
+    TestCase(L"Another rocket \x1F680 \x003D h"), // contains 5 byte char [\u1F680] and = sign
 };
 // msg
 static TestData<std::string> RSAEncryptionStringData = {

@@ -104,6 +104,10 @@ add_executable(mine-unit-tests
     ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
 )
 
+target_compile_definitions (mine-unit-tests PUBLIC
+    ELPP_STL_LOGGING
+)
+
 # Standard linking to gtest stuff.
 target_link_libraries(mine-unit-tests gtest gtest_main)
 
