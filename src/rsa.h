@@ -32,7 +32,7 @@ namespace mine {
 /// User will provide their own implementation of big integer
 /// or use existing one.
 ///
-/// This is implemeted from instructions on
+/// Compliant with PKCS#1 (v2.1)
 /// https://tools.ietf.org/html/rfc3447#section-7.2
 ///
 /// Mine uses pkcs#1 v1.5 padding scheme
