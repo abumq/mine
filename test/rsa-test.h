@@ -6,23 +6,31 @@
 #include <type_traits>
 #include <cryptopp/integer.h>
 
-
 namespace mine {
 
 using BigInteger = CryptoPP::Integer;
 
-class Helper : public GenericHelper<BigInteger>
+class Helper : public BigIntegerHelper<BigInteger>
 {
 public:
-    virtual byte bigIntegerToByte(const BigInteger& b) override
+    virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
         return static_cast<byte>(b.ConvertToLong());
     }
 
-    virtual std::string bigIntegerToHex(const BigInteger& b) override
+    virtual std::string bigIntegerToHex(const BigInteger& b) const override
     {
         std::stringstream ss;
         ss << std::hex << b;
+        std::string h(ss.str());
+        h.erase(h.end() - 1);
+        return h;
+    }
+
+    virtual std::string bigIntegerToString(const BigInteger& b) const override
+    {
+        std::stringstream ss;
+        ss << b;
         std::string h(ss.str());
         h.erase(h.end() - 1);
         return h;
@@ -207,12 +215,34 @@ TEST(RSATest, Decryption)
     }
 }
 
-TEST(RSATest, FakeTest)
+TEST(RSATest, ManualTest)
 {
-    auto item = RawKeyData.at(7);
-    KeyPair k(PARAM(0), PARAM(1), PARAM(3));
-    std::cout << rsaManager.encrypt(k.publicKey(), std::string("Test message")) << std::endl;
-    std::cout << rsaManager.decrypt<std::string>(k.privateKey(), std::string("68A7FE65FBD933522CDD321B0062DBA910AE5C1E73D46F7EB4A26773963963AE59F614D514E75773A8E6B67EACDC7C9F4172A94D58522CBB96FC79A836DB5343"));
+    // These keys were generated using
+    //      ripe -g --rsa --length 128 --out-public public.pem --out-private private.pem
+    // and can only encrypt 5 bytes
+    //
+    //
+    // imported from test/private.pem  test/public.pem
+    // using: cat private.pem | openssl rsa -text -noout
+    //
+    KeyPair k(BigInteger("13866701041466745229"), BigInteger("18381132054282063251"), 17);
+    std::cout << "Key ASN Seq:" << std::endl << k.privateKey()->exportASNSequence() << std::endl << "---------------" << std::endl;
+    std::cout << rsaManager.encrypt(k.publicKey(), std::string("Test")) << std::endl;
+
+    // You can manually run the output of above and confirm the result with ripe and openssl
+    //      ripe:      echo [encrypted_hex] | ripe -d --rsa --in-key private.pem --hex
+    //      openssl:   echo [encrypted_hex] | ripe -d --hex | openssl rsautl -decrypt -inkey private.pem
+    //
+
+    // this was created using ripe
+    //      echo Test | ripe -e --rsa --in-key public.pem | ripe -d --base64 | ripe -e --hex
+    std::string sripe = rsaManager.decrypt<std::string>(k.privateKey(), std::string("4A1E74DC3CC2FC57305287F3396449E4"));
+    ASSERT_STREQ(sripe.c_str(), "Test");
+
+    // this was created using openssl-cli
+    //      echo 'Test' | openssl rsautl -encrypt -pubin -inkey public.pem | ripe -e --hex
+    std::string sopenssl = rsaManager.decrypt<std::string>(k.privateKey(), std::string("57E56205E3D0135E7A2E7C5062D5453E"));
+    ASSERT_STREQ(sopenssl.c_str(), "Test\n");
 }
 
 TEST(RSATest, Signature)
@@ -233,6 +263,7 @@ TEST(RSATest, Signature)
         }
     }
 }
+
 }
 
 #endif // RSA_TEST_H
