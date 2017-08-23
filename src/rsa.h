@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <map>
 #include <string>
-#include <algorithm>
 #include <sstream>
 #include <vector>
 
