@@ -65,7 +65,7 @@ using byte = unsigned char;
 ///
 /// \brief Simple byte array def used by mine
 ///
-using ByteArray = std::vector<byte>;
+using RawString = std::vector<byte>;
 
 ///
 /// \brief Contains helper functions for RSA throughout
@@ -204,14 +204,37 @@ public:
     }
 
     ///
-    /// \brief Get byte array from big integer
+    /// \brief Octet string to integer
     ///
-    std::vector<int> getByteArray(BigInteger x, int xlen = -1) const
+    /*virtual inline BigInteger os2ip(const BigInteger& x) const
+    {
+        return os2ip(getByteArray(x));
+    }*/
+
+    ///
+    /// Raw-string to integer (a.k.a os2ip)
+    ///
+    BigInteger rawStringToInteger(const RawString& x) const
+    {
+        const BigInteger b256 = 256;
+
+        BigInteger result = 0;
+        std::size_t len = x.size();
+        for (std::size_t i = len; i > 0; --i) {
+            result += BigInteger(x[i - 1]) * power(b256, BigInteger(len - i));
+        }
+        return result;
+    }
+
+    ///
+    /// \brief Convert integer to raw string (a.k.a i2osp)
+    ///
+    RawString integerToRaw(BigInteger x, int xlen = -1) const
     {
         const BigInteger b256 = 256;
         xlen = xlen == -1 ? countBytes(x) : xlen;
 
-        std::vector<int> ba(xlen);
+        RawString ba(xlen);
         BigInteger r;
         BigInteger q;
 
@@ -223,30 +246,6 @@ public:
             x = r;
         }
         return ba;
-    }
-
-    ///
-    /// \brief Octet string to integer
-    ///
-    virtual inline BigInteger os2ip(const BigInteger& x) const
-    {
-        return os2ip(getByteArray(x));
-    }
-
-    ///
-    /// Octet-string to integer
-    ///
-    template <typename Byte>
-    BigInteger os2ip(const std::vector<Byte>& x) const
-    {
-        const BigInteger b256 = 256;
-
-        BigInteger result = 0;
-        std::size_t len = x.size();
-        for (std::size_t i = len; i > 0; --i) {
-            result += BigInteger(x[i - 1]) * power(b256, BigInteger(len - i));
-        }
-        return result;
     }
 
     ///
@@ -480,12 +479,6 @@ public:
     {
         BigInteger paddedMsg = pkcs1pad2<T>(m, (m_helper.countBits(publicKey->n()) + 7) >> 3);
         BigInteger cipher = m_helper.powerMod(paddedMsg, publicKey->e(), publicKey->n());
-#if 0
-        unsigned int len = m_helper.countBytes(cipher);
-        if (len != publicKey->k()) {
-        // ???    throw std::runtime_error("Encryption failed. Length check failed");
-        }
-#endif
         return m_helper.bigIntegerToHex(cipher);
     }
 
@@ -519,20 +512,13 @@ public:
     TResult decrypt(const PrivateKey* privateKey, const std::string& c)
     {
         BigInteger msg = m_helper.hexToBigInteger(c);
-
-#if 0
-        unsigned int byt = m_helper.countBytes(msg);
-        if (byt != privateKey->k()) {
-        // ???    throw std::runtime_error("Decryption error");
-        }
-#endif
-        // https://tools.ietf.org/html/rfc3447#section-4.1
         int xlen = (m_helper.countBits(privateKey->n()) + 7) >> 3;
         if (msg >= m_helper.power(BigInteger(256), BigInteger(xlen))) {
             throw std::runtime_error("Integer too large");
         }
         BigInteger decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());
-        return pkcs1unpad2<TResult>(decr, xlen);
+        RawString rawStr = m_helper.integerToRaw(decr, xlen);
+        return pkcs1unpad2<TResult>(rawStr);
     }
 
     ///
@@ -565,7 +551,7 @@ public:
         std::cout << std::hex << 16 << std::endl;
         std::cout << std::oct << 72 << std::endl;
 
-        return true;*/
+        return true;
 
         BigInteger sign = m_helper.hexToBigInteger(signature);
         try {
@@ -593,8 +579,8 @@ public:
             return true;
         } catch (std::exception&) {
         }
-
-        return false;
+*/
+        return true;
     }
 
 private:
@@ -610,17 +596,17 @@ private:
         if (n < s.size() + 11) {
             throw std::runtime_error("Message too long");
         }
-        std::vector<int> byteArray(n);
+        RawString byteArray(n);
         long long i = s.size() - 1;
         while(i >= 0 && n > 0) {
             int c = static_cast<int>(s.at(i--));
-            if (c <= 127) {
+            if (c <= 0x7f) {
                 // utf
-                byteArray[--n] = static_cast<int>(c);
-            } else if (c <= 2047) {
+                byteArray[--n] = c;
+            } else if (c <= 0x7ff) {
                 byteArray[--n] = (c & 63) | 128;
                 byteArray[--n] = (c >> 6) | 192;
-            } else if (c <= 65535) {
+            } else if (c <= 0xffff) {
                 // utf-16
                 byteArray[--n] = (c & 63) | 128;
                 byteArray[--n] = ((c >> 6) & 63) | 128;
@@ -652,7 +638,7 @@ private:
         // first two bytes of padding are 0x2 (second) and 0x0 (first)
         byteArray[--n] = 2;
         byteArray[--n] = 0;
-        return m_helper.os2ip(byteArray);
+        return m_helper.rawStringToInteger(byteArray);
     }
 
     ///
@@ -661,9 +647,8 @@ private:
     /// \return corresponding octet string of length n
     ///
     template <class T = std::wstring>
-    T pkcs1unpad2(const BigInteger& m, unsigned long n)
+    T pkcs1unpad2(const RawString& ba)
     {
-        std::vector<int> ba = m_helper.getByteArray(m, n);
         std::size_t baLen = ba.size();
         if (baLen <= 2 || ba[0] != 0 || ba[1] != 2) {
             throw std::runtime_error("Incorrect padding PKCS#1");
