@@ -301,6 +301,9 @@ public:
         iss >> std::hex >> msg;
         return msg;
     }
+private:
+    BigIntegerHelper(const BigIntegerHelper&) = delete;
+    BigIntegerHelper& operator=(const BigIntegerHelper&) = delete;
 };
 
 ///
@@ -317,6 +320,23 @@ class GenericPublicKey {
 public:
 
     GenericPublicKey() = default;
+
+    GenericPublicKey(const GenericPublicKey& other)
+    {
+        this->m_n = other.m_n;
+        this->m_e = other.m_e;
+        this->m_k = other.m_k;
+    }
+
+    GenericPublicKey& operator=(const GenericPublicKey& other)
+    {
+        if (this != &other) {
+            this->m_n = other.m_n;
+            this->m_e = other.m_e;
+            this->m_k = other.m_k;
+        }
+        return *this;
+    }
 
     GenericPublicKey(BigInteger n, int e) :
         m_n(n),
@@ -350,38 +370,68 @@ public:
 
     GenericPrivateKey() = default;
 
+    GenericPrivateKey(const GenericPrivateKey& other)
+    {
+        this->m_p = other.m_p;
+        this->m_q = other.m_q;
+        this->m_e = other.m_e;
+        this->m_n = other.m_n;
+        this->m_d = other.m_d;
+        this->m_coeff = other.m_coeff;
+        this->m_dp = other.m_dp;
+        this->m_dq = other.m_dq;
+        this->m_k = other.m_k;
+    }
+
+    GenericPrivateKey& operator=(const GenericPrivateKey& other)
+    {
+        if (this != &other) {
+            this->m_p = other.m_p;
+            this->m_q = other.m_q;
+            this->m_e = other.m_e;
+            this->m_n = other.m_n;
+            this->m_d = other.m_d;
+            this->m_coeff = other.m_coeff;
+            this->m_dp = other.m_dp;
+            this->m_dq = other.m_dq;
+            this->m_k = other.m_k;
+        }
+        return *this;
+    }
+
     GenericPrivateKey(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent) :
           m_p(p),
           m_q(q),
           m_e(e)
-      {
-          if (p == q || p == 0 || q == 0) {
-              throw std::invalid_argument("p and q must be prime numbers unique to each other");
-          }
 
-          const BigInteger pMinus1 = m_p - 1;
-          const BigInteger qMinus1 = m_q - 1;
-          const BigInteger phi = pMinus1 * qMinus1;
+    {
+        if (p == q || p == 0 || q == 0) {
+            throw std::invalid_argument("p and q must be prime numbers unique to each other");
+        }
 
-          if (m_helper.gcd(m_e, phi) != 1) {
-              throw std::invalid_argument("Invalid exponent, it must not share factor with phi");
-          }
-          m_n = m_p * m_q;
-          m_k = m_helper.countBytes(m_n);
-          if (m_k < 11) {
-              throw std::invalid_argument("Invalid prime. Length error.");
-          }
-          m_coeff = m_helper.modInverse(m_q, m_p);
+        const BigInteger pMinus1 = m_p - 1;
+        const BigInteger qMinus1 = m_q - 1;
+        const BigInteger phi = pMinus1 * qMinus1;
 
-          m_d = m_helper.modInverse(m_e, phi);
+        if (m_helper.gcd(m_e, phi) != 1) {
+            throw std::invalid_argument("Invalid exponent, it must not share factor with phi");
+        }
+        m_n = m_p * m_q;
+        m_k = m_helper.countBytes(m_n);
+        if (m_k < 11) {
+            throw std::invalid_argument("Invalid prime. Length error.");
+        }
+        m_coeff = m_helper.modInverse(m_q, m_p);
 
-          // note:
-          // https://tools.ietf.org/html/rfc3447#section-2 says to use m_e
-          // openssl says to use m_d - which one?!
-          //
-          m_dp = BigInteger(m_d) % pMinus1;
-          m_dq = BigInteger(m_d) % qMinus1;
-      }
+        m_d = m_helper.modInverse(m_e, phi);
+
+        // note:
+        // https://tools.ietf.org/html/rfc3447#section-2 says to use m_e
+        // openssl says to use m_d - which one?!
+        //
+        m_dp = BigInteger(m_d) % pMinus1;
+        m_dq = BigInteger(m_d) % qMinus1;
+    }
 
     virtual ~GenericPrivateKey() = default;
 
@@ -445,11 +495,30 @@ protected:
 template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
 class GenericKeyPair {
 public:
+    GenericKeyPair() = default;
+
+    GenericKeyPair(const GenericKeyPair& other)
+    {
+        this->m_privateKey = other.m_privateKey;
+        this->m_publicKey = other.m_publicKey;
+    }
+
+    GenericKeyPair& operator=(const GenericKeyPair& other)
+    {
+        if (this != &other) {
+            this->m_privateKey = other.m_privateKey;
+            this->m_publicKey = other.m_publicKey;
+        }
+        return *this;
+    }
+
     GenericKeyPair(const BigInteger& p, const BigInteger& q, unsigned int exp = kDefaultPublicExponent)
     {
         m_publicKey = GenericPublicKey<BigInteger, Helper>(p * q, exp);
         m_privateKey = GenericPrivateKey<BigInteger, Helper>(p, q, exp);
     }
+
+    virtual ~GenericKeyPair() = default;
 
     inline const GenericPublicKey<BigInteger, Helper>* publicKey() const { return &m_publicKey; }
     inline const GenericPrivateKey<BigInteger, Helper>* privateKey() const { return &m_privateKey; }
@@ -470,8 +539,8 @@ public:
     using PrivateKey = GenericPrivateKey<BigInteger, Helper>;
 
     GenericRSA() = default;
-    GenericRSA(const GenericRSA&) = default;
-    GenericRSA& operator=(const GenericRSA&) = default;
+    GenericRSA(const GenericRSA&) = delete;
+    GenericRSA& operator=(const GenericRSA&) = delete;
 
     ///
     /// \brief Encrypts plain bytes using RSA public key
@@ -680,6 +749,7 @@ private:
 
         using CharacterType = typename T::value_type;
         std::basic_stringstream<CharacterType> ss;
+
         for (; i < baLen; ++i) {
             // reference: http://en.cppreference.com/w/cpp/language/types -> range of values
             int c = ba[i] & 0xFF;

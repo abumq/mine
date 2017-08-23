@@ -37,18 +37,12 @@ public:
     }
 };
 
-class RSA : public GenericRSA<BigInteger, Helper>{
-
+class RSA : public GenericRSA<BigInteger, Helper> {};
+class PublicKey : public GenericPublicKey<BigInteger, Helper> {};
+class PrivateKey : public GenericPrivateKey<BigInteger, Helper> {};
+class KeyPair : public GenericKeyPair<BigInteger, Helper> {
+    using GenericKeyPair::GenericKeyPair;
 };
-
-class KeyPair : public GenericKeyPair<BigInteger, Helper>{
-public:
-    KeyPair(const BigInteger& p, const BigInteger& q,
-            unsigned int exp = kDefaultPublicExponent) :
-        GenericKeyPair<BigInteger, Helper>(p, q, exp) {}
-};
-class PublicKey : public GenericPublicKey<BigInteger, Helper>{};
-class PrivateKey : public GenericPrivateKey<BigInteger, Helper>{};
 
 static RSA rsaManager;
 static Helper rsaHelper;
