@@ -37,13 +37,37 @@ public:
     ///
     /// \brief Encodes input of length to base64 encoding
     ///
-    static std::string base64Encode(const std::string& d)
+    static std::string base64Encode(const std::wstring& d)
     {
+        std::string padding;
+        const std::size_t len = d.length();
+        const int paddingCount = (len % 0x03) + 1;
+        int i = 0;
+        for (; i < paddingCount; ++i) {
+            padding += kPaddingChar;
+        }
+        i = 0;
         std::stringstream ss;
-        for (auto it = d.begin(); it != d.end(); ++it) {
+        for (auto it = d.begin(); it <= d.end(); ++it, i += 4) {
+            int c = static_cast<int>(*it) & 0xff;
+            if (c >= 240) {
+                throw std::invalid_argument("UTF-32 base64 encoding not supported yet");
+            }
+            int n24 = (*it << 16);
+            if (++it != d.end()) {
+                n24 |= (*it << 8);
+            }
+            if (++it != d.end()) {
+                n24 |= *it;
+            }
+
+            ss << static_cast<char>(kValidChars[(n24 >> 18) & 0x3f]);
+            ss << static_cast<char>(kValidChars[(n24 >> 12) & 0x3f]);
+            ss << static_cast<char>(kValidChars[(n24 >> 6) & 0x3f]);
+            ss << static_cast<char>(kValidChars[n24 & 0x3f]);
 
         }
-        return ss.str();
+        return std::string(ss.str().substr(0, i - paddingCount)) + padding;
     }
 
     ///
