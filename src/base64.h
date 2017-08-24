@@ -21,10 +21,7 @@
 #ifndef Base64_H
 #define Base64_H
 
-#include <sstream>
 #include <string>
-#include <vector>
-#include <iostream>
 #include <unordered_map>
 
 namespace mine {
@@ -63,6 +60,7 @@ public:
     ///
     static std::size_t countChars(const std::string& d) noexcept;
 
+    // todo: make it portable for multi-byte character (start with wchar_t)
     ///
     /// \brief Encodes input of length to base64 encoding
     ///

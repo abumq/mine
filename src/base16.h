@@ -21,7 +21,11 @@
 #ifndef Base16_H
 #define Base16_H
 
+#include <string>
+
 namespace mine {
+
+using byte = unsigned char;
 
 ///
 /// \brief Provides base16 encoding / decoding
@@ -29,6 +33,22 @@ namespace mine {
 class Base16 {
 public:
 
+    ///
+    /// \brief List of valid hex encoding characters
+    ///
+    static const std::string kValidChars;
+
+    ///
+    /// \brief Encodes input of length to hex encoding
+    ///
+    static std::string encode(const std::string& raw) noexcept;
+
+    ///
+    /// \brief Decodes encoded hex
+    /// \throws std::runtime if invalid encoding.
+    /// std::runtime::what() is set according to the error
+    ///
+    static std::string decode(const std::string& e);
 private:
     Base16() = delete;
     Base16(const Base16&) = delete;

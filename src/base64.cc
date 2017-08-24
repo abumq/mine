@@ -14,11 +14,14 @@
 //  https://github.com/muflihun/mine
 //
 
+#include <sstream>
+#include <stdexcept>
 #include "src/base64.h"
 
 using namespace mine;
 
 const std::string Base64::kValidChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
 const std::unordered_map<int, int> Base64::kDecodeMap = {
     {65, 0},   {66, 1},   {67, 2},   {68, 3},
     {69, 4},   {70, 5},   {71, 6},   {72, 7},
@@ -123,7 +126,6 @@ std::string Base64::decode(const std::string& enc)
         throw std::runtime_error("Invalid base64 encoding. Padding is required");
     }
     const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
-    std::string s;
     std::stringstream ss;
     for (auto it = enc.begin(); it != enc.end(); it += 4) {
         try {
@@ -159,9 +161,6 @@ std::string Base64::decode(const std::string& enc)
                     }
                 }
             }
-
-            s = ss.str();
-
         } catch (const std::exception&) {
             throw std::runtime_error("Invalid base64 character");
         }
