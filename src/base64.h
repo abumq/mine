@@ -6,7 +6,10 @@
 //  instead which is automatically generated and includes this file
 //  This is seperated to aid the development
 //
-//  Copyright 2017 Muflihun Labs
+//  Copyright (c) 2017 Muflihun Labs
+//
+//  This library is released under the Apache 2.0 license
+//  https://github.com/muflihun/mine/blob/master/LICENSE
 //
 //  https://github.com/muflihun/mine
 //
@@ -22,55 +25,69 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 namespace mine {
 
 using byte = unsigned char;
+
 ///
-/// \brief Provides base64 encoding / decoding
+/// \brief Provides base64 encoding / decoding implementation
 ///
 class Base64 {
 public:
 
-    static const std::string kValidChars; // this also include padding char (=)
+    ///
+    /// \brief List of valid base64 encoding characters
+    ///
+    static const std::string kValidChars;
+
+    ///
+    /// \brief Map for fast lookup corresponding character
+    /// std::unordered_map is O(1) for best case and linear in worst case
+    /// which is better than kValidChars find_first_of() which is linear-pos
+    /// in general
+    /// \ref http://www.cplusplus.com/reference/unordered_map/unordered_map/at/
+    /// \ref  http://www.cplusplus.com/reference/string/string/find_first_of/
+    ///
+    static const std::unordered_map<int, int> kDecodeMap;
+
+    ///
+    /// \brief Padding is must in mine implementation of base64
+    ///
     static const char kPaddingChar = '=';
 
     ///
     /// \brief Replacement for better d.size() that consider unicode bytes too
     /// \see https://en.wikipedia.org/wiki/UTF-8#Description
     ///
-    static std::size_t countChars(const std::string& d);
+    static std::size_t countChars(const std::string& d) noexcept;
 
     ///
     /// \brief Encodes input of length to base64 encoding
-    /// \see https://tools.ietf.org/html/rfc1421#section-4.3.2.4
     ///
-    static std::string base64Encode(const std::string& raw);
+    static std::string encode(const std::string& raw) noexcept;
 
     ///
     /// \brief Decodes encoded base64
+    /// \throws std::runtime if invalid encoding. Another time it is thrown
+    /// is if no padding is found
+    /// std::runtime::what() is set according to the error
     ///
-    static std::string base64Decode(const std::string& e)
-    {
-        std::stringstream ss;
-        for (auto it = e.begin(); it != e.end(); ++it) {
-
-        }
-        return ss.str();
-    }
+    static std::string decode(const std::string& e);
 
     ///
     /// \brief expectedBase64Length Returns expected base64 length
     /// \param n Length of input (plain data)
     ///
-    inline static std::size_t expectedBase64Length(std::size_t n)
+    inline static std::size_t expectedLength(std::size_t n) noexcept
     {
         return ((4 * n / 3) + 3) & ~0x03;
     }
 
-    inline static std::size_t expectedBase64Length(const std::string& str)
+    inline static std::size_t expectedLength(const std::string& str) noexcept
     {
-        return expectedBase64Length(countChars(str));
+        return expectedLength(countChars(str));
     }
 
     ///
@@ -78,19 +95,9 @@ public:
     /// by finding non-base64 character. So it is not necessary
     /// a valid base64 encoding.
     ///
-    inline static bool isBase64(const std::string& data)
+    inline static bool isBase64(const std::string& data) noexcept
     {
         return data.find_first_not_of(kValidChars) == std::string::npos;
-    }
-
-    ///
-    /// \brief Finds whether data is base64 encoded. This is done
-    /// by finding non-base64 character. So it is not necessary
-    /// a valid base64 encoding.
-    ///
-    inline static bool isBase64(byte c)
-    {
-        return isalnum(c) || c == 0x2b || c == 0x2b;
     }
 
 private:

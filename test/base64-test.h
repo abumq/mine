@@ -21,6 +21,14 @@ static TestData<std::string, std::string> Base64TestData = {
     TestCase("SGVsbG/nq5w=", "Hello竜"),
     TestCase("4oKsNTA=", "€50"),
     TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", "this is rocket 🚀 and i love it"),
+    TestCase("YWJjMTIzIT8kKiYoKSctPUB+", "abc123!?$*&()'-=@~"),
+};
+
+static TestData<std::string> InvalidBase64EncodingData = {
+    TestCase("YWJj,ZA=="),
+    TestCase("YWJj,A=="),
+    TestCase(",,,,"),
+    TestCase("===="),
 };
 
 static TestData<std::string, bool> IsBase64Data = {
@@ -35,7 +43,7 @@ static TestData<std::string, bool> IsBase64Data = {
 TEST(Base64Test, Encode)
 {
     for (const auto& item : Base64TestData) {
-        std::string encoded = Base64::base64Encode(PARAM(1));
+        std::string encoded = Base64::encode(PARAM(1));
         ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
     }
 }
@@ -43,15 +51,22 @@ TEST(Base64Test, Encode)
 TEST(Base64Test, Decode)
 {
     for (const auto& item : Base64TestData) {
-        std::string decoded = Base64::base64Decode(PARAM(0));
-        //ASSERT_STREQ(PARAM(1), decoded);
+        std::string decoded = Base64::decode(PARAM(0));
+        ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
+    }
+}
+
+TEST(Base64Test, InvalidBase64Encoding)
+{
+    for (const auto& item : InvalidBase64EncodingData) {
+        EXPECT_THROW(Base64::decode(PARAM(0)), std::runtime_error);
     }
 }
 
 TEST(Base64Test, ExpectedSize)
 {
     for (const auto& item : Base64TestData) {
-        std::size_t s = Base64::expectedBase64Length(PARAM(1));
+        std::size_t s = Base64::expectedLength(PARAM(1));
         ASSERT_EQ(PARAM(0).size(), s);
     }
 }

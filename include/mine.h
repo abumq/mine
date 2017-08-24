@@ -17,12 +17,14 @@
 #ifndef MINE_CRYPTO_H
 #define MINE_CRYPTO_H
 
+#include <sstream>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <unordered_map>
 #include <cmath>
 #include <stdexcept>
 #include <map>
-#include <string>
-#include <sstream>
-#include <vector>
 
 namespace mine {
 
@@ -38,11 +40,76 @@ private:
     Base16& operator=(const Base16&) = delete;
 };
 
+using byte = unsigned char;
+
 ///
-/// \brief Provides base64 encoding / decoding
+/// \brief Provides base64 encoding / decoding implementation
 ///
 class Base64 {
 public:
+
+    ///
+    /// \brief List of valid base64 encoding characters
+    ///
+    static const std::string kValidChars;
+
+    ///
+    /// \brief Map for fast lookup corresponding character
+    /// std::unordered_map is O(1) for best case and linear in worst case
+    /// which is better than kValidChars find_first_of() which is linear-pos
+    /// in general
+    /// \ref http://www.cplusplus.com/reference/unordered_map/unordered_map/at/
+    /// \ref  http://www.cplusplus.com/reference/string/string/find_first_of/
+    ///
+    static const std::unordered_map<int, int> kDecodeMap;
+
+    ///
+    /// \brief Padding is must in mine implementation of base64
+    ///
+    static const char kPaddingChar = '=';
+
+    ///
+    /// \brief Replacement for better d.size() that consider unicode bytes too
+    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
+    ///
+    static std::size_t countChars(const std::string& d) noexcept;
+
+    ///
+    /// \brief Encodes input of length to base64 encoding
+    ///
+    static std::string encode(const std::string& raw) noexcept;
+
+    ///
+    /// \brief Decodes encoded base64
+    /// \throws std::runtime if invalid encoding. Another time it is thrown
+    /// is if no padding is found
+    /// std::runtime::what() is set according to the error
+    ///
+    static std::string decode(const std::string& e);
+
+    ///
+    /// \brief expectedBase64Length Returns expected base64 length
+    /// \param n Length of input (plain data)
+    ///
+    inline static std::size_t expectedLength(std::size_t n) noexcept
+    {
+        return ((4 * n / 3) + 3) & ~0x03;
+    }
+
+    inline static std::size_t expectedLength(const std::string& str) noexcept
+    {
+        return expectedLength(countChars(str));
+    }
+
+    ///
+    /// \brief Finds whether data is base64 encoded. This is done
+    /// by finding non-base64 character. So it is not necessary
+    /// a valid base64 encoding.
+    ///
+    inline static bool isBase64(const std::string& data) noexcept
+    {
+        return data.find_first_not_of(kValidChars) == std::string::npos;
+    }
 
 private:
     Base64() = delete;
@@ -67,7 +134,7 @@ private:
 /// User will provide their own implementation of big integer
 /// or use existing one.
 ///
-/// This is implemeted from instructions on
+/// Compliant with PKCS#1 (v2.1)
 /// https://tools.ietf.org/html/rfc3447#section-7.2
 ///
 /// Mine uses pkcs#1 v1.5 padding scheme
@@ -336,6 +403,9 @@ public:
         iss >> std::hex >> msg;
         return msg;
     }
+private:
+    BigIntegerHelper(const BigIntegerHelper&) = delete;
+    BigIntegerHelper& operator=(const BigIntegerHelper&) = delete;
 };
 
 ///
@@ -352,6 +422,23 @@ class GenericPublicKey {
 public:
 
     GenericPublicKey() = default;
+
+    GenericPublicKey(const GenericPublicKey& other)
+    {
+        this->m_n = other.m_n;
+        this->m_e = other.m_e;
+        this->m_k = other.m_k;
+    }
+
+    GenericPublicKey& operator=(const GenericPublicKey& other)
+    {
+        if (this != &other) {
+            this->m_n = other.m_n;
+            this->m_e = other.m_e;
+            this->m_k = other.m_k;
+        }
+        return *this;
+    }
 
     GenericPublicKey(BigInteger n, int e) :
         m_n(n),
@@ -385,38 +472,68 @@ public:
 
     GenericPrivateKey() = default;
 
+    GenericPrivateKey(const GenericPrivateKey& other)
+    {
+        this->m_p = other.m_p;
+        this->m_q = other.m_q;
+        this->m_e = other.m_e;
+        this->m_n = other.m_n;
+        this->m_d = other.m_d;
+        this->m_coeff = other.m_coeff;
+        this->m_dp = other.m_dp;
+        this->m_dq = other.m_dq;
+        this->m_k = other.m_k;
+    }
+
+    GenericPrivateKey& operator=(const GenericPrivateKey& other)
+    {
+        if (this != &other) {
+            this->m_p = other.m_p;
+            this->m_q = other.m_q;
+            this->m_e = other.m_e;
+            this->m_n = other.m_n;
+            this->m_d = other.m_d;
+            this->m_coeff = other.m_coeff;
+            this->m_dp = other.m_dp;
+            this->m_dq = other.m_dq;
+            this->m_k = other.m_k;
+        }
+        return *this;
+    }
+
     GenericPrivateKey(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent) :
           m_p(p),
           m_q(q),
           m_e(e)
-      {
-          if (p == q || p == 0 || q == 0) {
-              throw std::invalid_argument("p and q must be prime numbers unique to each other");
-          }
 
-          const BigInteger pMinus1 = m_p - 1;
-          const BigInteger qMinus1 = m_q - 1;
-          const BigInteger phi = pMinus1 * qMinus1;
+    {
+        if (p == q || p == 0 || q == 0) {
+            throw std::invalid_argument("p and q must be prime numbers unique to each other");
+        }
 
-          if (m_helper.gcd(m_e, phi) != 1) {
-              throw std::invalid_argument("Invalid exponent, it must not share factor with phi");
-          }
-          m_n = m_p * m_q;
-          m_k = m_helper.countBytes(m_n);
-          if (m_k < 11) {
-              throw std::invalid_argument("Invalid prime. Length error.");
-          }
-          m_coeff = m_helper.modInverse(m_q, m_p);
+        const BigInteger pMinus1 = m_p - 1;
+        const BigInteger qMinus1 = m_q - 1;
+        const BigInteger phi = pMinus1 * qMinus1;
 
-          m_d = m_helper.modInverse(m_e, phi);
+        if (m_helper.gcd(m_e, phi) != 1) {
+            throw std::invalid_argument("Invalid exponent, it must not share factor with phi");
+        }
+        m_n = m_p * m_q;
+        m_k = m_helper.countBytes(m_n);
+        if (m_k < 11) {
+            throw std::invalid_argument("Invalid prime. Length error.");
+        }
+        m_coeff = m_helper.modInverse(m_q, m_p);
 
-          // note:
-          // https://tools.ietf.org/html/rfc3447#section-2 says to use m_e
-          // openssl says to use m_d - which one?!
-          //
-          m_dp = BigInteger(m_d) % pMinus1;
-          m_dq = BigInteger(m_d) % qMinus1;
-      }
+        m_d = m_helper.modInverse(m_e, phi);
+
+        // note:
+        // https://tools.ietf.org/html/rfc3447#section-2 says to use m_e
+        // openssl says to use m_d - which one?!
+        //
+        m_dp = BigInteger(m_d) % pMinus1;
+        m_dq = BigInteger(m_d) % qMinus1;
+    }
 
     virtual ~GenericPrivateKey() = default;
 
@@ -480,11 +597,30 @@ protected:
 template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
 class GenericKeyPair {
 public:
+    GenericKeyPair() = default;
+
+    GenericKeyPair(const GenericKeyPair& other)
+    {
+        this->m_privateKey = other.m_privateKey;
+        this->m_publicKey = other.m_publicKey;
+    }
+
+    GenericKeyPair& operator=(const GenericKeyPair& other)
+    {
+        if (this != &other) {
+            this->m_privateKey = other.m_privateKey;
+            this->m_publicKey = other.m_publicKey;
+        }
+        return *this;
+    }
+
     GenericKeyPair(const BigInteger& p, const BigInteger& q, unsigned int exp = kDefaultPublicExponent)
     {
         m_publicKey = GenericPublicKey<BigInteger, Helper>(p * q, exp);
         m_privateKey = GenericPrivateKey<BigInteger, Helper>(p, q, exp);
     }
+
+    virtual ~GenericKeyPair() = default;
 
     inline const GenericPublicKey<BigInteger, Helper>* publicKey() const { return &m_publicKey; }
     inline const GenericPrivateKey<BigInteger, Helper>* privateKey() const { return &m_privateKey; }
@@ -505,8 +641,8 @@ public:
     using PrivateKey = GenericPrivateKey<BigInteger, Helper>;
 
     GenericRSA() = default;
-    GenericRSA(const GenericRSA&) = default;
-    GenericRSA& operator=(const GenericRSA&) = default;
+    GenericRSA(const GenericRSA&) = delete;
+    GenericRSA& operator=(const GenericRSA&) = delete;
 
     ///
     /// \brief Encrypts plain bytes using RSA public key
@@ -715,18 +851,19 @@ private:
 
         using CharacterType = typename T::value_type;
         std::basic_stringstream<CharacterType> ss;
+
         for (; i < baLen; ++i) {
             // reference: http://en.cppreference.com/w/cpp/language/types -> range of values
             int c = ba[i] & 0xFF;
-            if (c < 128) {
+            if (c <= 0x7f) {
                 ss << static_cast<CharacterType>(c);
-            } else if (c > 191 && c < 224) {
+            } else if (c > 0xbf && c < 0xe0) {
                 ss << static_cast<CharacterType>(
                           ((c & 31) << 6) |
                           (ba[i+1] & 63)
                       );
                 ++i;
-            } else if ((c < 191) || (c >= 224 && c < 240)) { // utf-16 char
+            } else if ((c < 0xbf) || (c >= 0xe0 && c < 0xf0)) { // utf-16 char
                 ss << static_cast<CharacterType>(
                           ((c & 15) << 12) |
                           ((ba[i+1] & 63) << 6) |
