@@ -5,7 +5,7 @@ dist: trusty
 before_install:
  - sudo add-apt-repository ppa:kubuntu-ppa/backports -y
  - sudo apt-get -qq update
- - sudo apt-get install -y libssl-dev libgtest-dev valgrind
+ - sudo apt-get install -y libssl-dev libgtest-dev php-cli valgrind
  - sudo apt-get install --only-upgrade cmake
  - cmake --version 
  # Crypto++ (We manually install it because we need Pem Pack as well)
@@ -45,6 +45,7 @@ before_install:
  - sudo make install
  ## Build
  - cd "${TRAVIS_BUILD_DIR}"
+ - php build.sh # build mine headers
  - mkdir build
  - cd build
  - pwd
