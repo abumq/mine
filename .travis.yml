@@ -45,6 +45,7 @@ before_install:
  - sudo make install
  ## Build
  - cd "${TRAVIS_BUILD_DIR}"
+ - pwd
  - php build.sh # build mine headers
  - mkdir build
  - cd build
