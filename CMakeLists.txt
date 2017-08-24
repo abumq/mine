@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(Mine)
 
+option (test_main_header "Test main header (mine.h)" OFF)
+
 set (MINE_VERSION "4.0.0")
 set (MINE_SOVERSION "4.0.0")
 
@@ -93,16 +95,27 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 enable_testing()
 
-add_executable(mine-unit-tests
-    test/main.cc
-    src/rsa.cc
-    src/aes.cc
-    src/base16.cc
-    src/base64.cc
-    src/zlib.cc
-    include/mine.cc
-    ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
-)
+if (test_main_header)
+    add_executable(mine-unit-tests
+        test/main.cc
+        include/mine.cc
+        ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
+    )
+
+    target_compile_definitions (mine-unit-tests PUBLIC
+        MINE_SINGLE_HEADER_TEST
+    )
+else()
+    add_executable(mine-unit-tests
+        test/main.cc
+        src/rsa.cc
+        src/aes.cc
+        src/base16.cc
+        src/base64.cc
+        src/zlib.cc
+        ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
+    )
+endif()
 
 target_compile_definitions (mine-unit-tests PUBLIC
     ELPP_STL_LOGGING

@@ -1,8 +1,14 @@
 #ifndef RSA_TEST_H
 #define RSA_TEST_H
 
-#include "src/rsa.h"
 #include "test.h"
+
+#ifdef MINE_SINGLE_HEADER_TEST
+#   include "include/mine.h"
+#else
+#   include "src/rsa.h"
+#endif
+
 #include <type_traits>
 #include <cryptopp/integer.h>
 

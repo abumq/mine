@@ -1,8 +1,13 @@
 #ifndef BASE64_TEST_H
 #define BASE64_TEST_H
 
-#include "src/base64.h"
 #include "test.h"
+
+#ifdef MINE_SINGLE_HEADER_TEST
+#   include "include/mine.h"
+#else
+#   include "src/base64.h"
+#endif
 
 namespace mine {
 
