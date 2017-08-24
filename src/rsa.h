@@ -212,7 +212,7 @@ public:
     ///
     /// \brief Count number of bytes in big integer
     ///
-    virtual unsigned int countBytes(BigInteger b) const
+    virtual inline unsigned int countBytes(BigInteger b) const
     {
         return countBits(b) * 8;
     }
@@ -566,7 +566,7 @@ public:
     /// \brief Helper method to encrypt wide-string messages using public key.
     /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
     ///
-    std::string encrypt(const PublicKey* publicKey,
+    inline std::string encrypt(const PublicKey* publicKey,
                                const std::wstring& message)
     {
         return encrypt<decltype(message)>(publicKey, message);
@@ -576,7 +576,7 @@ public:
     /// \brief Helper method to encrypt std::string messages using public key.
     /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
     ///
-    std::string encrypt(const PublicKey* publicKey,
+    inline std::string encrypt(const PublicKey* publicKey,
                                const std::string& message)
     {
         return encrypt<decltype(message)>(publicKey, message);

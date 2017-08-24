@@ -129,6 +129,7 @@ std::string Base64::decode(const std::string& enc)
         throw std::runtime_error("Invalid base64 encoding. Padding is required");
     }
     const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
+    std::string s;
     std::stringstream ss;
     for (auto it = enc.begin(); it != enc.end(); it += 4) {
         try {
@@ -144,7 +145,7 @@ std::string Base64::decode(const std::string& enc)
                                     b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
 
             if (b1 != kPadding && b1 != '\0') {
-                if (b2 == kPadding || b2 == '\0') {
+                if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
                     // second biteset is 'partial byte'
                     ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                 } else {
@@ -164,6 +165,8 @@ std::string Base64::decode(const std::string& enc)
                     }
                 }
             }
+
+            s = ss.str();
 
         } catch (const std::exception&) {
             throw std::runtime_error("Invalid base64 character");

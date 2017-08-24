@@ -27,6 +27,8 @@ static TestData<std::string, std::string> Base64TestData = {
     TestCase("4oKsNTA=", "€50"),
     TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", "this is rocket 🚀 and i love it"),
     TestCase("YWJjMTIzIT8kKiYoKSctPUB+", "abc123!?$*&()'-=@~"),
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRw==", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG"),
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };
 
 static TestData<std::string> InvalidBase64EncodingData = {
