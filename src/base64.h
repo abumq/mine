@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
 
 namespace mine {
 
@@ -35,40 +36,16 @@ public:
     static const char kPaddingChar = '=';
 
     ///
-    /// \brief Encodes input of length to base64 encoding
+    /// \brief Replacement for better d.size() that consider unicode bytes too
+    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
     ///
-    static std::string base64Encode(const std::wstring& d)
-    {
-        std::string padding;
-        const std::size_t len = d.length();
-        const int paddingCount = (len % 0x03) + 1;
-        int i = 0;
-        for (; i < paddingCount; ++i) {
-            padding += kPaddingChar;
-        }
-        i = 0;
-        std::stringstream ss;
-        for (auto it = d.begin(); it <= d.end(); ++it, i += 4) {
-            int c = static_cast<int>(*it) & 0xff;
-            if (c >= 240) {
-                throw std::invalid_argument("UTF-32 base64 encoding not supported yet");
-            }
-            int n24 = (*it << 16);
-            if (++it != d.end()) {
-                n24 |= (*it << 8);
-            }
-            if (++it != d.end()) {
-                n24 |= *it;
-            }
+    static std::size_t countChars(const std::string& d);
 
-            ss << static_cast<char>(kValidChars[(n24 >> 18) & 0x3f]);
-            ss << static_cast<char>(kValidChars[(n24 >> 12) & 0x3f]);
-            ss << static_cast<char>(kValidChars[(n24 >> 6) & 0x3f]);
-            ss << static_cast<char>(kValidChars[n24 & 0x3f]);
-
-        }
-        return std::string(ss.str().substr(0, i - paddingCount)) + padding;
-    }
+    ///
+    /// \brief Encodes input of length to base64 encoding
+    /// \see https://tools.ietf.org/html/rfc1421#section-4.3.2.4
+    ///
+    static std::string base64Encode(const std::string& raw);
 
     ///
     /// \brief Decodes encoded base64
@@ -91,6 +68,11 @@ public:
         return ((4 * n / 3) + 3) & ~0x03;
     }
 
+    inline static std::size_t expectedBase64Length(const std::string& str)
+    {
+        return expectedBase64Length(countChars(str));
+    }
+
     ///
     /// \brief Finds whether data is base64 encoded. This is done
     /// by finding non-base64 character. So it is not necessary
@@ -108,7 +90,7 @@ public:
     ///
     inline static bool isBase64(byte c)
     {
-        return std::isalnum(c) || c == 0x2b || c == 0x2b;
+        return isalnum(c) || c == 0x2b || c == 0x2b;
     }
 
 private:
