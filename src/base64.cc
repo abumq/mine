@@ -70,13 +70,10 @@ std::string Base64::encode(const std::string& raw) noexcept
     for (auto it = raw.begin(); it < raw.end(); it += 3) {
 
         //
-        // we use example of abc
-        // and let's say we're in the beginning of iterator (i.e, 'a')
-        //                      97         98       99
+        // we use example following example for implementation basis
         // Bits              01100001   01100010  01100011
-        // 24-bit Stream:    011000   010110   001001   100011
+        // 24-bit stream:    011000   010110   001001   100011
         // result indices     24        22       9        35
-        // result              Y         W       J        j
         //
 
         int c = static_cast<int>(*it & 0xff);
@@ -116,13 +113,10 @@ std::string Base64::encode(const std::string& raw) noexcept
 std::string Base64::decode(const std::string& enc)
 {
     //
-    // we use example of abc
-    // and let's say we're in the beginning of iterator (i.e, 'a')
-    //                      97         98       99
+    // we use example following example for implementation basis
     // Bits              01100001   01100010  01100011
-    // 24-bit Stream:    011000   010110   001001   100011
+    // 24-bit stream:    011000   010110   001001   100011
     // result indices     24        22       9        35
-    // result              Y         W       J        j
     //
 
     if (enc.size() % 4 != 0) {

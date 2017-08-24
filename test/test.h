@@ -7,8 +7,6 @@
 #include <easylogging++.h>
 #include <gtest/gtest.h>
 
-#include <Ripe.h>
-
 template <typename... T>
 using TestData = const std::vector<std::tuple<T...>>;
 
