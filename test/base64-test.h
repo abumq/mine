@@ -31,6 +31,27 @@ static TestData<std::string, std::string> Base64TestData = {
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };
 
+static TestData<std::string, std::wstring> Base64WStringTestData = {
+    // examples from https://en.wikipedia.org/wiki/Base64#Output_padding
+    TestCase("YWJjZA==", L"abcd"),
+    TestCase("YW55IGNhcm5hbCBwbGVhc3VyZS4=", L"any carnal pleasure."),
+    TestCase("YW55IGNhcm5hbCBwbGVhc3VyZQ==", L"any carnal pleasure"),
+    TestCase("YW55IGNhcm5hbCBwbGVhc3Vy", L"any carnal pleasur"),
+    TestCase("YW55IGNhcm5hbCBwbGVhc3U=", L"any carnal pleasu"),
+    TestCase("YW55IGNhcm5hbCBwbGVhcw==", L"any carnal pleas"),
+    // some manual examples
+    TestCase("cGxhaW4gdGV4dA==", L"plain text"),
+    TestCase("SGVsbG8=", L"Hello"),
+    // Some unicode examples
+    TestCase("SGVsbG/nq5w=", L"Hello竜"),
+    TestCase("4oKsNTA=", L"€50"),
+    // Commenting and leaving it here on purpose, see note on decodeAsWString
+    // TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", L"this is rocket 🚀 and i love it"),
+    TestCase("YWJjMTIzIT8kKiYoKSctPUB+", L"abc123!?$*&()'-=@~"),
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRw==", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG"),
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
+};
+
 static TestData<std::string> InvalidBase64EncodingData = {
     TestCase("YWJj,ZA=="),
     TestCase("YWJj,A=="),
@@ -59,6 +80,26 @@ TEST(Base64Test, Decode)
 {
     for (const auto& item : Base64TestData) {
         std::string decoded = Base64::decode(PARAM(0));
+        std::cout << decoded << std::endl;
+        ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
+    }
+}
+
+TEST(Base64Test, EncodeWString)
+{
+    for (const auto& item : Base64WStringTestData) {
+        std::string encoded = Base64::encode(PARAM(1));
+        ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+    }
+}
+
+TEST(Base64Test, DecodeWString)
+{
+    for (const auto& item : Base64WStringTestData) {
+        std::wstring decoded = Base64::decodeAsWString(PARAM(0));
+        std::wcout << std::wstring(decoded.begin(), decoded.end());
+        std::wcout.clear(); // clear the stream in case of failbit or badbit
+        std::cout << std::endl;
         ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
     }
 }
@@ -73,6 +114,14 @@ TEST(Base64Test, InvalidBase64Encoding)
 TEST(Base64Test, ExpectedSize)
 {
     for (const auto& item : Base64TestData) {
+        std::size_t s = Base64::expectedLength(PARAM(1));
+        ASSERT_EQ(PARAM(0).size(), s);
+    }
+}
+
+TEST(Base64Test, ExpectedSizeWstring)
+{
+    for (const auto& item : Base64WStringTestData) {
         std::size_t s = Base64::expectedLength(PARAM(1));
         ASSERT_EQ(PARAM(0).size(), s);
     }

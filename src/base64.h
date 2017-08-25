@@ -23,6 +23,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <locale>
+#include <codecvt>
 
 namespace mine {
 
@@ -60,11 +62,32 @@ public:
     ///
     static std::size_t countChars(const std::string& d) noexcept;
 
-    // todo: make it portable for multi-byte character (start with wchar_t)
+    ///
+    /// \brief Converts it to std::string and calls countChars on it
+    ///
+    static std::size_t countChars(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return countChars(converted);
+    }
+
     ///
     /// \brief Encodes input of length to base64 encoding
     ///
     static std::string encode(const std::string& raw) noexcept;
+
+    ///
+    /// \brief Converts wstring to corresponding string and returns
+    /// encoding
+    /// \see encode(const std::string&)
+    ///
+    static std::string encode(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return encode(converted);
+    }
 
     ///
     /// \brief Decodes encoded base64
@@ -75,6 +98,22 @@ public:
     static std::string decode(const std::string& e);
 
     ///
+    /// \brief Helper method to decode base64 encoding as wstring (basic_string<wchar_t>)
+    /// \see decode(const std::string&)
+    /// \note We do not recommend using it, instead have your own conversion function from
+    /// std::string to wstring as it can give you invalid results with characters that are
+    /// 5+ bytes long e.g, \x1F680. If you don't use such characters then it should be safe
+    /// to use this
+    ///
+    static std::wstring decodeAsWString(const std::string& e)
+    {
+        std::string result = decode(e);
+        std::wstring converted = std::wstring_convert
+                <std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(result);
+        return converted;
+    }
+
+    ///
     /// \brief expectedBase64Length Returns expected base64 length
     /// \param n Length of input (plain data)
     ///
@@ -83,7 +122,12 @@ public:
         return ((4 * n / 3) + 3) & ~0x03;
     }
 
-    inline static std::size_t expectedLength(const std::string& str) noexcept
+    ///
+    /// \brief Calculates the length of string
+    /// \see countChars()
+    ///
+    template <typename T = std::string>
+    inline static std::size_t expectedLength(const T& str) noexcept
     {
         return expectedLength(countChars(str));
     }
