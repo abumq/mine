@@ -17,6 +17,12 @@ static TestData<std::string, std::string> Base16TestData = {
     TestCase("616263313233213F242A262829272D3D407E", "abc123!?$*&()'-=@~"),
 };
 
+static TestData<std::string, unsigned long long> Base16IntTestData = {
+    TestCase("22FD3", 143315ULL),
+    TestCase("35639D3C8", 14331532232ULL),
+    TestCase("3D8E08048D", 264375895181ULL),
+};
+
 static TestData<std::string> InvalidBase16EncodingData = {
     TestCase("48656C6C6F20576F726C64F"),
 };
@@ -29,11 +35,27 @@ TEST(Base16Test, Encode)
     }
 }
 
+TEST(Base16Test, EncodeInt)
+{
+    for (const auto& item : Base16IntTestData) {
+        std::string encoded = Base16::encode(PARAM(1));
+        ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+    }
+}
+
 TEST(Base16Test, Decode)
 {
     for (const auto& item : Base16TestData) {
         std::string decoded = Base16::decode(PARAM(0));
         ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
+    }
+}
+
+TEST(Base16Test, DecodeInt)
+{
+    for (const auto& item : Base16IntTestData) {
+        unsigned long long decoded = Base16::decodeInt<unsigned long long>(PARAM(0));
+        ASSERT_EQ(PARAM(1), decoded);
     }
 }
 

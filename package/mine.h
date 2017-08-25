@@ -18,13 +18,11 @@
 #define MINE_CRYPTO_H
 
 #include <string>
+#include <sstream>
 #include <unordered_map>
-#include <locale>
-#include <codecvt>
 #include <cmath>
 #include <stdexcept>
 #include <map>
-#include <sstream>
 #include <vector>
 #include "src/base16.h"
 
@@ -55,11 +53,47 @@ public:
     static std::string encode(const std::string& raw) noexcept;
 
     ///
+    /// \brief Encodes integer to hex
+    ///
+    template <typename T>
+    static std::string encode(T n) noexcept
+    {
+        std::stringstream ss;
+        int remainder;
+        while (n != 0) {
+            remainder = n % 16;
+            n /= 16;
+            ss << kValidChars[remainder];
+        }
+        std::string res(ss.str());
+        std::reverse(res.begin(), res.end());
+        return res;
+    }
+
+    ///
     /// \brief Decodes encoded hex
     /// \throws std::runtime if invalid encoding.
     /// std::runtime::what() is set according to the error
     ///
     static std::string decode(const std::string& e);
+
+    ///
+    /// \brief Decodes encoding to single integer of type T
+    ///
+    template <typename T>
+    static T decodeInt(const std::string& e)
+    {
+        T result = 0;
+        for (auto it = e.begin(); it != e.end() && result >= 0; ++it) {
+            try {
+                result = ((result << 4) | kDecodeMap.at(*it & 0xff));
+            } catch (const std::exception&) {
+                throw std::runtime_error("Invalid base-16 encoding");
+            }
+        }
+        return result;
+    }
+
 private:
     Base16() = delete;
     Base16(const Base16&) = delete;
@@ -100,6 +134,7 @@ public:
     ///
     static std::size_t countChars(const std::string& d) noexcept;
 
+#ifdef MINE_BASE64_WSTRING_CONVERSION
     ///
     /// \brief Converts it to std::string and calls countChars on it
     ///
@@ -109,12 +144,14 @@ public:
                 <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
         return countChars(converted);
     }
+#endif
 
     ///
     /// \brief Encodes input of length to base64 encoding
     ///
     static std::string encode(const std::string& raw) noexcept;
 
+#ifdef MINE_BASE64_WSTRING_CONVERSION
     ///
     /// \brief Converts wstring to corresponding string and returns
     /// encoding
@@ -126,6 +163,7 @@ public:
                 <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
         return encode(converted);
     }
+#endif
 
     ///
     /// \brief Decodes encoded base64
@@ -135,6 +173,7 @@ public:
     ///
     static std::string decode(const std::string& e);
 
+#ifdef MINE_BASE64_WSTRING_CONVERSION
     ///
     /// \brief Helper method to decode base64 encoding as wstring (basic_string<wchar_t>)
     /// \see decode(const std::string&)
@@ -150,6 +189,7 @@ public:
                 <std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(result);
         return converted;
     }
+#endif
 
     ///
     /// \brief expectedBase64Length Returns expected base64 length
@@ -409,7 +449,7 @@ public:
     /// you are using.
     /// Result should be stored in quotient and remainder
     ///
-    virtual inline void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const
     {
         *quotient = divisor / divident;
@@ -427,24 +467,15 @@ public:
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual inline std::string bigIntegerToHex(BigInteger n) const
+    virtual std::string bigIntegerToHex(BigInteger n) const
     {
-        std::stringstream ss;
-        int remainder;
-        while (n != 0) {
-            remainder = n % 16;
-            n /= 16;
-            ss << Base16::kValidChars[remainder];
-        }
-        std::string res(ss.str());
-        std::reverse(res.begin(), res.end());
-        return res;
+        return Base16::encode(n);
     }
 
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual inline std::string bigIntegerToString(const BigInteger& b) const
+    virtual std::string bigIntegerToString(const BigInteger& b) const
     {
         std::stringstream ss;
         ss << b;
@@ -455,7 +486,7 @@ public:
     /// \brief Converts hex to big integer
     /// \param hex Hexadecimal without '0x' prefix
     ///
-    virtual inline BigInteger hexToBigInteger(const std::string& hex) const
+    virtual BigInteger hexToBigInteger(const std::string& hex) const
     {
         std::string readableMsg = "0x" + hex;
         BigInteger msg;

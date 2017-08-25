@@ -242,7 +242,7 @@ public:
     /// you are using.
     /// Result should be stored in quotient and remainder
     ///
-    virtual inline void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const
     {
         *quotient = divisor / divident;
@@ -260,24 +260,15 @@ public:
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual inline std::string bigIntegerToHex(BigInteger n) const
+    virtual std::string bigIntegerToHex(BigInteger n) const
     {
-        std::stringstream ss;
-        int remainder;
-        while (n != 0) {
-            remainder = n % 16;
-            n /= 16;
-            ss << Base16::kValidChars[remainder];
-        }
-        std::string res(ss.str());
-        std::reverse(res.begin(), res.end());
-        return res;
+        return Base16::encode(n);
     }
 
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual inline std::string bigIntegerToString(const BigInteger& b) const
+    virtual std::string bigIntegerToString(const BigInteger& b) const
     {
         std::stringstream ss;
         ss << b;
@@ -288,7 +279,7 @@ public:
     /// \brief Converts hex to big integer
     /// \param hex Hexadecimal without '0x' prefix
     ///
-    virtual inline BigInteger hexToBigInteger(const std::string& hex) const
+    virtual BigInteger hexToBigInteger(const std::string& hex) const
     {
         std::string readableMsg = "0x" + hex;
         BigInteger msg;
