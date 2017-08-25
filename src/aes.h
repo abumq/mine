@@ -23,6 +23,8 @@
 
 namespace mine {
 
+using byte = unsigned char;
+
 ///
 /// \brief Provides AES crypto functionalities
 ///

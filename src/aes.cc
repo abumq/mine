@@ -13,7 +13,10 @@
 //
 //  https://github.com/muflihun/mine
 //
-
+//
+// need to verify against
+// http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
+//
 #include "src/aes.h"
 
 using namespace mine;
