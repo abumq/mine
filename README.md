@@ -2,7 +2,7 @@
 
 ![banner]
 
-Mine is minimal cryptography implementation for small projects that cannot afford to link to external libraries such as OpenSSL etc.
+Mine is single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
 [![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
@@ -16,6 +16,8 @@ Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to you
 
 # Status
 Currently, it is not production ready. It depends upon third-party library. We are actively working on the development and implementation of RFC. We cannot guarantee the timeframe as all the contributors are full time workers and only do this project in their spare time.
+
+We are very careful with our implementations and have [unit tests](/test/) in place. 
 
 # Features
 Mine _will_ support following features:
