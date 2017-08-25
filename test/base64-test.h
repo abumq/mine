@@ -22,11 +22,11 @@ static TestData<std::string, std::string> Base64TestData = {
     // some manual examples
     TestCase("cGxhaW4gdGV4dA==", "plain text"),
     TestCase("SGVsbG8=", "Hello"),
+    TestCase("YWJjMTIzIT8kKiYoKSctPUB+", "abc123!?$*&()'-=@~"),
     // Some unicode examples
     TestCase("SGVsbG/nq5w=", "Hello竜"),
     TestCase("4oKsNTA=", "€50"),
     TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", "this is rocket 🚀 and i love it"),
-    TestCase("YWJjMTIzIT8kKiYoKSctPUB+", "abc123!?$*&()'-=@~"),
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRw==", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG"),
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };
@@ -42,12 +42,12 @@ static TestData<std::string, std::wstring> Base64WStringTestData = {
     // some manual examples
     TestCase("cGxhaW4gdGV4dA==", L"plain text"),
     TestCase("SGVsbG8=", L"Hello"),
+    TestCase("YWJjMTIzIT8kKiYoKSctPUB+", L"abc123!?$*&()'-=@~"),
     // Some unicode examples
     TestCase("SGVsbG/nq5w=", L"Hello竜"),
     TestCase("4oKsNTA=", L"€50"),
     // Commenting and leaving it here on purpose, see note on decodeAsWString
     // TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", L"this is rocket 🚀 and i love it"),
-    TestCase("YWJjMTIzIT8kKiYoKSctPUB+", L"abc123!?$*&()'-=@~"),
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRw==", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG"),
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };

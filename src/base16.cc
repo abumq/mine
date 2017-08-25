@@ -22,6 +22,13 @@ using namespace mine;
 
 const std::string Base16::kValidChars = "0123456789ABCDEF";
 
+const std::unordered_map<int, int> Base16::kDecodeMap = {
+    {48, 0},  {49, 1}, {50, 2},  {51, 3},
+    {52, 4},  {53, 5}, {54, 6},  {55, 7},
+    {56, 8},  {57, 9}, {65, 10}, {66, 11},
+    {67, 12}, {68, 13},{69, 14}, {70, 15},
+};
+
 std::string Base16::encode(const std::string& raw) noexcept
 {
     std::stringstream ss;
@@ -42,8 +49,12 @@ std::string Base16::decode(const std::string& enc)
     for (auto it = enc.begin(); it != enc.end(); it += 2) {
         int b0 = *it & 0xff;
         int b1 = *(it + 1) & 0xff;
-        // fixme: need to fix this!
-        ss << static_cast<byte>(((b0 & 0xf) << 4) | (b1 & 0xf));
+        try {
+            ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Invalid base-16 encoding");
+        }
+
         s = ss.str();
     }
     return ss.str();

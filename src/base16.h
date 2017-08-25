@@ -22,6 +22,7 @@
 #define Base16_H
 
 #include <string>
+#include <unordered_map>
 
 namespace mine {
 
@@ -37,6 +38,12 @@ public:
     /// \brief List of valid hex encoding characters
     ///
     static const std::string kValidChars;
+
+    ///
+    /// \brief Map for fast lookup corresponding character
+    /// \see Base64::kDecodeMap
+    ///
+    static const std::unordered_map<int, int> kDecodeMap;
 
     ///
     /// \brief Encodes input of length to hex encoding
