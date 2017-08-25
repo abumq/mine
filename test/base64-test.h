@@ -85,6 +85,7 @@ TEST(Base64Test, Decode)
     }
 }
 
+#ifdef MINE_BASE64_WSTRING_CONVERSION
 TEST(Base64Test, EncodeWString)
 {
     for (const auto& item : Base64WStringTestData) {
@@ -104,6 +105,15 @@ TEST(Base64Test, DecodeWString)
     }
 }
 
+TEST(Base64Test, ExpectedSizeWstring)
+{
+    for (const auto& item : Base64WStringTestData) {
+        std::size_t s = Base64::expectedLength(PARAM(1));
+        ASSERT_EQ(PARAM(0).size(), s);
+    }
+}
+#endif
+
 TEST(Base64Test, InvalidBase64Encoding)
 {
     for (const auto& item : InvalidBase64EncodingData) {
@@ -114,14 +124,6 @@ TEST(Base64Test, InvalidBase64Encoding)
 TEST(Base64Test, ExpectedSize)
 {
     for (const auto& item : Base64TestData) {
-        std::size_t s = Base64::expectedLength(PARAM(1));
-        ASSERT_EQ(PARAM(0).size(), s);
-    }
-}
-
-TEST(Base64Test, ExpectedSizeWstring)
-{
-    for (const auto& item : Base64WStringTestData) {
         std::size_t s = Base64::expectedLength(PARAM(1));
         ASSERT_EQ(PARAM(0).size(), s);
     }

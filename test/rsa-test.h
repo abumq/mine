@@ -24,7 +24,7 @@ public:
         return static_cast<byte>(b.ConvertToLong());
     }
 
-    virtual std::string bigIntegerToHex(const BigInteger& b) const override
+    virtual std::string bigIntegerToHex(BigInteger b) const override
     {
         std::stringstream ss;
         ss << std::hex << b;

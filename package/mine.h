@@ -26,6 +26,7 @@
 #include <map>
 #include <sstream>
 #include <vector>
+#include "src/base16.h"
 
 namespace mine {
 
@@ -252,23 +253,6 @@ public:
     virtual ~BigIntegerHelper() = default;
 
     ///
-    /// \brief Specific base to specified base
-    /// \param n Number
-    /// \param b Target base (default: 16 - Hex)
-    ///
-    virtual BigInteger changeBase(BigInteger n, BigInteger b = 16) const
-    {
-        BigInteger r, i = 1, o = 0;
-        while (n != 0) {
-            r = n % b;
-            n /= b;
-            o += r * i;
-            i *= 10;
-        }
-        return o;
-    }
-
-    ///
     /// \brief Implementation for (a ^ -1) mod b
     ///
     virtual BigInteger modInverse(BigInteger a, BigInteger b) const
@@ -398,7 +382,8 @@ public:
     }
 
     ///
-    /// \brief Convert integer to raw string (a.k.a i2osp)
+    /// \brief Convert integer to raw string
+    /// (this func is also known as i2osp)
     ///
     RawString integerToRaw(BigInteger x, int xlen = -1) const
     {
@@ -432,7 +417,7 @@ public:
     }
 
     ///
-    /// Absolutely must override this - conversion from x to single byte
+    /// \brief Absolutely must override this - conversion from x to single byte
     ///
     virtual inline byte bigIntegerToByte(const BigInteger& x) const
     {
@@ -442,11 +427,18 @@ public:
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual inline std::string bigIntegerToHex(const BigInteger& b) const
+    virtual inline std::string bigIntegerToHex(BigInteger n) const
     {
         std::stringstream ss;
-        ss << std::hex << b;
-        return ss.str();
+        int remainder;
+        while (n != 0) {
+            remainder = n % 16;
+            n /= 16;
+            ss << Base16::kValidChars[remainder];
+        }
+        std::string res(ss.str());
+        std::reverse(res.begin(), res.end());
+        return res;
     }
 
     ///
@@ -851,18 +843,18 @@ private:
                 // utf
                 byteArray[--n] = c;
             } else if (c <= 0x7ff) {
-                byteArray[--n] = (c & 63) | 128;
+                byteArray[--n] = (c & 0x3f) | 128;
                 byteArray[--n] = (c >> 6) | 192;
             } else if (c <= 0xffff) {
                 // utf-16
-                byteArray[--n] = (c & 63) | 128;
+                byteArray[--n] = (c & 0x3f) | 128;
                 byteArray[--n] = ((c >> 6) & 63) | 128;
                 byteArray[--n] = (c >> 12) | 224;
             } else {
                 // utf-32
-                byteArray[--n] = (c & 63) | 128;
-                byteArray[--n] = ((c >> 6) & 63) | 128;
-                byteArray[--n] = ((c >> 12) & 63) | 128;
+                byteArray[--n] = (c & 0x3f) | 128;
+                byteArray[--n] = ((c >> 6) & 0x3f) | 128;
+                byteArray[--n] = ((c >> 12) & 0x3f) | 128;
                 byteArray[--n] = (c >> 18) | 240;
             }
         }
@@ -922,28 +914,28 @@ private:
 
         for (; i < baLen; ++i) {
             // reference: http://en.cppreference.com/w/cpp/language/types -> range of values
-            int c = ba[i] & 0xFF;
+            int c = ba[i] & 0xff;
             if (c <= 0x7f) {
                 ss << static_cast<CharacterType>(c);
             } else if (c > 0xbf && c < 0xe0) {
                 ss << static_cast<CharacterType>(
-                          ((c & 31) << 6) |
-                          (ba[i+1] & 63)
+                          ((c & 0x1f) << 6) |
+                          (ba[i+1] & 0x3f)
                       );
                 ++i;
             } else if ((c < 0xbf) || (c >= 0xe0 && c < 0xf0)) { // utf-16 char
                 ss << static_cast<CharacterType>(
-                          ((c & 15) << 12) |
-                          ((ba[i+1] & 63) << 6) |
-                          (ba[i+2] & 63)
+                          ((c & 0xf) << 12) |
+                          ((ba[i+1] & 0x3f) << 6) |
+                          (ba[i+2] & 0x3f)
                         );
                 i += 2;
             } else { // utf-32 char
                 ss << static_cast<CharacterType>(
-                          ((c & 7) << 18) |
-                          ((ba[i+1] & 63) << 12) |
-                          ((ba[i+2] & 63) << 6) |
-                          (ba[i+3] & 63)
+                          ((c & 0x7) << 18) |
+                          ((ba[i+1] & 0x3f) << 12) |
+                          ((ba[i+2] & 0x3f) << 6) |
+                          (ba[i+3] & 0x3f)
                         );
                 i += 3;
             }
