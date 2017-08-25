@@ -2,7 +2,7 @@
 //  aes.h
 //  Part of Mine crypto library
 //
-//  You should not use this file, use include/mine.h
+//  You should not use this file, use mine.h
 //  instead which is automatically generated and includes this file
 //  This is seperated to aid the development
 //

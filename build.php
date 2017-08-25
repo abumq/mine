@@ -1,8 +1,8 @@
 <?php
 
 ///
-/// This script generates include/mine.h
-/// file. Development is done on separate
+/// This script generates mine.h and mine.cc
+/// files. Development is done on separate
 /// modules for ease of development
 ///
 
@@ -112,7 +112,7 @@ foreach ($headers_list as $filename) {
     }
     
 }
-resolveTemplate($header_template, $includes, $lines, $lib_version, "include/mine.h");
+resolveTemplate($header_template, $includes, $lines, $lib_version, "package/mine.h");
 
 // source file
 
@@ -153,4 +153,4 @@ foreach ($source_list as $filename) {
     }
     
 }
-resolveTemplate($source_template, $includes, $lines, $lib_version, "include/mine.cc");
+resolveTemplate($source_template, $includes, $lines, $lib_version, "package/mine.cc");

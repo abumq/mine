@@ -2,7 +2,7 @@
 //  base64.cc
 //  Part of Mine crypto library
 //
-//  You should not use this file, use include/mine.cc
+//  You should not use this file, use mine.cc
 //  instead which is automatically generated and includes this file
 //  This is seperated to aid the development
 //

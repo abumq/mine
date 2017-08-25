@@ -13,14 +13,57 @@
 //  https://muflihun.github.io/mine
 //  https://muflihun.com
 //
+#include <sstream>
+#include <stdexcept>
 
 #include "mine.h"
 
 using namespace mine;
 
 
+const std::string Base16::kValidChars = "0123456789ABCDEF";
+
+const std::unordered_map<int, int> Base16::kDecodeMap = {
+    {48, 0},  {49, 1}, {50, 2},  {51, 3},
+    {52, 4},  {53, 5}, {54, 6},  {55, 7},
+    {56, 8},  {57, 9}, {65, 10}, {66, 11},
+    {67, 12}, {68, 13},{69, 14}, {70, 15},
+};
+
+std::string Base16::encode(const std::string& raw) noexcept
+{
+    std::stringstream ss;
+    for (auto it = raw.begin(); it < raw.end(); ++it) {
+        int h = (*it & 0xff);
+        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
+    }
+    return ss.str();
+}
+
+std::string Base16::decode(const std::string& enc)
+{
+    if (enc.size() % 2 != 0) {
+        throw std::runtime_error("Invalid base-16 encoding");
+    }
+    std::string s;
+    std::stringstream ss;
+    for (auto it = enc.begin(); it != enc.end(); it += 2) {
+        int b0 = *it & 0xff;
+        int b1 = *(it + 1) & 0xff;
+        try {
+            ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
+        } catch (const std::exception&) {
+            throw std::runtime_error("Invalid base-16 encoding");
+        }
+
+        s = ss.str();
+    }
+    return ss.str();
+}
+
 
 const std::string Base64::kValidChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
 const std::unordered_map<int, int> Base64::kDecodeMap = {
     {65, 0},   {66, 1},   {67, 2},   {68, 3},
     {69, 4},   {70, 5},   {71, 6},   {72, 7},
@@ -72,13 +115,10 @@ std::string Base64::encode(const std::string& raw) noexcept
     for (auto it = raw.begin(); it < raw.end(); it += 3) {
 
         //
-        // we use example of abc
-        // and let's say we're in the beginning of iterator (i.e, 'a')
-        //                      97         98       99
+        // we use example following example for implementation basis
         // Bits              01100001   01100010  01100011
-        // 24-bit Stream:    011000   010110   001001   100011
+        // 24-bit stream:    011000   010110   001001   100011
         // result indices     24        22       9        35
-        // result              Y         W       J        j
         //
 
         int c = static_cast<int>(*it & 0xff);
@@ -118,13 +158,10 @@ std::string Base64::encode(const std::string& raw) noexcept
 std::string Base64::decode(const std::string& enc)
 {
     //
-    // we use example of abc
-    // and let's say we're in the beginning of iterator (i.e, 'a')
-    //                      97         98       99
+    // we use example following example for implementation basis
     // Bits              01100001   01100010  01100011
-    // 24-bit Stream:    011000   010110   001001   100011
+    // 24-bit stream:    011000   010110   001001   100011
     // result indices     24        22       9        35
-    // result              Y         W       J        j
     //
 
     if (enc.size() % 4 != 0) {
@@ -146,7 +183,7 @@ std::string Base64::decode(const std::string& enc)
                                     b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
 
             if (b1 != kPadding && b1 != '\0') {
-                if (b2 == kPadding || b2 == '\0') {
+                if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
                     // second biteset is 'partial byte'
                     ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                 } else {
@@ -166,7 +203,6 @@ std::string Base64::decode(const std::string& enc)
                     }
                 }
             }
-
         } catch (const std::exception&) {
             throw std::runtime_error("Invalid base64 character");
         }

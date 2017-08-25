@@ -98,7 +98,7 @@ enable_testing()
 if (test_main_header)
     add_executable(mine-unit-tests
         test/main.cc
-        include/mine.cc
+        package/mine.cc
         ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
     )
 

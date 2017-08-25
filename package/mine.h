@@ -17,16 +17,19 @@
 #ifndef MINE_CRYPTO_H
 #define MINE_CRYPTO_H
 
-#include <sstream>
 #include <string>
-#include <vector>
-#include <iostream>
 #include <unordered_map>
+#include <locale>
+#include <codecvt>
 #include <cmath>
 #include <stdexcept>
 #include <map>
+#include <sstream>
+#include <vector>
 
 namespace mine {
+
+using byte = unsigned char;
 
 ///
 /// \brief Provides base16 encoding / decoding
@@ -34,6 +37,28 @@ namespace mine {
 class Base16 {
 public:
 
+    ///
+    /// \brief List of valid hex encoding characters
+    ///
+    static const std::string kValidChars;
+
+    ///
+    /// \brief Map for fast lookup corresponding character
+    /// \see Base64::kDecodeMap
+    ///
+    static const std::unordered_map<int, int> kDecodeMap;
+
+    ///
+    /// \brief Encodes input of length to hex encoding
+    ///
+    static std::string encode(const std::string& raw) noexcept;
+
+    ///
+    /// \brief Decodes encoded hex
+    /// \throws std::runtime if invalid encoding.
+    /// std::runtime::what() is set according to the error
+    ///
+    static std::string decode(const std::string& e);
 private:
     Base16() = delete;
     Base16(const Base16&) = delete;
@@ -75,9 +100,31 @@ public:
     static std::size_t countChars(const std::string& d) noexcept;
 
     ///
+    /// \brief Converts it to std::string and calls countChars on it
+    ///
+    static std::size_t countChars(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return countChars(converted);
+    }
+
+    ///
     /// \brief Encodes input of length to base64 encoding
     ///
     static std::string encode(const std::string& raw) noexcept;
+
+    ///
+    /// \brief Converts wstring to corresponding string and returns
+    /// encoding
+    /// \see encode(const std::string&)
+    ///
+    static std::string encode(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return encode(converted);
+    }
 
     ///
     /// \brief Decodes encoded base64
@@ -88,6 +135,22 @@ public:
     static std::string decode(const std::string& e);
 
     ///
+    /// \brief Helper method to decode base64 encoding as wstring (basic_string<wchar_t>)
+    /// \see decode(const std::string&)
+    /// \note We do not recommend using it, instead have your own conversion function from
+    /// std::string to wstring as it can give you invalid results with characters that are
+    /// 5+ bytes long e.g, \x1F680. If you don't use such characters then it should be safe
+    /// to use this
+    ///
+    static std::wstring decodeAsWString(const std::string& e)
+    {
+        std::string result = decode(e);
+        std::wstring converted = std::wstring_convert
+                <std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(result);
+        return converted;
+    }
+
+    ///
     /// \brief expectedBase64Length Returns expected base64 length
     /// \param n Length of input (plain data)
     ///
@@ -96,7 +159,12 @@ public:
         return ((4 * n / 3) + 3) & ~0x03;
     }
 
-    inline static std::size_t expectedLength(const std::string& str) noexcept
+    ///
+    /// \brief Calculates the length of string
+    /// \see countChars()
+    ///
+    template <typename T = std::string>
+    inline static std::size_t expectedLength(const T& str) noexcept
     {
         return expectedLength(countChars(str));
     }
@@ -311,7 +379,7 @@ public:
     ///
     /// \brief Count number of bytes in big integer
     ///
-    virtual unsigned int countBytes(BigInteger b) const
+    virtual inline unsigned int countBytes(BigInteger b) const
     {
         return countBits(b) * 8;
     }
@@ -665,7 +733,7 @@ public:
     /// \brief Helper method to encrypt wide-string messages using public key.
     /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
     ///
-    std::string encrypt(const PublicKey* publicKey,
+    inline std::string encrypt(const PublicKey* publicKey,
                                const std::wstring& message)
     {
         return encrypt<decltype(message)>(publicKey, message);
@@ -675,7 +743,7 @@ public:
     /// \brief Helper method to encrypt std::string messages using public key.
     /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
     ///
-    std::string encrypt(const PublicKey* publicKey,
+    inline std::string encrypt(const PublicKey* publicKey,
                                const std::string& message)
     {
         return encrypt<decltype(message)>(publicKey, message);

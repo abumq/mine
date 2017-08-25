@@ -10,6 +10,9 @@ Mine is minimal cryptography implementation of [RFC-3447](https://tools.ietf.org
 # Introduction
 It all started with [ripe](https://github.com/muflihun/ripe) that is dependent upon third-party library (initially OpenSSL then Crypto++) statically linked. However after using it for a while in [residue](https://github.com/muflihun/residue), we realized that portability became an issue for _minimal_ library. So we decided to start implementing the standards ourself, forming _mine_. 
 
+# Installation
+Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to your project or your local machine.
+
 # Status
 Currently, it is not production ready. It depends upon third-party library. We are actively working on the development and implementation of RFC. We cannot guarantee the timeframe as all the contributors are full time workers and only do this project in their spare time.
 
@@ -25,7 +28,7 @@ Mine _will_ support following features:
 For _minimal_ library this is what we are aiming.
 
 # Contribution
-We are currently not accepting any pull requests for this project but if you have security concerns or see an issue in implementation please let us know via github issues.
+You can only contribute by testing on various platforms and reporting the issues. We are not accepting any pull requests until first release.
 
 # License
 ```

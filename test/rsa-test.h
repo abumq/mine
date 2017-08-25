@@ -4,7 +4,7 @@
 #include "test.h"
 
 #ifdef MINE_SINGLE_HEADER_TEST
-#   include "include/mine.h"
+#   include "package/mine.h"
 #else
 #   include "src/rsa.h"
 #endif
