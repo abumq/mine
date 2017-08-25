@@ -21,6 +21,7 @@
 #ifndef Base16_H
 #define Base16_H
 
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <unordered_map>
