@@ -24,7 +24,6 @@
 #include <stdexcept>
 #include <map>
 #include <vector>
-#include "src/base16.h"
 
 namespace mine {
 

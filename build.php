@@ -95,7 +95,10 @@ foreach ($headers_list as $filename) {
         $namespace_started = false;
         while (($line = fgets($fd, 2048)) !== false) {
             if ($pos = (strpos(trim($line), "#include")) === 0) {
-                $includes[] = substr($line, $pos + strlen("#include"));
+                // don't include header of the file
+                if (strpos(trim($line), "#include \"src/") === false) {
+                    $includes[] = substr($line, $pos + strlen("#include"));
+                }
             } else if ($pos = (strpos(trim($line), "namespace mine {")) === 0) {
                 $namespace_started = true;
             } else if ($pos = (strpos(trim($line), "} // end namespace mine")) === 0) {
