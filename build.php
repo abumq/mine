@@ -60,22 +60,22 @@ using namespace mine;
 EOT;
 
 function includeArrayToStr($includes) {
-	$includes = array_unique($includes, SORT_STRING);
-	$includes_str = "";
-	foreach ($includes as $incl) {
-	    $includes_str .= "#include $incl";
-	}
-	return $includes_str;
+    $includes = array_unique($includes, SORT_STRING);
+    $includes_str = "";
+    foreach ($includes as $incl) {
+        $includes_str .= "#include $incl";
+    }
+    return $includes_str;
 }
 
 function resolveTemplate($template, $includes, $lines, $lib_version, $filename) {
-	$includes_str = includeArrayToStr($includes);
-	$final = str_replace("{{includes}}", $includes_str, $template);
+    $includes_str = includeArrayToStr($includes);
+    $final = str_replace("{{includes}}", $includes_str, $template);
 
-	$final = str_replace("{{code}}", $lines, $final);
-	$final = str_replace("{{version}}", $lib_version, $final);
+    $final = str_replace("{{code}}", $lines, $final);
+    $final = str_replace("{{version}}", $lib_version, $final);
 
-	file_put_contents($filename, $final);
+    file_put_contents($filename, $final);
 }
 
 $headers_list = array(
@@ -94,13 +94,13 @@ foreach ($headers_list as $filename) {
     if ($fd) {
         $namespace_started = false;
         while (($line = fgets($fd, 2048)) !== false) {
-            if ($pos = (strpos($line, "#include")) === 0) {
+            if ($pos = (strpos(trim($line), "#include")) === 0) {
                 $includes[] = substr($line, $pos + strlen("#include"));
-            } else if ($pos = (strpos($line, "namespace mine {")) === 0) {
+            } else if ($pos = (strpos(trim($line), "namespace mine {")) === 0) {
                 $namespace_started = true;
-            } else if ($pos = (strpos($line, "} // end namespace mine")) === 0) {
+            } else if ($pos = (strpos(trim($line), "} // end namespace mine")) === 0) {
                 $namespace_started = false;
-            } else if ($namespace_started && strpos($line, "#include") === false) {
+            } else if ($namespace_started && strpos(trim($line), "#include") === false) {
                 $lines .= $line;
             }
         }
@@ -130,18 +130,18 @@ $lines = "";
 foreach ($source_list as $filename) {
     $fd = @fopen($filename, "r");
     if ($fd) {
-		$codeStarted = false;
+        $codeStarted = false;
         while (($line = fgets($fd, 4096)) !== false) {
-            if (!$codeStarted && $pos = (strpos($line, "//")) === false) {
+            if (!$codeStarted && $pos = (strpos(trim($line), "//")) === false) {
                 $codeStarted = true; // we ignore comment of the file
-            } else if ($codeStarted && $pos = (strpos($line, "#include")) === 0) {
-				// don't include header of the file
-				if (strpos($line, "#include \"src/") === false) {
-                	$includes[] = substr($line, $pos + strlen("#include"));
-				}
-            } else if ($codeStarted && $pos = (strpos($line, "using namespace mine")) === 0) {
+            } else if ($codeStarted && $pos = (strpos(trim($line), "#include")) === 0) {
+                // don't include header of the file
+                if (strpos(trim($line), "#include \"src/") === false) {
+                    $includes[] = substr($line, $pos + strlen("#include"));
+                }
+            } else if ($codeStarted && $pos = (strpos(trim($line), "using namespace mine")) === 0) {
                 // ignore namespace as we have in template
-            } else if ($codeStarted && strpos($line, "#include") === false) {
+            } else if ($codeStarted && strpos(trim($line), "#include") === false) {
                 $lines .= $line;
             }
         }
