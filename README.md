@@ -1,6 +1,7 @@
 ﷽
 
-# Mine
+![banner]
+
 Mine is minimal cryptography implementation for small projects that cannot afford to link to external libraries such as OpenSSL etc.
 
 [![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
@@ -50,3 +51,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+  [banner]: https://raw.githubusercontent.com/muflihun/mine/develop/mine.png
