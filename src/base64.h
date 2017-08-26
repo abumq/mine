@@ -23,6 +23,10 @@
 
 #include <string>
 #include <unordered_map>
+
+// codecvt is not part of standard
+// hence we leave it to user to enable/disable
+// it depending on their
 #ifdef MINE_BASE64_WSTRING_CONVERSION
 #   include <locale>
 #   include <codecvt>
@@ -68,6 +72,8 @@ public:
     ///
     /// \brief Converts it to std::string and calls countChars on it
     ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
+    ///
     static std::size_t countChars(const std::wstring& raw) noexcept
     {
         std::string converted = std::wstring_convert
@@ -86,6 +92,8 @@ public:
     /// \brief Converts wstring to corresponding string and returns
     /// encoding
     /// \see encode(const std::string&)
+    ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
     ///
     static std::string encode(const std::wstring& raw) noexcept
     {
@@ -111,6 +119,8 @@ public:
     /// std::string to wstring as it can give you invalid results with characters that are
     /// 5+ bytes long e.g, \x1F680. If you don't use such characters then it should be safe
     /// to use this
+    ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
     ///
     static std::wstring decodeAsWString(const std::string& e)
     {

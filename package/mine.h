@@ -17,6 +17,7 @@
 #ifndef MINE_CRYPTO_H
 #define MINE_CRYPTO_H
 
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <unordered_map>
@@ -137,6 +138,8 @@ public:
     ///
     /// \brief Converts it to std::string and calls countChars on it
     ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
+    ///
     static std::size_t countChars(const std::wstring& raw) noexcept
     {
         std::string converted = std::wstring_convert
@@ -224,6 +227,8 @@ private:
     Base64(const Base64&) = delete;
     Base64& operator=(const Base64&) = delete;
 };
+
+using byte = unsigned char;
 
 ///
 /// \brief Provides AES crypto functionalities

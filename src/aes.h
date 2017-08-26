@@ -21,6 +21,8 @@
 #ifndef AES_H
 #define AES_H
 
+#include <string>
+
 namespace mine {
 
 using byte = unsigned char;

@@ -14,7 +14,8 @@
 //  https://github.com/muflihun/mine
 //
 //
-// need to verify against
+// Standard publication
+// http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf
 // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 //
 #include "src/aes.h"
