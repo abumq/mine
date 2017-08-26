@@ -34,19 +34,23 @@ using byte = unsigned char;
 ///
 class AES {
 public:
-    using Key = std::vector<byte>;
+    using ByteArray = std::vector<byte>;
+    using Key = ByteArray;
 
     static void transposeBytes(byte input[], std::size_t len);
 private:
     using Word = std::array<byte, 4>;
 
-    using RoundKeys = std::unordered_map<int, Word>;
+    ///
+    /// \brief KeySchedule is linear array of 4-byte words
+    /// \ref FIPS.197 Sec 5.2
+    ///
+    using KeySchedule = std::unordered_map<int, Word>;
 
     ///
     /// \brief State as described in FIPS.197 Sec. 3.4
-    /// \see kNb
     ///
-    using CipherState = byte[4][4 /* Nb */];
+    using State = std::array<std::array<byte, 4>, 4>;
 
     ///
     /// \brief AES works on 16 bit block at a time
@@ -73,27 +77,47 @@ private:
     static const uint8_t kNb = 4;
 
     ///
-    /// \brief Raw encryption function
-    /// \param output Byte array for desitnation
-    /// \param input Byte array of input
+    /// \brief Raw encryption function - not for public use
+    /// \param input 128-bit Byte array of input.
+    /// If array is bigger it's chopped and if it's smaller, it's padded
+    /// please use alternative functions if your array is bigger. Those
+    /// function will handle all the bytes correctly.
     /// \param key Byte array of key
     /// \return cipher text (byte array)
     ///
-    static void cipher(byte output[], byte input[], std::size_t len, const Key* key);
+    static ByteArray cipher(const ByteArray& input, const Key* key);
 
     static void getKeyParams(std::size_t keySize, uint8_t* keyExSize, uint8_t* Nk, uint8_t* Nr);
 
     ///
-    /// \brief generateRoundKeys
-    /// \param output
-    /// \param keySchedule
+    /// \brief Key expansion function as described in FIPS.197
     ///
-    static RoundKeys keyExpansion(const Key* key);
+    static KeySchedule keyExpansion(const Key* key);
+
+    ///
+    /// \brief Adds round to the state using specified key schedule
+    ///
+    static void addRoundKey(State* state, KeySchedule* keySchedule, int round);
+
+    ///
+    /// \brief Substitution step for state (Sec. 5.1.1)
+    ///
+    static void subBytes(State* state);
+
+    ///
+    /// \brief Shifting rows step for the state (Sec. 5.1.2)
+    ///
+    static void shiftRows(State* state);
+
+    ///
+    /// \brief Mixing columns for the state  (Sec. 5.1.3)
+    ///
+    static void mixColumns(State* state);
 
     ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion
     ///
-    static void printBytes(byte b[], std::size_t len);
+    static void printBytes(const ByteArray& b);
 
     AES() = delete;
     AES(const AES&) = delete;

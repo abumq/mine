@@ -19,6 +19,7 @@
 // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 //
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include "src/base16.h"
@@ -68,20 +69,9 @@ const uint8_t AES::kRoundConstant[11] = {
     0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
 };
 
-void AES::transposeBytes(byte input[], std::size_t len)
+void AES::printBytes(const ByteArray& b)
 {
-    std::size_t n = std::sqrt(len);
-    for (int i = 0; i < n; ++i) {
-        for (int j = i+1; j < n; ++j) {
-            std::swap(input[n*i + j], input[n*j + i]);
-        }
-    }
-}
-
-void AES::printBytes(byte b[], std::size_t len)
-{
-    std::cout << "------" << std::endl;
-    for (int i = 1; i <= len; ++i) {
+    for (int i = 1; i <= b.size(); ++i) {
         std::cout << "0x" << (b[i - 1] < 10 ? "0" : "") << Base16::encode(b[i - 1]) << "  ";
         if (i % 4 == 0) {
             std::cout << std::endl;
@@ -90,7 +80,7 @@ void AES::printBytes(byte b[], std::size_t len)
     std::cout << std::endl << "------" << std::endl;
 }
 
-AES::RoundKeys AES::keyExpansion(const Key* key)
+AES::KeySchedule AES::keyExpansion(const Key* key)
 {
 
     // rotateWord function is specified in FIPS.197 Sec. 5.2:
@@ -108,12 +98,12 @@ AES::RoundKeys AES::keyExpansion(const Key* key)
     //           [a3]  =>  [a4]
     //           [a4]      [a1]
     //
-    auto rotateWord = [](Word& w) -> Word {
-        byte t = w[0];
-        w[0] = w[1];
-        w[1] = w[2];
-        w[2] = w[3];
-        w[3] = t;
+    auto rotateWord = [](Word* w) -> Word* {
+        byte t = w->at(0);
+        w->at(0) = w->at(1);
+        w->at(1) = w->at(2);
+        w->at(2) = w->at(3);
+        w->at(3) = t;
         return w;
     };
 
@@ -126,17 +116,33 @@ AES::RoundKeys AES::keyExpansion(const Key* key)
     // It's a simple substition with kSbox for corresponding bit
     // index
     //
-    auto substituteWord = [](Word& w) -> Word {
+    auto substituteWord = [](Word* w) -> Word* {
         for (uint8_t i = 0; i < 4; ++i) {
-            w[i] = kSBox[w[i]];
+            w->at(i) = kSBox[w->at(i)];
         }
         return w;
     };
 
-    uint8_t keyExSize, Nk, Nr;
-    getKeyParams(key->size(), &keyExSize, &Nk, &Nr);
+    uint8_t Nk, Nr;
 
-    RoundKeys words(kNb * (Nr+1));
+    switch (key->size()) {
+    case 16:
+        Nk = 4;
+        Nr = 10;
+        break;
+    case 24:
+        Nk = 6;
+        Nr = 12;
+        break;
+    case 32:
+        Nk = 8;
+        Nr = 14;
+        break;
+    default:
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    KeySchedule words(kNb * (Nr+1));
 
     int i = 0;
     // copy main key as is for the first round
@@ -149,20 +155,18 @@ AES::RoundKeys AES::keyExpansion(const Key* key)
                     }};
     }
 
-    const int kModCheckThreshold = i;
-
     for (; i < kNb * (Nr + 1); ++i) {
         Word temp = words[i - 1];
 
-        if (i % kModCheckThreshold == 0) {
-            temp = rotateWord(temp);
-            temp = substituteWord(temp);
+        if (i % Nk == 0) {
+            rotateWord(&temp);
+            substituteWord(&temp);
             // xor with rcon
             temp[0] ^= kRoundConstant[i / Nk];
         }
         if (Nk == 8 && i % Nk == 4) {
             // See note for 256-bit keys on Sec. 5.2 (Key Expansion) on FIPS.197
-            temp = substituteWord(temp);
+            substituteWord(&temp);
         }
 
 
@@ -180,39 +184,98 @@ AES::RoundKeys AES::keyExpansion(const Key* key)
     return words;
 }
 
-void AES::cipher(byte output[], byte input[], std::size_t len, const Key* key)
+void AES::addRoundKey(State* state, KeySchedule* keySchedule, int round)
 {
-    // FIPS.197 p.14
-    CipherState state[4][4];
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            state->at(i)[j] ^= keySchedule->at(i)[j];
+        }
+    }
+}
 
-    std::memcpy(output, input, len);
-    uint8_t keyExSize, Nk, Nr;
+void AES::subBytes(State* state)
+{
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            state->at(i)[j] = kSBox[state->at(i)[j]];
+        }
+    }
+}
 
-    getKeyParams(key->size(), &keyExSize, &Nk, &Nr);
+void AES::shiftRows(State *state)
+{
+    int rowIdx = 1;
+    std::swap(state->at(0)[rowIdx], state->at(3)[rowIdx]);
+    std::swap(state->at(0)[rowIdx], state->at(1)[rowIdx]);
+    std::swap(state->at(1)[rowIdx], state->at(2)[rowIdx]);
 
-    RoundKeys roundKeys = keyExpansion(key);
+    rowIdx = 2;
+    std::swap(state->at(0)[rowIdx], state->at(2)[rowIdx]);
+    std::swap(state->at(1)[rowIdx], state->at(3)[rowIdx]);
+
+    rowIdx = 3;
+    std::swap(state->at(0)[rowIdx], state->at(1)[rowIdx]);
+    std::swap(state->at(2)[rowIdx], state->at(3)[rowIdx]);
+    std::swap(state->at(0)[rowIdx], state->at(2)[rowIdx]);
+}
+
+void AES::mixColumns(State* state)
+{
 
 }
 
-void AES::getKeyParams(std::size_t keySize, uint8_t *keyExSize, uint8_t *Nk, uint8_t *Nr)
+AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
-    switch (keySize) {
+    State state;
+    ByteArray result;
+
+    std::copy_n(input.begin(), kBlockSize, std::back_inserter(result));
+
+    // add padding if needed
+    if (result.size() < kBlockSize) {
+        std::fill_n(result.end(), kBlockSize - result.size(), 0);
+    }
+
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            state[i][j] = result[(kNb * i) + j];
+        }
+    }
+
+    uint8_t kTotalRounds;
+    switch (key->size()) {
     case 16:
-        *keyExSize = 176;
-        *Nk = 4;
-        *Nr = 10;
+        kTotalRounds = 10;
         break;
     case 24:
-        *keyExSize = 208;
-        *Nk = 6;
-        *Nr = 12;
+        kTotalRounds = 12;
         break;
     case 32:
-        *keyExSize = 240;
-        *Nk = 8;
-        *Nr = 14;
+        kTotalRounds = 14;
         break;
     default:
         throw std::invalid_argument("Invalid AES key size");
     }
-};
+
+    KeySchedule keySchedule = keyExpansion(key);
+
+    int round = 0;
+
+    addRoundKey(&state, &keySchedule, round++);
+
+    while (round <= kTotalRounds) {
+        subBytes(&state);
+        shiftRows(&state);
+        if (round < kTotalRounds) {
+            // don't mix column for last round
+            // it only adds overhead and no
+            // extra security
+            // see Sec. 5.1 (p.14)
+            mixColumns(&state);
+        }
+        addRoundKey(&state, &keySchedule, round++);
+    }
+
+    return result;
+
+}

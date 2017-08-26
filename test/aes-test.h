@@ -14,10 +14,10 @@ namespace mine {
 
 // from http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 
-static const byte kNistIV[16] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
-};
+static const AES::ByteArray kNistIV = {{
+                                           0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                                           0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+                                       }};
 
 static const AES::Key kNistKey128 = {{
                                          0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
@@ -40,13 +40,13 @@ static const AES::Key kNistKey256 = {{
 TEST(AESTest, KeyExpansion)
 {
     // This key expansion is original key from FIPS.197 example
-    static TestData<std::string, AES::Key, AES::RoundKeys> KeyExpansionTestData = {
+    static TestData<std::string, AES::Key, AES::KeySchedule> KeyExpansionTestData = {
         TestCase("128-bit key expansion", AES::Key{{
                                                        0x2b, 0x7e, 0x15, 0x16,
                                                        0x28, 0xae, 0xd2, 0xa6,
                                                        0xab, 0xf7, 0x15, 0x88,
                                                        0x09, 0xcf, 0x4f, 0x3c
-                                                   }}, AES::RoundKeys{{
+                                                   }}, AES::KeySchedule{{
                                                                           {0, {{ 0x2B, 0x7E, 0x15, 0x16 }}},
                                                                           {1, {{ 0x28, 0xAE, 0xD2, 0xA6 }}},
                                                                           {2, {{ 0xAB, 0xF7, 0x15, 0x88 }}},
@@ -99,7 +99,7 @@ TEST(AESTest, KeyExpansion)
                                                        0x80, 0x90, 0x79, 0xe5,
                                                        0x62, 0xf8, 0xea, 0xd2,
                                                        0x52, 0x2c, 0x6b, 0x7b
-                                                   }}, AES::RoundKeys{{
+                                                   }}, AES::KeySchedule{{
                                                                           {0, {{ 0x8E, 0x73, 0xB0, 0xF7 }}},
                                                                           {1, {{ 0xDA, 0xE, 0x64, 0x52 }}},
                                                                           {2, {{ 0xC8, 0x10, 0xF3, 0x2B }}},
@@ -164,7 +164,7 @@ TEST(AESTest, KeyExpansion)
                                                        0x3b, 0x61, 0x08, 0xd7,
                                                        0x2d, 0x98, 0x10, 0xa3,
                                                        0x09, 0x14, 0xdf, 0xf4
-                                                   }}, AES::RoundKeys{{
+                                                   }}, AES::KeySchedule{{
                                                                           {0, {{ 0x60, 0x3D, 0xEB, 0x10 }}},
                                                                           {1, {{ 0x15, 0xCA, 0x71, 0xBE }}},
                                                                           {2, {{ 0x2B, 0x73, 0xAE, 0xF0 }}},
@@ -230,8 +230,8 @@ TEST(AESTest, KeyExpansion)
 
     for (auto& item : KeyExpansionTestData) {
         LOG(INFO) << "Test: " << PARAM(0);
-        AES::RoundKeys keys = AES::keyExpansion(&PARAM(1));
-        AES::RoundKeys expected = PARAM(2);
+        AES::KeySchedule keys = AES::keyExpansion(&PARAM(1));
+        AES::KeySchedule expected = PARAM(2);
         ASSERT_EQ(expected, keys);
     }
 
@@ -244,12 +244,12 @@ TEST(AESTest, KeyExpansion)
 TEST(AESTest, SimpleCipher)
 {
 
-    byte input[16] = {
-        0x32, 0x43, 0xf6, 0xa8,
-        0x88, 0x5a, 0x30, 0x8d,
-        0x31, 0x31, 0x98, 0xa2,
-        0xe0, 0x37, 0x07, 0x34
-    };
+    AES::ByteArray input = {{
+                                0x32, 0x43, 0xf6, 0xa8,
+                                0x88, 0x5a, 0x30, 0x8d,
+                                0x31, 0x31, 0x98, 0xa2,
+                                0xe0, 0x37, 0x07, 0x34
+                            }};
 
     AES::Key key = {{
                         0x2b, 0x7e, 0x15, 0x16,
@@ -258,22 +258,9 @@ TEST(AESTest, SimpleCipher)
                         0x09, 0xcf, 0x4f, 0x3c
                     }};
 
-    byte key2[16] = {
-        0x53, 0x4F, 0x4D, 0x45,
-        0x20, 0x31, 0x32, 0x38,
-        0x20, 0x42, 0x49, 0x54,
-        0x20, 0x4B, 0x45, 0x59,
-    };
+    AES::ByteArray output = AES::cipher(input, &key);
 
-    byte output[16];
-
-    AES::transposeBytes(input, 16);
-    //AES::transposeBytes(key, 16);
-
-    AES::printBytes(key2, 16);
-
-    AES::cipher(output, input, 16, &key);
-
+    AES::printBytes(output);
 
 }
 }
