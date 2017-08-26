@@ -22,11 +22,15 @@
 #define AES_H
 
 #include <string>
+#include <array>
+#include <vector>
 
 namespace mine {
 
 using byte = unsigned char;
-using word = byte[4];
+using Word = std::array<byte, 4>;
+using Key = std::array<byte, 16>;
+using RoundKeys = std::vector<Key>;
 
 ///
 /// \brief Provides AES crypto functionalities
@@ -83,7 +87,7 @@ private:
     /// \param output
     /// \param keySchedule
     ///
-    static void keyExpansion(byte output[], byte key[], std::size_t keySize);
+    static RoundKeys keyExpansion(byte key[], std::size_t keySize);
 
     ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion

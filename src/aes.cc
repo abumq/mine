@@ -20,6 +20,7 @@
 //
 
 #include <iostream>
+#include <vector>
 #include "src/base16.h"
 #include "src/aes.h"
 
@@ -89,25 +90,8 @@ void AES::printBytes(byte b[], std::size_t len)
     std::cout << std::endl << "------" << std::endl;
 }
 
-void AES::keyExpansion(byte output___[], byte key[], std::size_t keySize)
+RoundKeys AES::keyExpansion(byte key[], std::size_t keySize)
 {
-
-    uint8_t keyExSize, Nk, Nr;
-    getKeyParams(keySize, &keyExSize, &Nk, &Nr);
-    byte output[keyExSize]; // move this to output___ - this is only for visualizing
-    printBytes(output, keyExSize);
-
-    word tmp;
-
-    int i = 0;
-    // copy main key as is for the first round
-    for (; i < Nk; ++i) {
-        for (uint8_t j = 0; j < 4; ++j) {
-            output[(i * 4) + j] = key[(i * 4) + j];
-        }
-    }
-
-    printBytes(output, keyExSize);
 
     // rotateWord function is specified in FIPS.197 Sec. 5.2:
     //      The function RotWord() takes a
@@ -124,12 +108,13 @@ void AES::keyExpansion(byte output___[], byte key[], std::size_t keySize)
     //           [a3]  =>  [a4]
     //           [a4]      [a1]
     //
-    auto rotateWord = [](word& w) {
-        decltype(w[0]) t = w[0];
+    auto rotateWord = [](Word& w) -> Word {
+        byte t = w[0];
         w[0] = w[1];
         w[1] = w[2];
         w[2] = w[3];
         w[3] = t;
+        return w;
     };
 
     // this function is also specified in FIPS.197 Sec. 5.2:
@@ -141,41 +126,80 @@ void AES::keyExpansion(byte output___[], byte key[], std::size_t keySize)
     // It's a simple substition with kSbox for corresponding bit
     // index
     //
-    auto substituteWord = [](word& w) {
+    auto substituteWord = [](Word& w) -> Word {
         for (uint8_t i = 0; i < 4; ++i) {
             w[i] = kSBox[w[i]];
         }
+        return w;
     };
 
-    // i == Nk here
+    const std::size_t keyLen = keySize / 8;
+    uint8_t keyExSize, Nk, Nr;
+    getKeyParams(keySize, &keyExSize, &Nk, &Nr);
 
+    RoundKeys roundKeys;//(keyExSize);
 
-    // FIPS.197 p.27 for examples
+    std::vector<Word> linearWords;
 
-    for (; i < kNb * (Nr + 1); ++i) {
-        //prev =
-        // temp = w[i-1]
-        for (uint8_t j = 0; j < 4; ++j) {
-            tmp[j] = output[((i - 1) * 4) + j];
+    // copy main key as is for the first round
+    Key newRoundKey = {{ 0 }};
+    for (uint8_t i = 0; i < keyLen; ++i) {
+        newRoundKey[i] = key[i];
+    }
+    roundKeys.push_back(newRoundKey);
+
+    auto addRoundKeyToLinearArr = [&](const Key& key) {
+        for (auto iter = key.begin(); iter < key.end(); iter += 4) {
+            Word w = { *iter, *(iter + 1), *(iter + 2), *(iter + 3) };
+            linearWords.push_back(w);
         }
+    };
 
-        if (i % Nk == 0) {
-            rotateWord(tmp);
-            substituteWord(tmp);
+    addRoundKeyToLinearArr(newRoundKey);
 
-            // xor with round constant as specified in p.20
-            tmp[0] = tmp[0] ^ kRoundConstant[i / Nk];
+    for (uint8_t i = Nk; i < kNb * (Nr + 1); ++i) {
+        const Key* previousRoundKey = &roundKeys[roundKeys.size() - 1];
+        Key newRoundKey = {{0}};
+        Word temp;
+
+        for (uint8_t j = 0; j < sizeof(Word); ++j) {
+            // temp is last col of prev round key
+            temp[j] = (*previousRoundKey)[(keyLen - 4) + j];
+        }
+        if (i % 4 == 0) {
+            temp = rotateWord(temp);
+            temp = substituteWord(temp);
+            // xor with rcon
+            temp[0] ^= kRoundConstant[i / Nk];
         } else if (Nk > 6 && i % Nk == 4) {
-            substituteWord(tmp);
+            temp = substituteWord(temp);
         }
 
-        // this round key is xor of previous round key
-        for (uint8_t j = 0; j < 4; ++j) {
-            output[(i * 4) + j] = output[((i - Nk) * 4) + j] ^ tmp[j];
+        for (uint8_t j = 0; j < sizeof(Word); ++j) {
+            // xor with first column of previous round key
+            temp[j] ^= (*previousRoundKey)[j];
+            newRoundKey[j] = temp[j];
         }
+
+        // xor previous column of new key with corresponding column of
+        // previous round key
+
+        for (int col = 1; col < sizeof(Word); ++col) {
+            int c = col * sizeof(Word);
+            for (int j = c; j < c + sizeof(Word); ++j) {
+                newRoundKey[j] = newRoundKey[j - 4] ^ (*previousRoundKey)[j];
+            }
+        }
+
+        roundKeys.push_back(newRoundKey);
+        linearWords.push_back(temp);
+        //addRoundKeyToLinearArr(newRoundKey);
+
     }
 
-    printBytes(output, keyExSize);
+    std::cout << "f";
+
+
 
 }
 
@@ -189,8 +213,7 @@ void AES::cipher(byte output[], byte input[], std::size_t len, byte key[], std::
 
     getKeyParams(keySize, &keyExSize, &Nk, &Nr);
 
-    byte roundKeys[keyExSize];
-    keyExpansion(roundKeys, key, keySize);
+    RoundKeys roundKeys = keyExpansion(key, keySize);
 
 }
 

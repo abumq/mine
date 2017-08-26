@@ -57,12 +57,19 @@ TEST(AESTest, SimpleCipher)
         0x09, 0xcf, 0x4f, 0x3c
     };
 
+    byte key2[16] = {
+        0x53, 0x4F, 0x4D, 0x45,
+        0x20, 0x31, 0x32, 0x38,
+        0x20, 0x42, 0x49, 0x54,
+        0x20, 0x4B, 0x45, 0x59,
+    };
+
     byte output[16];
 
     AES::transposeBytes(input, 16);
-    AES::transposeBytes(key, 16);
+    //AES::transposeBytes(key, 16);
 
-    AES::printBytes(key, 16);
+    AES::printBytes(key2, 16);
 
     AES::cipher(output, input, 16, key);
 
