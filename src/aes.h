@@ -26,6 +26,7 @@
 namespace mine {
 
 using byte = unsigned char;
+using word = byte[4];
 
 ///
 /// \brief Provides AES crypto functionalities
@@ -35,14 +36,6 @@ public:
 
     static void transposeBytes(byte input[], std::size_t len);
 private:
-
-    ///
-    /// \brief Raw encryption function
-    /// \param plainText Byte array of input
-    /// \param key Byte array of key
-    /// \return cipher text (byte array)
-    ///
-    static byte* cipher(byte input[], std::size_t len, byte key[]);
 
     ///
     /// \brief State as described in FIPS.197 Sec. 3.4
@@ -65,6 +58,8 @@ private:
     ///
     static const byte kSBoxInverse[256];
 
+    static const byte kRoundConstant[11];
+
     ///
     /// \brief Nb
     /// \note we make it constant as FIPS.197 p.9 says
@@ -73,7 +68,25 @@ private:
     static const uint8_t kNb = 4;
 
     ///
-    /// \brief Prints bytes in hex format in 4x4 matrix fasion
+    /// \brief Raw encryption function
+    /// \param output Byte array for desitnation
+    /// \param input Byte array of input
+    /// \param key Byte array of key
+    /// \return cipher text (byte array)
+    ///
+    static void cipher(byte output[], byte input[], std::size_t len, byte key[], std::size_t keySize = 128);
+
+    static void getKeyParams(std::size_t keySize, uint8_t* keyExSize, uint8_t* Nk, uint8_t* Nr);
+
+    ///
+    /// \brief generateRoundKeys
+    /// \param output
+    /// \param keySchedule
+    ///
+    static void keyExpansion(byte output[], byte key[], std::size_t keySize);
+
+    ///
+    /// \brief Prints bytes in hex format in 4x4 matrix fashion
     ///
     static void printBytes(byte b[], std::size_t len);
 

@@ -63,6 +63,10 @@ const byte AES::kSBoxInverse[256] = {
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 };
 
+const uint8_t AES::kRoundConstant[11] = {
+  0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+};
+
 void AES::transposeBytes(byte input[], std::size_t len)
 {
     std::size_t n = std::sqrt(len);
@@ -85,10 +89,130 @@ void AES::printBytes(byte b[], std::size_t len)
     std::cout << std::endl << "------" << std::endl;
 }
 
-byte* AES::cipher(byte input[], std::size_t len, byte key[])
+void AES::keyExpansion(byte output___[], byte key[], std::size_t keySize)
 {
+
+    uint8_t keyExSize, Nk, Nr;
+    getKeyParams(keySize, &keyExSize, &Nk, &Nr);
+    byte output[keyExSize]; // move this to output___ - this is only for visualizing
+    printBytes(output, keyExSize);
+
+    word tmp;
+
+    int i = 0;
+    // copy main key as is for the first round
+    for (; i < Nk; ++i) {
+        for (uint8_t j = 0; j < 4; ++j) {
+            output[(i * 4) + j] = key[(i * 4) + j];
+        }
+    }
+
+    printBytes(output, keyExSize);
+
+    // rotateWord function is specified in FIPS.197 Sec. 5.2:
+    //      The function RotWord() takes a
+    //      word [a0,a1,a2,a3] as input, performs a cyclic permutation,
+    //      and returns the word [a1,a2,a3,a0]. The
+    //      round constant word array
+    //
+    // Our definition:
+    //      We swap the first byte
+    //      to last one causing it to shift to the left
+    //      i.e,
+    //           [a1]      [a2]
+    //           [a2]      [a3]
+    //           [a3]  =>  [a4]
+    //           [a4]      [a1]
+    //
+    auto rotateWord = [](word& w) {
+        decltype(w[0]) t = w[0];
+        w[0] = w[1];
+        w[1] = w[2];
+        w[2] = w[3];
+        w[3] = t;
+    };
+
+    // this function is also specified in FIPS.197 Sec. 5.2:
+    //      SubWord() is a function that takes a four-byte
+    //      input word and applies the S-box
+    //      to each of the four bytes to produce an output word.
+    //
+    // Out definition:
+    // It's a simple substition with kSbox for corresponding bit
+    // index
+    //
+    auto substituteWord = [](word& w) {
+        for (uint8_t i = 0; i < 4; ++i) {
+            w[i] = kSBox[w[i]];
+        }
+    };
+
+    // i == Nk here
+
+
+    // FIPS.197 p.27 for examples
+
+    for (; i < kNb * (Nr + 1); ++i) {
+        //prev =
+        // temp = w[i-1]
+        for (uint8_t j = 0; j < 4; ++j) {
+            tmp[j] = output[((i - 1) * 4) + j];
+        }
+
+        if (i % Nk == 0) {
+            rotateWord(tmp);
+            substituteWord(tmp);
+
+            // xor with round constant as specified in p.20
+            tmp[0] = tmp[0] ^ kRoundConstant[i / Nk];
+        } else if (Nk > 6 && i % Nk == 4) {
+            substituteWord(tmp);
+        }
+
+        // this round key is xor of previous round key
+        for (uint8_t j = 0; j < 4; ++j) {
+            output[(i * 4) + j] = output[((i - Nk) * 4) + j] ^ tmp[j];
+        }
+    }
+
+    printBytes(output, keyExSize);
+
+}
+
+void AES::cipher(byte output[], byte input[], std::size_t len, byte key[], std::size_t keySize)
+{
+    // FIPS.197 p.14
     CipherState state[4][4];
 
-    // FIPS.197 p.14
-    return 0;
+    std::memcpy(output, input, len);
+    uint8_t keyExSize, Nk, Nr;
+
+    getKeyParams(keySize, &keyExSize, &Nk, &Nr);
+
+    byte roundKeys[keyExSize];
+    keyExpansion(roundKeys, key, keySize);
+
 }
+
+void AES::getKeyParams(std::size_t keySize, uint8_t *keyExSize, uint8_t *Nk, uint8_t *Nr)
+{
+       switch (keySize) {
+       case 128:
+           *keyExSize = 176;
+           *Nk = 4;
+           *Nr = 10;
+           break;
+       case 192:
+           *keyExSize = 208;
+           *Nk = 6;
+           *Nr = 12;
+           break;
+       case 256:
+           *keyExSize = 240;
+           *Nk = 8;
+           *Nr = 14;
+           break;
+       default:
+           throw std::invalid_argument("Invalid AES key size");
+       }
+   };
