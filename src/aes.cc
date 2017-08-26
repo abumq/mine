@@ -21,3 +21,8 @@
 #include "src/aes.h"
 
 using namespace mine;
+
+std::string AES::cipher(const std::string& plainText, const std::string& key)
+{
+    return "";
+}

@@ -22,13 +22,11 @@ using namespace mine;
 
 const std::string Base16::kValidChars = "0123456789ABCDEF";
 
-const std::unordered_map<int, int> Base16::kDecodeMap = {
-    {48,  0 }, {49,  1 }, {50, 2 }, {51,  3 },
-    {52,  4 }, {53,  5 }, {54, 6 }, {55,  7 },
-    {56,  8 }, {57,  9 }, {65, 10}, {66,  11},
-    {67,  12}, {68,  13}, {69, 14}, {70,  15},
-    {97,  10}, {98,  11}, {99, 12}, {100, 13},
-    {101, 14}, {102, 15}
+const std::unordered_map<uint8_t, uint8_t> Base16::kDecodeMap = {
+    {0x30, 0x00}, {0x31, 0x01}, {0x32, 0x02}, {0x33, 0x03},
+    {0x34, 0x04}, {0x35, 0x05}, {0x36, 0x06}, {0x37, 0x07},
+    {0x38, 0x08}, {0x39, 0x09}, {0x41, 0x0A}, {0x42, 0x0B},
+    {0x43, 0x0C}, {0x44, 0x0D}, {0x45, 0x0E}, {0x46, 0x0F}
 };
 
 std::string Base16::encode(const std::string& raw) noexcept

@@ -32,7 +32,13 @@ using byte = unsigned char;
 ///
 class AES {
 public:
-
+    ///
+    /// \brief Main encrypt function without any mode
+    /// \param plainText Plain text in
+    /// \param key Key in hex, can be 128-bit, 192-bit or 256-bit key
+    /// \return cipher text
+    ///
+    static std::string cipher(const std::string& plainText, const std::string& key);
 private:
     AES() = delete;
     AES(const AES&) = delete;

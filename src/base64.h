@@ -21,6 +21,7 @@
 #ifndef Base64_H
 #define Base64_H
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 
@@ -55,7 +56,7 @@ public:
     /// \ref http://www.cplusplus.com/reference/unordered_map/unordered_map/at/
     /// \ref  http://www.cplusplus.com/reference/string/string/find_first_of/
     ///
-    static const std::unordered_map<int, int> kDecodeMap;
+    static const std::unordered_map<uint8_t, uint8_t> kDecodeMap;
 
     ///
     /// \brief Padding is must in mine implementation of base64
