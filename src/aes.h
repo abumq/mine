@@ -32,17 +32,56 @@ using byte = unsigned char;
 ///
 class AES {
 public:
-    ///
-    /// \brief Main encrypt function without any mode
-    /// \param plainText Plain text in
-    /// \param key Key in hex, can be 128-bit, 192-bit or 256-bit key
-    /// \return cipher text
-    ///
-    static std::string cipher(const std::string& plainText, const std::string& key);
+
+    static void transposeBytes(byte input[], std::size_t len);
 private:
+
+    ///
+    /// \brief Raw encryption function
+    /// \param plainText Byte array of input
+    /// \param key Byte array of key
+    /// \return cipher text (byte array)
+    ///
+    static byte* cipher(byte input[], std::size_t len, byte key[]);
+
+    ///
+    /// \brief State as described in FIPS.197 Sec. 3.4
+    /// \see kNb
+    ///
+    using CipherState = byte[4][4 /* Nb */];
+
+    ///
+    /// \brief AES works on 16 bit block at a time
+    ///
+    static const uint8_t kBlockSize = 16;
+
+    ///
+    /// \brief As defined in FIPS. 197 Sec. 5.1.1
+    ///
+    static const byte kSBox[256];
+
+    ///
+    /// \brief As defined in FIPS. 197 Sec. 5.3.2
+    ///
+    static const byte kSBoxInverse[256];
+
+    ///
+    /// \brief Nb
+    /// \note we make it constant as FIPS.197 p.9 says
+    /// "For this standard, Nb=4."
+    ///
+    static const uint8_t kNb = 4;
+
+    ///
+    /// \brief Prints bytes in hex format in 4x4 matrix fasion
+    ///
+    static void printBytes(byte b[], std::size_t len);
+
     AES() = delete;
     AES(const AES&) = delete;
     AES& operator=(const AES&) = delete;
+
+    friend class AESTest_SimpleCipher_Test;
 };
 } // end namespace mine
 

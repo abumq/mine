@@ -21,7 +21,6 @@
 #ifndef Base16_H
 #define Base16_H
 
-#include <cstdint>
 #include <algorithm>
 #include <string>
 #include <sstream>
@@ -46,7 +45,7 @@ public:
     /// \brief Map for fast lookup corresponding character
     /// \see Base64::kDecodeMap
     ///
-    static const std::unordered_map<uint8_t, uint8_t> kDecodeMap;
+    static const std::unordered_map<byte, byte> kDecodeMap;
 
     ///
     /// \brief Encodes input of length to hex encoding
