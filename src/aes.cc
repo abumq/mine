@@ -65,7 +65,7 @@ const byte AES::kSBoxInverse[256] = {
 };
 
 const uint8_t AES::kRoundConstant[11] = {
-  0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+    0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
 };
 
 void AES::transposeBytes(byte input[], std::size_t len)
@@ -90,7 +90,7 @@ void AES::printBytes(byte b[], std::size_t len)
     std::cout << std::endl << "------" << std::endl;
 }
 
-RoundKeys AES::keyExpansion(byte key[], std::size_t keySize)
+AES::RoundKeys AES::keyExpansion(const Key* key)
 {
 
     // rotateWord function is specified in FIPS.197 Sec. 5.2:
@@ -133,77 +133,54 @@ RoundKeys AES::keyExpansion(byte key[], std::size_t keySize)
         return w;
     };
 
-    const std::size_t keyLen = keySize / 8;
     uint8_t keyExSize, Nk, Nr;
-    getKeyParams(keySize, &keyExSize, &Nk, &Nr);
+    getKeyParams(key->size(), &keyExSize, &Nk, &Nr);
 
-    RoundKeys roundKeys;//(keyExSize);
+    RoundKeys words(kNb * (Nr+1));
 
-    std::vector<Word> linearWords;
-
+    int i = 0;
     // copy main key as is for the first round
-    Key newRoundKey = {{ 0 }};
-    for (uint8_t i = 0; i < keyLen; ++i) {
-        newRoundKey[i] = key[i];
+    for (; i < Nk; ++i) {
+        words[i] = {{
+                        (*key)[(i * 4) + 0],
+                        (*key)[(i * 4) + 1],
+                        (*key)[(i * 4) + 2],
+                        (*key)[(i * 4) + 3],
+                    }};
     }
-    roundKeys.push_back(newRoundKey);
 
-    auto addRoundKeyToLinearArr = [&](const Key& key) {
-        for (auto iter = key.begin(); iter < key.end(); iter += 4) {
-            Word w = { *iter, *(iter + 1), *(iter + 2), *(iter + 3) };
-            linearWords.push_back(w);
-        }
-    };
+    const int kModCheckThreshold = i;
 
-    addRoundKeyToLinearArr(newRoundKey);
+    for (; i < kNb * (Nr + 1); ++i) {
+        Word temp = words[i - 1];
 
-    for (uint8_t i = Nk; i < kNb * (Nr + 1); ++i) {
-        const Key* previousRoundKey = &roundKeys[roundKeys.size() - 1];
-        Key newRoundKey = {{0}};
-        Word temp;
-
-        for (uint8_t j = 0; j < sizeof(Word); ++j) {
-            // temp is last col of prev round key
-            temp[j] = (*previousRoundKey)[(keyLen - 4) + j];
-        }
-        if (i % 4 == 0) {
+        if (i % kModCheckThreshold == 0) {
             temp = rotateWord(temp);
             temp = substituteWord(temp);
             // xor with rcon
             temp[0] ^= kRoundConstant[i / Nk];
-        } else if (Nk > 6 && i % Nk == 4) {
+        }
+        if (Nk == 8 && i % Nk == 4) {
+            // See note for 256-bit keys on Sec. 5.2 (Key Expansion) on FIPS.197
             temp = substituteWord(temp);
         }
 
-        for (uint8_t j = 0; j < sizeof(Word); ++j) {
-            // xor with first column of previous round key
-            temp[j] ^= (*previousRoundKey)[j];
-            newRoundKey[j] = temp[j];
-        }
 
         // xor previous column of new key with corresponding column of
         // previous round key
+        Word correspondingWord = words[i - Nk];
+        byte b0 = correspondingWord[0] ^ temp[0];
+        byte b1 = correspondingWord[1] ^ temp[1];
+        byte b2 = correspondingWord[2] ^ temp[2];
+        byte b3 = correspondingWord[3] ^ temp[3];
 
-        for (int col = 1; col < sizeof(Word); ++col) {
-            int c = col * sizeof(Word);
-            for (int j = c; j < c + sizeof(Word); ++j) {
-                newRoundKey[j] = newRoundKey[j - 4] ^ (*previousRoundKey)[j];
-            }
-        }
-
-        roundKeys.push_back(newRoundKey);
-        linearWords.push_back(temp);
-        //addRoundKeyToLinearArr(newRoundKey);
-
+        words[i] = {{ b0, b1, b2, b3 }};
     }
 
-    std::cout << "f";
-
-
-
+    return words;
 }
 
-void AES::cipher(byte output[], byte input[], std::size_t len, byte key[], std::size_t keySize)
+void AES::cipher(byte output[], byte input[], std::size_t len, const Key* key)
 {
     // FIPS.197 p.14
     CipherState state[4][4];
@@ -211,31 +188,31 @@ void AES::cipher(byte output[], byte input[], std::size_t len, byte key[], std::
     std::memcpy(output, input, len);
     uint8_t keyExSize, Nk, Nr;
 
-    getKeyParams(keySize, &keyExSize, &Nk, &Nr);
+    getKeyParams(key->size(), &keyExSize, &Nk, &Nr);
 
-    RoundKeys roundKeys = keyExpansion(key, keySize);
+    RoundKeys roundKeys = keyExpansion(key);
 
 }
 
 void AES::getKeyParams(std::size_t keySize, uint8_t *keyExSize, uint8_t *Nk, uint8_t *Nr)
 {
-       switch (keySize) {
-       case 128:
-           *keyExSize = 176;
-           *Nk = 4;
-           *Nr = 10;
-           break;
-       case 192:
-           *keyExSize = 208;
-           *Nk = 6;
-           *Nr = 12;
-           break;
-       case 256:
-           *keyExSize = 240;
-           *Nk = 8;
-           *Nr = 14;
-           break;
-       default:
-           throw std::invalid_argument("Invalid AES key size");
-       }
-   };
+    switch (keySize) {
+    case 16:
+        *keyExSize = 176;
+        *Nk = 4;
+        *Nr = 10;
+        break;
+    case 24:
+        *keyExSize = 208;
+        *Nk = 6;
+        *Nr = 12;
+        break;
+    case 32:
+        *keyExSize = 240;
+        *Nk = 8;
+        *Nr = 14;
+        break;
+    default:
+        throw std::invalid_argument("Invalid AES key size");
+    }
+};

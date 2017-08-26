@@ -23,23 +23,24 @@
 
 #include <string>
 #include <array>
-#include <vector>
+#include <unordered_map>
 
 namespace mine {
 
 using byte = unsigned char;
-using Word = std::array<byte, 4>;
-using Key = std::array<byte, 16>;
-using RoundKeys = std::vector<Key>;
 
 ///
 /// \brief Provides AES crypto functionalities
 ///
 class AES {
 public:
+    using Key = std::vector<byte>;
 
     static void transposeBytes(byte input[], std::size_t len);
 private:
+    using Word = std::array<byte, 4>;
+
+    using RoundKeys = std::unordered_map<int, Word>;
 
     ///
     /// \brief State as described in FIPS.197 Sec. 3.4
@@ -78,7 +79,7 @@ private:
     /// \param key Byte array of key
     /// \return cipher text (byte array)
     ///
-    static void cipher(byte output[], byte input[], std::size_t len, byte key[], std::size_t keySize = 128);
+    static void cipher(byte output[], byte input[], std::size_t len, const Key* key);
 
     static void getKeyParams(std::size_t keySize, uint8_t* keyExSize, uint8_t* Nk, uint8_t* Nr);
 
@@ -87,7 +88,7 @@ private:
     /// \param output
     /// \param keySchedule
     ///
-    static RoundKeys keyExpansion(byte key[], std::size_t keySize);
+    static RoundKeys keyExpansion(const Key* key);
 
     ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion
@@ -99,6 +100,7 @@ private:
     AES& operator=(const AES&) = delete;
 
     friend class AESTest_SimpleCipher_Test;
+    friend class AESTest_KeyExpansion_Test;
 };
 } // end namespace mine
 
