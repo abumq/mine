@@ -22,6 +22,8 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include "src/base16.h"
 #include "src/aes.h"
 
@@ -222,6 +224,17 @@ void AES::shiftRows(State *state)
 void AES::mixColumns(State* state)
 {
 
+    // revisit! <!>
+    // need
+    auto multiplyColumn = [&](int col) {
+        Word column = state->at(col);
+    };
+
+    multiplyColumn(0);
+    multiplyColumn(1);
+    multiplyColumn(2);
+    multiplyColumn(3);
+    std::cout << std::endl;
 }
 
 AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
@@ -261,20 +274,21 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
     int round = 0;
 
+    // initial round
     addRoundKey(&state, &keySchedule, round++);
 
-    while (round <= kTotalRounds) {
+    // intermediate round
+    while (round < kTotalRounds) {
         subBytes(&state);
         shiftRows(&state);
-        if (round < kTotalRounds) {
-            // don't mix column for last round
-            // it only adds overhead and no
-            // extra security
-            // see Sec. 5.1 (p.14)
-            mixColumns(&state);
-        }
+        mixColumns(&state);
         addRoundKey(&state, &keySchedule, round++);
     }
+
+    // final round
+    subBytes(&state);
+    shiftRows(&state);
+    addRoundKey(&state, &keySchedule, round++);
 
     return result;
 
