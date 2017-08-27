@@ -85,7 +85,61 @@ public:
     ///
     /// \brief Encodes input of length to base64 encoding
     ///
-    static std::string encode(const std::string& raw) noexcept;
+    static std::string encode(const std::string& raw) noexcept
+    {
+        return encode(raw.begin(), raw.end());
+    }
+
+    ///
+    /// \brief Encodes iterators
+    ///
+    template <class Iter>
+    static std::string encode(const Iter& begin, const Iter& end) noexcept
+    {
+        std::string padding;
+        std::stringstream ss;
+        for (auto it = begin; it < end; it += 3) {
+
+            //
+            // we use example following example for implementation basis
+            // Bits              01100001   01100010  01100011
+            // 24-bit stream:    011000   010110   001001   100011
+            // result indices     24        22       9        35
+            //
+
+            int c = static_cast<int>(*it & 0xff);
+            ss << static_cast<char>(static_cast<char>(kValidChars[(c >> 2) & 0x3f])); // first 6 bits from first bitset
+            if (it + 1 < end) {
+                int c2 = static_cast<int>(*(it + 1) & 0xff);
+                ss << static_cast<char>(kValidChars[((c << 4) | // remaining 2 bits from first bitset - shift them left to get 4-bit spaces 010000
+                                                     (c2 >> 4) // first 4 bits of second bitset - shift them right to get 2 spaces and bitwise
+                                                                      // to add them 000110
+                                                     ) & 0x3f]);      // must be within 63 --
+                                                                      // 010000
+                                                                      // 000110
+                                                                      // --|---
+                                                                      // 010110
+                                                                      // 111111
+                                                                      // ---&--
+                                                                      // 010110 ==> 22
+                if (it + 2 < end) {
+                    int c3 = static_cast<int>(*(it + 2) & 0xff);
+                    ss << static_cast<char>(kValidChars[((c2 << 2) | // remaining 4 bits from second bitset - shift them to get 011000
+                                                         (c3 >> 6)   // the first 2 bits from third bitset - shift them right to get 000001
+                                                         ) & 0x3f]);
+                                                                             // the rest of the explanation is same as above
+                    ss << static_cast<char>(kValidChars[c3 & 0x3f]); // all the remaing bits
+                } else {
+                    ss << static_cast<char>(kValidChars[(c2 << 2) & 0x3f]); // we have 4 bits left from last byte need space for two 0-bits
+                    ss << kPaddingChar;
+                }
+            } else {
+                ss << static_cast<char>(kValidChars[(c << 4) & 0x3f]); // remaining 2 bits from single byte
+                ss << kPaddingChar << kPaddingChar;
+            }
+        }
+        return ss.str() + padding;
+    }
 
 #ifdef MINE_BASE64_WSTRING_CONVERSION
     ///
@@ -109,7 +163,66 @@ public:
     /// is if no padding is found
     /// std::runtime::what() is set according to the error
     ///
-    static std::string decode(const std::string& e);
+    static std::string decode(const std::string& e)
+    {
+        if (e.size() % 4 != 0) {
+            throw std::runtime_error("Invalid base64 encoding. Padding is required");
+        }
+        return decode(e.begin(), e.end());
+    }
+
+    template <class Iter>
+    static std::string decode(const Iter& begin, const Iter& end)
+    {
+        //
+        // we use example following example for implementation basis
+        // Bits              01100001   01100010  01100011
+        // 24-bit stream:    011000   010110   001001   100011
+        // result indices     24        22       9        35
+        //
+
+        const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
+        std::stringstream ss;
+        for (auto it = begin; it != end; it += 4) {
+            try {
+                int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
+                if (b0 == kPadding || b0 == '\0') {
+                    throw std::runtime_error("Invalid base64 encoding. No data available");
+                }
+                int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
+                int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
+                int b3 = kDecodeMap.at(static_cast<int>(*(it + 3) & 0xff));
+
+                ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
+                                        b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
+
+                if (b1 != kPadding && b1 != '\0') {
+                    if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
+                        // second biteset is 'partial byte'
+                        ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
+                    } else {
+                        ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
+                                                                                        // first we clear the bits at pos 4 and 5
+                                                                                        // then we concat with next bit
+                                                 b2 >> 2); // 001001 >> 2 ==> 00000010 ==> 01100010 = 98
+                        if (b3 == kPadding || b3 == '\0') {
+                            // third bitset is 'partial byte'
+                            ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
+                                                    // first we clear first 4 bits
+                        } else {
+                            ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6 |     // 001001 ==> 000001 << 6 ==> 01000000
+                                                    // first we clear first 4 bits
+                                                    // then concat with last byte as is
+                                                     b3); // as is
+                        }
+                    }
+                }
+            } catch (const std::exception&) {
+                throw std::runtime_error("Invalid base64 character");
+            }
+        }
+        return ss.str();
+    }
 
 #ifdef MINE_BASE64_WSTRING_CONVERSION
     ///

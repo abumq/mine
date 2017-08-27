@@ -48,9 +48,34 @@ public:
     static const std::unordered_map<byte, byte> kDecodeMap;
 
     ///
-    /// \brief Encodes input of length to hex encoding
+    /// \brief Encodes input to hex encoding
     ///
-    static std::string encode(const std::string& raw) noexcept;
+    static inline std::string encode(const std::string& raw) noexcept
+    {
+        return encode(raw.begin(), raw.end());
+    }
+
+    ///
+    /// \brief Encodes input iterator to hex encoding
+    ///
+    template <class Iter>
+    static std::string encode(const Iter& begin, const Iter& end) noexcept
+    {
+        std::ostringstream ss;
+        for (auto it = begin; it < end; ++it) {
+            encode(*it, ss);
+        }
+        return ss.str();
+    }
+
+    ///
+    /// \brief Encodes single byte
+    ///
+    static inline void encode(char b, std::ostringstream& ss) noexcept
+    {
+        int h = (b & 0xff);
+        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
+    }
 
     ///
     /// \brief Encodes integer to hex
@@ -73,9 +98,35 @@ public:
     ///
     /// \brief Decodes encoded hex
     /// \throws std::runtime if invalid encoding.
-    /// std::runtime::what() is set according to the error
+    /// std::runtime::what() is set accordingly
     ///
-    static std::string decode(const std::string& e);
+    static std::string decode(const std::string& enc)
+    {
+        if (enc.size() % 2 != 0) {
+            throw std::runtime_error("Invalid base-16 encoding");
+        }
+        return decode(enc.begin(), enc.end());
+    }
+
+    ///
+    /// \brief Encodes input iterator to hex encoding
+    /// \note User should check for the valid size or use decode(std::string)
+    /// \throws runtime_error if invalid base16-encoding
+    ///
+    template <class Iter>
+    static std::string decode(const Iter& begin, const Iter& end)
+    {
+        std::ostringstream ss;
+        for (auto it = begin; it != end; it += 2) {
+            decode(*it, *(it + 1), ss);
+        }
+        return ss.str();
+    }
+
+    ///
+    /// \brief Decodes single byte pair
+    ///
+    static void decode(char a, char b, std::ostringstream& ss);
 
     ///
     /// \brief Decodes encoding to single integer of type T

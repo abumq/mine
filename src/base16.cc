@@ -29,30 +29,13 @@ const std::unordered_map<byte, byte> Base16::kDecodeMap = {
     {0x43, 0x0C}, {0x44, 0x0D}, {0x45, 0x0E}, {0x46, 0x0F}
 };
 
-std::string Base16::encode(const std::string& raw) noexcept
+void Base16::decode(char a, char b, std::ostringstream& ss)
 {
-    std::stringstream ss;
-    for (auto it = raw.begin(); it < raw.end(); ++it) {
-        int h = (*it & 0xff);
-        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
-    }
-    return ss.str();
-}
-
-std::string Base16::decode(const std::string& enc)
-{
-    if (enc.size() % 2 != 0) {
+    int b0 = a & 0xff;
+    int b1 = b & 0xff;
+    try {
+        ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
+    } catch (const std::exception&) {
         throw std::runtime_error("Invalid base-16 encoding");
     }
-    std::stringstream ss;
-    for (auto it = enc.begin(); it != enc.end(); it += 2) {
-        int b0 = *it & 0xff;
-        int b1 = *(it + 1) & 0xff;
-        try {
-            ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
-        } catch (const std::exception&) {
-            throw std::runtime_error("Invalid base-16 encoding");
-        }
-    }
-    return ss.str();
 }

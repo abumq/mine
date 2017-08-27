@@ -17,6 +17,11 @@ static TestData<std::string, std::string> Base16TestData = {
     TestCase("616263313233213F242A262829272D3D407E", "abc123!?$*&()'-=@~"),
 };
 
+//                plain             encoding
+static TestData<std::vector<int>, std::string> Base16ByteArrayEncodingTestData = {
+    TestCase(std::vector<int> { 72, 101, 108, 108, 111 }, "48656C6C6F"),
+};
+
 static TestData<std::string, unsigned long long> Base16IntTestData = {
     TestCase("22FD3", 143315ULL),
     TestCase("35639D3C8", 14331532232ULL),
@@ -32,6 +37,14 @@ TEST(Base16Test, Encode)
     for (const auto& item : Base16TestData) {
         std::string encoded = Base16::encode(PARAM(1));
         ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+    }
+}
+
+TEST(Base16Test, EncodeByteArray)
+{
+    for (const auto& item : Base16ByteArrayEncodingTestData) {
+        std::string encoded = Base16::encode(PARAM(0).begin(), PARAM(0).end());
+        ASSERT_STREQ(PARAM(1).c_str(), encoded.c_str());
     }
 }
 

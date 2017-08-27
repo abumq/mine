@@ -379,3 +379,15 @@ AES::ByteArray AES::stateToByteArray(const State *state)
 
     return result;
 }
+
+// public
+
+std::string AES::cipher(const std::string& input, const std::string& key)
+{
+    Key k(key.size());
+    std::copy(key.begin(), key.end(), k.begin());
+    ByteArray inp(kBlockSize);
+    std::copy(input.begin(), input.end(), inp.begin());
+    ByteArray result = cipher(inp, &k);
+    return Base16::encode(result.begin(), result.end());
+}

@@ -35,32 +35,15 @@ const std::unordered_map<byte, byte> Base16::kDecodeMap = {
     {0x43, 0x0C}, {0x44, 0x0D}, {0x45, 0x0E}, {0x46, 0x0F}
 };
 
-std::string Base16::encode(const std::string& raw) noexcept
+void Base16::decode(char a, char b, std::ostringstream& ss)
 {
-    std::stringstream ss;
-    for (auto it = raw.begin(); it < raw.end(); ++it) {
-        int h = (*it & 0xff);
-        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
-    }
-    return ss.str();
-}
-
-std::string Base16::decode(const std::string& enc)
-{
-    if (enc.size() % 2 != 0) {
+    int b0 = a & 0xff;
+    int b1 = b & 0xff;
+    try {
+        ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
+    } catch (const std::exception&) {
         throw std::runtime_error("Invalid base-16 encoding");
     }
-    std::stringstream ss;
-    for (auto it = enc.begin(); it != enc.end(); it += 2) {
-        int b0 = *it & 0xff;
-        int b1 = *(it + 1) & 0xff;
-        try {
-            ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
-        } catch (const std::exception&) {
-            throw std::runtime_error("Invalid base-16 encoding");
-        }
-    }
-    return ss.str();
 }
 
 
@@ -108,108 +91,6 @@ std::size_t Base64::countChars(const std::string& str) noexcept
         it += charCount;
     }
     return result;
-}
-
-std::string Base64::encode(const std::string& raw) noexcept
-{
-    std::string padding;
-    std::stringstream ss;
-    for (auto it = raw.begin(); it < raw.end(); it += 3) {
-
-        //
-        // we use example following example for implementation basis
-        // Bits              01100001   01100010  01100011
-        // 24-bit stream:    011000   010110   001001   100011
-        // result indices     24        22       9        35
-        //
-
-        int c = static_cast<int>(*it & 0xff);
-        ss << static_cast<char>(static_cast<char>(kValidChars[(c >> 2) & 0x3f])); // first 6 bits from first bitset
-        if (it + 1 < raw.end()) {
-            int c2 = static_cast<int>(*(it + 1) & 0xff);
-            ss << static_cast<char>(kValidChars[((c << 4) | // remaining 2 bits from first bitset - shift them left to get 4-bit spaces 010000
-                                                 (c2 >> 4) // first 4 bits of second bitset - shift them right to get 2 spaces and bitwise
-                                                                  // to add them 000110
-                                                 ) & 0x3f]);      // must be within 63 --
-                                                                  // 010000
-                                                                  // 000110
-                                                                  // --|---
-                                                                  // 010110
-                                                                  // 111111
-                                                                  // ---&--
-                                                                  // 010110 ==> 22
-            if (it + 2 < raw.end()) {
-                int c3 = static_cast<int>(*(it + 2) & 0xff);
-                ss << static_cast<char>(kValidChars[((c2 << 2) | // remaining 4 bits from second bitset - shift them to get 011000
-                                                     (c3 >> 6)   // the first 2 bits from third bitset - shift them right to get 000001
-                                                     ) & 0x3f]);
-                                                                         // the rest of the explanation is same as above
-                ss << static_cast<char>(kValidChars[c3 & 0x3f]); // all the remaing bits
-            } else {
-                ss << static_cast<char>(kValidChars[(c2 << 2) & 0x3f]); // we have 4 bits left from last byte need space for two 0-bits
-                ss << kPaddingChar;
-            }
-        } else {
-            ss << static_cast<char>(kValidChars[(c << 4) & 0x3f]); // remaining 2 bits from single byte
-            ss << kPaddingChar << kPaddingChar;
-        }
-    }
-    return ss.str() + padding;
-}
-
-std::string Base64::decode(const std::string& enc)
-{
-    //
-    // we use example following example for implementation basis
-    // Bits              01100001   01100010  01100011
-    // 24-bit stream:    011000   010110   001001   100011
-    // result indices     24        22       9        35
-    //
-
-    if (enc.size() % 4 != 0) {
-        throw std::runtime_error("Invalid base64 encoding. Padding is required");
-    }
-    const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
-    std::stringstream ss;
-    for (auto it = enc.begin(); it != enc.end(); it += 4) {
-        try {
-            int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
-            if (b0 == kPadding || b0 == '\0') {
-                throw std::runtime_error("Invalid base64 encoding. No data available");
-            }
-            int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
-            int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
-            int b3 = kDecodeMap.at(static_cast<int>(*(it + 3) & 0xff));
-
-            ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
-                                    b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
-
-            if (b1 != kPadding && b1 != '\0') {
-                if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
-                    // second biteset is 'partial byte'
-                    ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
-                } else {
-                    ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
-                                                                                    // first we clear the bits at pos 4 and 5
-                                                                                    // then we concat with next bit
-                                             b2 >> 2); // 001001 >> 2 ==> 00000010 ==> 01100010 = 98
-                    if (b3 == kPadding || b3 == '\0') {
-                        // third bitset is 'partial byte'
-                        ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
-                                                // first we clear first 4 bits
-                    } else {
-                        ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6 |     // 001001 ==> 000001 << 6 ==> 01000000
-                                                // first we clear first 4 bits
-                                                // then concat with last byte as is
-                                                 b3); // as is
-                    }
-                }
-            }
-        } catch (const std::exception&) {
-            throw std::runtime_error("Invalid base64 character");
-        }
-    }
-    return ss.str();
 }
 
 
@@ -444,7 +325,21 @@ void AES::mixColumns(State* state)
     }
 }
 
-AES::ByteArray AES::cipher(ByteArray input, const Key* key)
+void AES::invSubBytes(State* state)
+{
+
+}
+
+void AES::invShiftRows(State *state)
+{
+
+}
+
+void AES::invMixColumns(State* state)
+{
+}
+
+AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
     std::size_t keySize = key->size();
 
@@ -453,18 +348,8 @@ AES::ByteArray AES::cipher(ByteArray input, const Key* key)
         throw std::invalid_argument("Invalid AES key size");
     }
 
-    // Pad the input if needed
-    if (input.size() < kBlockSize) {
-        std::fill_n(input.end(), kBlockSize - input.size(), 0);
-    }
-
-    // assign it to state for processing
     State state;
-    for (std::size_t i = 0; i < kNb; ++i) {
-        for (std::size_t j = 0; j < kNb; ++j) {
-            state[i][j] = input[(kNb * i) + j];
-        }
-    }
+    initState(&state, input);
 
     uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
 
@@ -489,17 +374,87 @@ AES::ByteArray AES::cipher(ByteArray input, const Key* key)
     shiftRows(&state);
     addRoundKey(&state, &keySchedule, round++);
 
-    // assign state to result
+    return stateToByteArray(&state);
+
+}
+
+AES::ByteArray AES::decipher(const ByteArray& input, const Key* key)
+{
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    State state;
+    initState(&state, input);
+
+    uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
+
+    // Create linear subkeys (key schedule)
+    KeySchedule keySchedule = keyExpansion(key);
+
+    int round = kTotalRounds;
+
+    // initial round
+    addRoundKey(&state, &keySchedule, round--);
+
+    // intermediate round
+    while (round > 0) {
+        invShiftRows(&state);
+        invSubBytes(&state);
+        addRoundKey(&state, &keySchedule, round--);
+        invMixColumns(&state);
+    }
+
+    // final round
+    invShiftRows(&state);
+    invSubBytes(&state);
+    addRoundKey(&state, &keySchedule, round);
+
+    return stateToByteArray(&state);
+
+}
+
+void AES::initState(State* state, ByteArray input)
+{
+    // Pad the input if needed
+    if (input.size() < kBlockSize) {
+        std::fill_n(input.end(), kBlockSize - input.size(), 0);
+    }
+
+    // assign it to state for processing
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            (*state)[i][j] = input[(kNb * i) + j];
+        }
+    }
+}
+
+AES::ByteArray AES::stateToByteArray(const State *state)
+{
     ByteArray result(kBlockSize);
     int k = 0;
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            result[k++] = state.at(i)[j];
+            result[k++] = state->at(i)[j];
         }
     }
 
     return result;
+}
 
+// public
+
+std::string AES::cipher(const std::string& input, const std::string& key)
+{
+    Key k(key.size());
+    std::copy(key.begin(), key.end(), k.begin());
+    ByteArray inp(kBlockSize);
+    std::copy(input.begin(), input.end(), inp.begin());
+    ByteArray result = cipher(inp, &k);
+    return Base16::encode(result.begin(), result.end());
 }
 
 

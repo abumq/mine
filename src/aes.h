@@ -55,6 +55,13 @@ public:
     ///
     using Key = ByteArray;
 
+    ///
+    /// \brief Ciphers the input with specified hex key
+    /// \param key Hex key
+    /// \return Base16 encoded cipher
+    ///
+    static std::string cipher(const std::string& input, const std::string& key);
+
 private:
 
     ///

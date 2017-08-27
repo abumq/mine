@@ -68,11 +68,25 @@ static TestData<std::string, bool> IsBase64Data = {
     TestCase("i3eclcagfnUbK1B==", true),
 };
 
+static TestData<std::vector<int>, std::string> Base64ByteArrayEncodingTestData = {
+    TestCase(std::vector<int> { 72, 101, 108, 108, 111 }, "SGVsbG8="),
+};
+
+
 TEST(Base64Test, Encode)
 {
     for (const auto& item : Base64TestData) {
         std::string encoded = Base64::encode(PARAM(1));
         ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+    }
+}
+
+
+TEST(Base64Test, ByteArrayEncode)
+{
+    for (const auto& item : Base64ByteArrayEncodingTestData) {
+        std::string encoded = Base64::encode(PARAM(0).begin(), PARAM(0).end());
+        ASSERT_STREQ(PARAM(1).c_str(), encoded.c_str());
     }
 }
 
