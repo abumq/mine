@@ -45,10 +45,21 @@ using byte = unsigned char;
 ///
 class AES {
 public:
+    ///
+    /// \brief Handy safe byte array
+    ///
     using ByteArray = std::vector<byte>;
+
+    ///
+    /// \brief A key is a byte array
+    ///
     using Key = ByteArray;
 
 private:
+
+    ///
+    /// \brief A word is array of 4 byte
+    ///
     using Word = std::array<byte, 4>;
 
     ///
@@ -60,7 +71,7 @@ private:
     ///
     /// \brief State as described in FIPS.197 Sec. 3.4
     ///
-    using State = std::array<std::array<byte, 4>, 4>;
+    using State = std::array<Word, 4>;
 
     ///
     /// \brief AES works on 16 bit block at a time
@@ -100,14 +111,14 @@ private:
 
     ///
     /// \brief Raw encryption function - not for public use
-    /// \param input 128-bit Byte array of input.
+    /// \param input (by val) 128-bit Byte array of input.
     /// If array is bigger it's chopped and if it's smaller, it's padded
     /// please use alternative functions if your array is bigger. Those
     /// function will handle all the bytes correctly.
     /// \param key Byte array of key
     /// \return cipher text (byte array)
     ///
-    static ByteArray cipher(const ByteArray& input, const Key* key);
+    static ByteArray cipher(ByteArray input, const Key* key);
 
     ///
     /// \brief Key expansion function as described in FIPS.197

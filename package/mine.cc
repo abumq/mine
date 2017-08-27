@@ -444,33 +444,31 @@ void AES::mixColumns(State* state)
     }
 }
 
-AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
+AES::ByteArray AES::cipher(ByteArray input, const Key* key)
 {
-    State state;
-    ByteArray result;
-
-    // TODO: remove this extra overhead
-    std::copy_n(input.begin(), kBlockSize, std::back_inserter(result));
-
-    // add padding if needed
-    if (result.size() < kBlockSize) {
-        std::fill_n(result.end(), kBlockSize - result.size(), 0);
-    }
-
-    for (std::size_t i = 0; i < kNb; ++i) {
-        for (std::size_t j = 0; j < kNb; ++j) {
-            state[i][j] = result[(kNb * i) + j];
-        }
-    }
-
     std::size_t keySize = key->size();
 
+    // key size validation
     if (keySize != 16 && keySize != 24 && keySize != 32) {
         throw std::invalid_argument("Invalid AES key size");
     }
 
+    // Pad the input if needed
+    if (input.size() < kBlockSize) {
+        std::fill_n(input.end(), kBlockSize - input.size(), 0);
+    }
+
+    // assign it to state for processing
+    State state;
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            state[i][j] = input[(kNb * i) + j];
+        }
+    }
+
     uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
 
+    // Create linear subkeys (key schedule)
     KeySchedule keySchedule = keyExpansion(key);
 
     int round = 0;
@@ -492,6 +490,7 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
     addRoundKey(&state, &keySchedule, round++);
 
     // assign state to result
+    ByteArray result(kBlockSize);
     int k = 0;
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
