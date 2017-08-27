@@ -23,7 +23,7 @@ We are very careful with our implementations and have [unit tests](/test/) in pl
 Mine _will_ support following features:
 
  * RSA (Encrypt, Decrypt, Sign and Verify) [[RFC-3447](https://tools.ietf.org/html/rfc3447)]
- * AES-CBC [[RFC-3602](https://tools.ietf.org/html/rfc3602)]
+ * AES [[FIPS.197](http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)]
  * ZLib (Depend upon libz, eventually implement [RFC-1950](https://tools.ietf.org/html/rfc3602))
  * Base16 (Encode, Decode)
  * Base64 (Encode, Decode)
