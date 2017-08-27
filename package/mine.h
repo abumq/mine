@@ -21,6 +21,7 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <array>
 #include <cmath>
 #include <stdexcept>
 #include <map>
@@ -45,7 +46,7 @@ public:
     /// \brief Map for fast lookup corresponding character
     /// \see Base64::kDecodeMap
     ///
-    static const std::unordered_map<int, int> kDecodeMap;
+    static const std::unordered_map<byte, byte> kDecodeMap;
 
     ///
     /// \brief Encodes input of length to hex encoding
@@ -121,7 +122,7 @@ public:
     /// \ref http://www.cplusplus.com/reference/unordered_map/unordered_map/at/
     /// \ref  http://www.cplusplus.com/reference/string/string/find_first_of/
     ///
-    static const std::unordered_map<int, int> kDecodeMap;
+    static const std::unordered_map<byte, byte> kDecodeMap;
 
     ///
     /// \brief Padding is must in mine implementation of base64
@@ -159,6 +160,8 @@ public:
     /// encoding
     /// \see encode(const std::string&)
     ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
+    ///
     static std::string encode(const std::wstring& raw) noexcept
     {
         std::string converted = std::wstring_convert
@@ -183,6 +186,8 @@ public:
     /// std::string to wstring as it can give you invalid results with characters that are
     /// 5+ bytes long e.g, \x1F680. If you don't use such characters then it should be safe
     /// to use this
+    ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
     ///
     static std::wstring decodeAsWString(const std::string& e)
     {
@@ -233,13 +238,125 @@ using byte = unsigned char;
 ///
 /// \brief Provides AES crypto functionalities
 ///
+/// This is validated against NIST test data and all
+/// the corresponding tests under test/ directory
+/// are from NIST themselves.
+///
+/// Please make sure to use public functions and do not
+/// use private functions especially in production as
+/// you may end up using them incorrectly. However
+/// the source code for AES class is heavily commented for
+/// verification on implementation.
+///
 class AES {
 public:
+    using ByteArray = std::vector<byte>;
+    using Key = ByteArray;
 
 private:
+    using Word = std::array<byte, 4>;
+
+    ///
+    /// \brief KeySchedule is linear array of 4-byte words
+    /// \ref FIPS.197 Sec 5.2
+    ///
+    using KeySchedule = std::unordered_map<uint8_t, Word>;
+
+    ///
+    /// \brief State as described in FIPS.197 Sec. 3.4
+    ///
+    using State = std::array<std::array<byte, 4>, 4>;
+
+    ///
+    /// \brief AES works on 16 bit block at a time
+    ///
+    static const uint8_t kBlockSize = 16;
+
+    ///
+    /// \brief Defines the key params to it's size
+    ///
+    static const std::unordered_map<uint8_t, std::vector<uint8_t>> kKeyParams;
+
+    ///
+    /// \brief As defined in FIPS. 197 Sec. 5.1.1
+    ///
+    static const byte kSBox[];
+
+    ///
+    /// \brief As defined in FIPS. 197 Sec. 5.3.2
+    ///
+    static const byte kSBoxInverse[];
+
+    ///
+    /// \brief Round constant is constant for each round
+    /// it contains 10 values each defined in
+    /// Appendix A of FIPS.197 in column Rcon[i/Nk] for
+    /// each key size, we add all of them in one array for
+    /// ease of access
+    ///
+    static const byte kRoundConstant[];
+
+    ///
+    /// \brief Nb
+    /// \note we make it constant as FIPS.197 p.9 says
+    /// "For this standard, Nb=4."
+    ///
+    static const uint8_t kNb = 4;
+
+    ///
+    /// \brief Raw encryption function - not for public use
+    /// \param input 128-bit Byte array of input.
+    /// If array is bigger it's chopped and if it's smaller, it's padded
+    /// please use alternative functions if your array is bigger. Those
+    /// function will handle all the bytes correctly.
+    /// \param key Byte array of key
+    /// \return cipher text (byte array)
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Key expansion function as described in FIPS.197
+    ///
+    static KeySchedule keyExpansion(const Key* key);
+
+    ///
+    /// \brief Adds round to the state using specified key schedule
+    ///
+    static void addRoundKey(State* state, const KeySchedule* keySchedule, int round);
+
+    ///
+    /// \brief Substitution step for state (Sec. 5.1.1)
+    ///
+    static void subBytes(State* state);
+
+    ///
+    /// \brief Shifting rows step for the state (Sec. 5.1.2)
+    ///
+    static void shiftRows(State* state);
+
+    ///
+    /// \brief Mixing columns for the state  (Sec. 5.1.3)
+    ///
+    static void mixColumns(State* state);
+
+    ///
+    /// \brief Prints bytes in hex format in 4x4 matrix fashion
+    ///
+    static void printBytes(const ByteArray& b);
+
+    ///
+    /// \brief Prints state for debugging
+    ///
+    static void printState(const State*);
+
     AES() = delete;
     AES(const AES&) = delete;
     AES& operator=(const AES&) = delete;
+
+    friend class AESTest_RawCipher_Test;
+    friend class AESTest_FiniteFieldMultiply_Test;
+    friend class AESTest_KeyExpansion_Test;
+    friend class AESTest_AddRoundKey_Test;
 };
 
 /// Here onwards start implementation for RSA - this contains
