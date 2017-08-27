@@ -223,36 +223,58 @@ void AES::shiftRows(State *state)
 
 void AES::mixColumns(State* state)
 {
+    // taken from Finite Field article
     auto polyProduct = [](byte a, byte b) -> byte {
-        // todo: implement this
-        return 0;
+        byte result = 0x0;
+        while (a && b) {
+            if (b & 0x01) {
+                result ^= a;
+            }
+            if (a & 0x80) {
+                a = (a << 1) ^ 0x11b;
+            } else {
+                result <<= 1;
+            }
+            b >>= 1;
+        }
+        return result;
     };
 
     auto multiplyColumn = [&](int col) {
         Word column = state->at(col);
-        state->at(col)[0] = (polyProduct(column[0], 2)) ^
+        state->at(col)[0] =
+                (polyProduct(column[0], 2)) ^
                 (polyProduct(column[1], 3)) ^
                 (column[2]) ^
                 (column[3]);
-        state->at(col)[1] = (column[0]) ^
+        state->at(col)[1] =
+                (column[0]) ^
                 (polyProduct(column[1], 2)) ^
-                (column[2] * 3) ^
+                (polyProduct(column[2], 3)) ^
                 (column[3]);
-        state->at(col)[2] = (column[0]) ^
+        state->at(col)[2] =
+                (column[0]) ^
                 (column[1]) ^
                 (polyProduct(column[2], 2)) ^
-                (column[3] * 3);
-        state->at(col)[3] = (polyProduct(column[0], 3)) ^
+                (polyProduct(column[3], 3));
+        state->at(col)[3] =
+                (polyProduct(column[0], 3)) ^
                 (column[1]) ^
                 (column[2]) ^
                 (polyProduct(column[3], 2));
     };
 
+    /*
+     expected
+04 e0 48 28
+66 cb f8 06
+81 19 d3 26
+e5 9a 7a 4c
+*/
     multiplyColumn(0);
     multiplyColumn(1);
     multiplyColumn(2);
     multiplyColumn(3);
-    std::cout << std::endl;
 }
 
 AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
