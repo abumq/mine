@@ -60,7 +60,7 @@ public:
     /// \param key Hex key
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const Key& key);
+    static std::string cipher(const std::string& input, const std::string& key);
 
 private:
 
@@ -208,11 +208,17 @@ private:
     ///
     static void printState(const State*);
 
+    ///
+    /// \brief Converts hex string to byte array
+    ///
+    static ByteArray hexStrToByteArray(const std::string& hex);
+
     AES() = delete;
     AES(const AES&) = delete;
     AES& operator=(const AES&) = delete;
 
     friend class AESTest_RawCipher_Test;
+    friend class AESTest_RawSimpleCipher_Test;
     friend class AESTest_FiniteFieldMultiply_Test;
     friend class AESTest_KeyExpansion_Test;
     friend class AESTest_AddRoundKey_Test;

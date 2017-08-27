@@ -19,6 +19,7 @@
 // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 //
 
+#include <cstdlib>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -99,6 +100,16 @@ void AES::printState(const State* state)
     }
     std::cout << std::endl;
 }
+
+AES::ByteArray AES::hexStrToByteArray(const std::string& hex)
+{
+    AES::ByteArray byteArr;
+    for (std::size_t i = 0; i < hex.length(); i += 2) {
+        std::string hexByte = hex.substr(i, 2);
+        byteArr.push_back(static_cast<byte>(strtol(hexByte.c_str(), NULL, 16)));
+    }
+    return byteArr;
+  }
 
 AES::KeySchedule AES::keyExpansion(const Key* key)
 {
@@ -382,10 +393,10 @@ AES::ByteArray AES::stateToByteArray(const State *state)
 
 // public
 
-std::string AES::cipher(const std::string& input, const Key& key)
+std::string AES::cipher(const std::string& input, const std::string& key)
 {
-    ByteArray inp(kBlockSize);
-    std::copy(input.begin(), input.end(), inp.begin());
-    ByteArray result = cipher(inp, &key);
+    Key keyArr = hexStrToByteArray(key);
+    ByteArray inp = hexStrToByteArray(input);
+    ByteArray result = cipher(inp, &keyArr);
     return Base16::encode(result.begin(), result.end());
 }
