@@ -260,7 +260,21 @@ void AES::mixColumns(State* state)
     }
 }
 
-AES::ByteArray AES::cipher(ByteArray input, const Key* key)
+void AES::invSubBytes(State* state)
+{
+
+}
+
+void AES::invShiftRows(State *state)
+{
+
+}
+
+void AES::invMixColumns(State* state)
+{
+}
+
+AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
     std::size_t keySize = key->size();
 
@@ -269,18 +283,8 @@ AES::ByteArray AES::cipher(ByteArray input, const Key* key)
         throw std::invalid_argument("Invalid AES key size");
     }
 
-    // Pad the input if needed
-    if (input.size() < kBlockSize) {
-        std::fill_n(input.end(), kBlockSize - input.size(), 0);
-    }
-
-    // assign it to state for processing
     State state;
-    for (std::size_t i = 0; i < kNb; ++i) {
-        for (std::size_t j = 0; j < kNb; ++j) {
-            state[i][j] = input[(kNb * i) + j];
-        }
-    }
+    initState(&state, input);
 
     uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
 
@@ -305,15 +309,73 @@ AES::ByteArray AES::cipher(ByteArray input, const Key* key)
     shiftRows(&state);
     addRoundKey(&state, &keySchedule, round++);
 
-    // assign state to result
+    return stateToByteArray(&state);
+
+}
+
+AES::ByteArray AES::decipher(const ByteArray& input, const Key* key)
+{
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    State state;
+    initState(&state, input);
+
+    uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
+
+    // Create linear subkeys (key schedule)
+    KeySchedule keySchedule = keyExpansion(key);
+
+    int round = kTotalRounds;
+
+    // initial round
+    addRoundKey(&state, &keySchedule, round--);
+
+    // intermediate round
+    while (round > 0) {
+        invShiftRows(&state);
+        invSubBytes(&state);
+        addRoundKey(&state, &keySchedule, round--);
+        invMixColumns(&state);
+    }
+
+    // final round
+    invShiftRows(&state);
+    invSubBytes(&state);
+    addRoundKey(&state, &keySchedule, round);
+
+    return stateToByteArray(&state);
+
+}
+
+void AES::initState(State* state, ByteArray input)
+{
+    // Pad the input if needed
+    if (input.size() < kBlockSize) {
+        std::fill_n(input.end(), kBlockSize - input.size(), 0);
+    }
+
+    // assign it to state for processing
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            (*state)[i][j] = input[(kNb * i) + j];
+        }
+    }
+}
+
+AES::ByteArray AES::stateToByteArray(const State *state)
+{
     ByteArray result(kBlockSize);
     int k = 0;
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            result[k++] = state.at(i)[j];
+            result[k++] = state->at(i)[j];
         }
     }
 
     return result;
-
 }

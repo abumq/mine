@@ -110,15 +110,37 @@ private:
     static const uint8_t kNb = 4;
 
     ///
+    /// \brief Initializes the state with input. This function
+    /// also pads the input if needed (i.e, input is not block of 128-bit)
+    ///
+    static void initState(State* state, ByteArray input);
+
+    ///
     /// \brief Raw encryption function - not for public use
-    /// \param input (by val) 128-bit Byte array of input.
+    /// \param input 128-bit plain input
     /// If array is bigger it's chopped and if it's smaller, it's padded
     /// please use alternative functions if your array is bigger. Those
     /// function will handle all the bytes correctly.
     /// \param key Byte array of key
-    /// \return cipher text (byte array)
+    /// \return 128-bit cipher text
     ///
-    static ByteArray cipher(ByteArray input, const Key* key);
+    static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Raw decryption function - not for public use
+    /// \param input 128-bit cipher input
+    /// If array is bigger it's chopped and if it's smaller, it's padded
+    /// please use alternative functions if your array is bigger. Those
+    /// function will handle all the bytes correctly.
+    /// \param key Byte array of key
+    /// \return 128-bit plain text
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array
+    ///
+    static ByteArray stateToByteArray(const State* state);
 
     ///
     /// \brief Key expansion function as described in FIPS.197
@@ -131,19 +153,43 @@ private:
     static void addRoundKey(State* state, const KeySchedule* keySchedule, int round);
 
     ///
-    /// \brief Substitution step for state (Sec. 5.1.1)
+    /// \brief Substitution step for state
+    /// \ref Sec. 5.1.1
     ///
     static void subBytes(State* state);
 
     ///
-    /// \brief Shifting rows step for the state (Sec. 5.1.2)
+    /// \brief Shifting rows step for the state
+    /// \ref Sec. 5.1.2
     ///
     static void shiftRows(State* state);
 
     ///
-    /// \brief Mixing columns for the state  (Sec. 5.1.3)
+    /// \brief Mixing columns for the state
+    /// \ref Sec. 5.1.3
     ///
     static void mixColumns(State* state);
+
+    ///
+    /// \brief Transformation in the Inverse Cipher
+    /// that is the inverse of subBytes()
+    /// \ref Sec. 5.3.2
+    ///
+    static void invSubBytes(State* state);
+
+    ///
+    /// \brief  Transformation in the Inverse Cipher that is
+    /// the inverse of shiftRows()
+    /// \ref Sec. 5.3.1
+    ///
+    static void invShiftRows(State* state);
+
+    ///
+    /// \brief Transformation in the Inverse Cipher
+    /// that is the inverse of mixColumns()
+    /// \ref Sec. 5.3.3
+    ///
+    static void invMixColumns(State* state);
 
     ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion
