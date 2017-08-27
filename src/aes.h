@@ -24,6 +24,7 @@
 #include <string>
 #include <array>
 #include <unordered_map>
+#include "src/rsa.h"
 
 namespace mine {
 
@@ -32,12 +33,21 @@ using byte = unsigned char;
 ///
 /// \brief Provides AES crypto functionalities
 ///
+/// This is validated against NIST test data and all
+/// the corresponding tests under test/ directory
+/// are from NIST themselves.
+///
+/// Please make sure to use public functions and do not
+/// use private functions especially in production as
+/// you may end up using them incorrectly. However
+/// the source code for AES class is heavily commented for
+/// verification on implementation.
+///
 class AES {
 public:
     using ByteArray = std::vector<byte>;
     using Key = ByteArray;
 
-    static void transposeBytes(byte input[], std::size_t len);
 private:
     using Word = std::array<byte, 4>;
 
@@ -45,7 +55,7 @@ private:
     /// \brief KeySchedule is linear array of 4-byte words
     /// \ref FIPS.197 Sec 5.2
     ///
-    using KeySchedule = std::unordered_map<int, Word>;
+    using KeySchedule = std::unordered_map<uint8_t, Word>;
 
     ///
     /// \brief State as described in FIPS.197 Sec. 3.4
@@ -58,16 +68,28 @@ private:
     static const uint8_t kBlockSize = 16;
 
     ///
+    /// \brief Defines the key params to it's size
+    ///
+    static const std::unordered_map<uint8_t, std::vector<uint8_t>> kKeyParams;
+
+    ///
     /// \brief As defined in FIPS. 197 Sec. 5.1.1
     ///
-    static const byte kSBox[256];
+    static const byte kSBox[];
 
     ///
     /// \brief As defined in FIPS. 197 Sec. 5.3.2
     ///
-    static const byte kSBoxInverse[256];
+    static const byte kSBoxInverse[];
 
-    static const byte kRoundConstant[11];
+    ///
+    /// \brief Round constant is constant for each round
+    /// it contains 10 values each defined in
+    /// Appendix A of FIPS.197 in column Rcon[i/Nk] for
+    /// each key size, we add all of them in one array for
+    /// ease of access
+    ///
+    static const byte kRoundConstant[];
 
     ///
     /// \brief Nb
@@ -86,8 +108,6 @@ private:
     /// \return cipher text (byte array)
     ///
     static ByteArray cipher(const ByteArray& input, const Key* key);
-
-    static void getKeyParams(std::size_t keySize, uint8_t* keyExSize, uint8_t* Nk, uint8_t* Nr);
 
     ///
     /// \brief Key expansion function as described in FIPS.197
@@ -113,11 +133,6 @@ private:
     /// \brief Mixing columns for the state  (Sec. 5.1.3)
     ///
     static void mixColumns(State* state);
-
-    ///
-    /// \brief Multiply two numbers in the GF(2^8) finite field defined
-    ///
-    static byte finiteFieldMultiply(byte a, byte b);
 
     ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion

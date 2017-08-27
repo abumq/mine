@@ -67,8 +67,14 @@ const byte AES::kSBoxInverse[256] = {
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 };
 
-const uint8_t AES::kRoundConstant[11] = {
-    0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+const uint8_t AES::kRoundConstant[10] = {
+    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+};
+
+const std::unordered_map<uint8_t, std::vector<uint8_t>> AES::kKeyParams = {
+    { 16, {{ 4, 10 }} },
+    { 24, {{ 6, 12 }} },
+    { 32, {{ 8, 14 }} }
 };
 
 void AES::printBytes(const ByteArray& b)
@@ -137,28 +143,18 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
         return w;
     };
 
-    uint8_t Nk, Nr;
+    std::size_t keySize = key->size();
 
-    switch (key->size()) {
-    case 16:
-        Nk = 4;
-        Nr = 10;
-        break;
-    case 24:
-        Nk = 6;
-        Nr = 12;
-        break;
-    case 32:
-        Nk = 8;
-        Nr = 14;
-        break;
-    default:
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
         throw std::invalid_argument("Invalid AES key size");
     }
 
+    uint8_t Nk = kKeyParams.at(keySize)[0],
+            Nr = kKeyParams.at(keySize)[1];
+
     KeySchedule words(kNb * (Nr+1));
 
-    int i = 0;
+    uint8_t i = 0;
     // copy main key as is for the first round
     for (; i < Nk; ++i) {
         words[i] = {{
@@ -176,9 +172,9 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
             rotateWord(&temp);
             substituteWord(&temp);
             // xor with rcon
-            temp[0] ^= kRoundConstant[i / Nk];
+            temp[0] ^= kRoundConstant[(i / Nk) - 1];
         } else if (Nk == 8 && i % Nk == 4) {
-            // See note for 256-bit keys on Sec. 5.2 (Key Expansion) on FIPS.197
+            // See note for 256-bit keys on Sec. 5.2 on FIPS.197
             substituteWord(&temp);
         }
 
@@ -201,8 +197,7 @@ void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            int keyIdx = (round * kNb) + i;
-            state->at(i)[j] ^= keySchedule->at(keyIdx)[j];
+            state->at(i)[j] ^= keySchedule->at((round * kNb) + i)[j];
         }
     }
 }
@@ -218,69 +213,51 @@ void AES::subBytes(State* state)
 
 void AES::shiftRows(State *state)
 {
-    int rowIdx = 1;
-    std::swap(state->at(0)[rowIdx], state->at(3)[rowIdx]);
-    std::swap(state->at(0)[rowIdx], state->at(1)[rowIdx]);
-    std::swap(state->at(1)[rowIdx], state->at(2)[rowIdx]);
+    // row 1
+    std::swap(state->at(0)[1], state->at(3)[1]);
+    std::swap(state->at(0)[1], state->at(1)[1]);
+    std::swap(state->at(1)[1], state->at(2)[1]);
 
-    rowIdx = 2;
-    std::swap(state->at(0)[rowIdx], state->at(2)[rowIdx]);
-    std::swap(state->at(1)[rowIdx], state->at(3)[rowIdx]);
+    // row 2
+    std::swap(state->at(0)[2], state->at(2)[2]);
+    std::swap(state->at(1)[2], state->at(3)[2]);
 
-    rowIdx = 3;
-    std::swap(state->at(0)[rowIdx], state->at(1)[rowIdx]);
-    std::swap(state->at(2)[rowIdx], state->at(3)[rowIdx]);
-    std::swap(state->at(0)[rowIdx], state->at(2)[rowIdx]);
+    // row 3
+    std::swap(state->at(0)[3], state->at(1)[3]);
+    std::swap(state->at(2)[3], state->at(3)[3]);
+    std::swap(state->at(0)[3], state->at(2)[3]);
 }
 
 void AES::mixColumns(State* state)
 {
-
-    auto multiplyColumn = [&](int col) {
-        Word column = state->at(col);
-        state->at(col)[0] =
-                (finiteFieldMultiply(column[0], 2)) ^
-                (finiteFieldMultiply(column[1], 3)) ^
-                (column[2]) ^
-                (column[3]);
-        state->at(col)[1] =
-                (column[0]) ^
-                (finiteFieldMultiply(column[1], 2)) ^
-                (finiteFieldMultiply(column[2], 3)) ^
-                (column[3]);
-        state->at(col)[2] =
-                (column[0]) ^
-                (column[1]) ^
-                (finiteFieldMultiply(column[2], 2)) ^
-                (finiteFieldMultiply(column[3], 3));
-        state->at(col)[3] =
-                (finiteFieldMultiply(column[0], 3)) ^
-                (column[1]) ^
-                (column[2]) ^
-                (finiteFieldMultiply(column[3], 2));
+    // Finds the product of {02} and the argument to xtime modulo {1b}
+    // mentioned in Sec. 4.2.1 of FIPS.197
+    // taken from http://gauss.ececs.uc.edu/Courses/c653/extra/AES/xtime.cpp
+    auto xtime = [](byte x) {
+        return ((x << 1) ^ (((x >> 7) & 1) * 0x11b));
     };
 
-    multiplyColumn(0);
-    multiplyColumn(1);
-    multiplyColumn(2);
-    multiplyColumn(3);
-}
+    for (int col = 0; col < 4; ++col) {
 
-byte AES::finiteFieldMultiply(byte a, byte b)
-{
-    byte result = 0x0;
-    while (a && b) {
-        if (b & 0x01) {
-            result ^= a;
-        }
-        if (a & 0x80) {
-            a = (a << 1) ^ 0x11b;
-        } else {
-            result <<= 1;
-        }
-        b >>= 1;
+        //
+        // multiplies in GF(2^8) field selected column from state
+        // with constant matrix defined by publication
+        //
+        // [ 02  03  01  01 ]
+        // | 01  02  03  01 |
+        // | 01  01  02  03 |
+        // [ 03  01  01  02 ]
+        //
+        Word column = state->at(col);
+        // let's take example from publication, col: [212, 191, 93, 48]
+        // t == 6
+        byte t = (column[0]) ^ (column[1]) ^ (column[2]) ^ (column[3]);
+        // see Sec. 4.2.1 and Sec. 5.1.3 for more details
+        state->at(col)[0] ^= xtime(column[0] ^ column[1]) ^ t;
+        state->at(col)[1] ^= xtime(column[1] ^ column[2]) ^ t;
+        state->at(col)[2] ^= xtime(column[2] ^ column[3]) ^ t;
+        state->at(col)[3] ^= xtime(column[3] ^ column[0]) ^ t;
     }
-    return result;
 }
 
 AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
@@ -302,20 +279,13 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
         }
     }
 
-    uint8_t kTotalRounds;
-    switch (key->size()) {
-    case 16:
-        kTotalRounds = 10;
-        break;
-    case 24:
-        kTotalRounds = 12;
-        break;
-    case 32:
-        kTotalRounds = 14;
-        break;
-    default:
+    std::size_t keySize = key->size();
+
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
         throw std::invalid_argument("Invalid AES key size");
     }
+
+    uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
 
     KeySchedule keySchedule = keyExpansion(key);
 
@@ -337,6 +307,7 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
     shiftRows(&state);
     addRoundKey(&state, &keySchedule, round++);
 
+    // assign state to result
     int k = 0;
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {

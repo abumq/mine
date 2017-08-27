@@ -277,22 +277,6 @@ TEST(AESTest, AddRoundKey)
     ASSERT_EQ(expected7, state);
 }
 
-
-TEST(AESTest, FiniteFieldMultiply)
-{
-    static TestData<byte, byte, byte> FiniteFieldMultiplyData = {
-        TestCase(0xd4, 0x02, 0x04),
-    };
-
-    for (auto& item : FiniteFieldMultiplyData) {
-        byte a = PARAM(0);
-        byte b = PARAM(1);
-        byte expected = PARAM(2);
-        ASSERT_EQ(AES::finiteFieldMultiply(a, b), expected);
-    }
-
-}
-
 TEST(AESTest, RawCipher)
 {
 
