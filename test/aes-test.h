@@ -304,8 +304,26 @@ TEST(AESTest, RawCipher)
 
     AES::ByteArray output = AES::cipher(input, &key);
     ASSERT_EQ(expected, output);
-
 }
+
+TEST(AESTest, DevAid)
+{
+
+    std::string cip = AES::cipher("this is a test!!", {{
+                                                           0x2b, 0x7e, 0x15, 0x16,
+                                                           0x28, 0xae, 0xd2, 0xa6,
+                                                           0xab, 0xf7, 0x15, 0x88,
+                                                           0x09, 0xcf, 0x4f, 0x3c
+                                                       }});
+    // key: 2b7e151628aed2a6abf7158809cf4f3c
+    //
+    // inp: this is a test!!
+    // cip: 4F0A21D2E75B7832246D45109258B75A
+    // inp: this is a test
+    // cip: 85D87A79E77CE29EE9374E235DC8FA7E
+    std::cout << "AES Cipher: " << cip << std::endl;
+}
+
 }
 
 #endif // AES_TEST_H

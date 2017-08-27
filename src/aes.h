@@ -60,7 +60,7 @@ public:
     /// \param key Hex key
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key);
+    static std::string cipher(const std::string& input, const Key& key);
 
 private:
 
