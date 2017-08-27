@@ -223,11 +223,29 @@ void AES::shiftRows(State *state)
 
 void AES::mixColumns(State* state)
 {
+    auto polyProduct = [](byte a, byte b) -> byte {
+        // todo: implement this
+        return 0;
+    };
 
-    // revisit! <!>
-    // need
     auto multiplyColumn = [&](int col) {
         Word column = state->at(col);
+        state->at(col)[0] = (polyProduct(column[0], 2)) ^
+                (polyProduct(column[1], 3)) ^
+                (column[2]) ^
+                (column[3]);
+        state->at(col)[1] = (column[0]) ^
+                (polyProduct(column[1], 2)) ^
+                (column[2] * 3) ^
+                (column[3]);
+        state->at(col)[2] = (column[0]) ^
+                (column[1]) ^
+                (polyProduct(column[2], 2)) ^
+                (column[3] * 3);
+        state->at(col)[3] = (polyProduct(column[0], 3)) ^
+                (column[1]) ^
+                (column[2]) ^
+                (polyProduct(column[3], 2));
     };
 
     multiplyColumn(0);
