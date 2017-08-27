@@ -97,7 +97,7 @@ private:
     ///
     /// \brief Adds round to the state using specified key schedule
     ///
-    static void addRoundKey(State* state, KeySchedule* keySchedule, int round);
+    static void addRoundKey(State* state, const KeySchedule* keySchedule, int round);
 
     ///
     /// \brief Substitution step for state (Sec. 5.1.1)
@@ -115,16 +115,28 @@ private:
     static void mixColumns(State* state);
 
     ///
+    /// \brief Multiply two numbers in the GF(2^8) finite field defined
+    ///
+    static byte finiteFieldMultiply(byte a, byte b);
+
+    ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion
     ///
     static void printBytes(const ByteArray& b);
+
+    ///
+    /// \brief Prints state for debugging
+    ///
+    static void printState(const State*);
 
     AES() = delete;
     AES(const AES&) = delete;
     AES& operator=(const AES&) = delete;
 
-    friend class AESTest_SimpleCipher_Test;
+    friend class AESTest_RawCipher_Test;
+    friend class AESTest_FiniteFieldMultiply_Test;
     friend class AESTest_KeyExpansion_Test;
+    friend class AESTest_AddRoundKey_Test;
 };
 } // end namespace mine
 

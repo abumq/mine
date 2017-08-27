@@ -82,6 +82,18 @@ void AES::printBytes(const ByteArray& b)
     std::cout << std::endl << "------" << std::endl;
 }
 
+void AES::printState(const State* state)
+{
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            byte b = state->at(j)[i];
+            std::cout << "0x" << (b < 10 ? "0" : "") << Base16::encode(b) << "  ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 AES::KeySchedule AES::keyExpansion(const Key* key)
 {
 
@@ -165,8 +177,7 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
             substituteWord(&temp);
             // xor with rcon
             temp[0] ^= kRoundConstant[i / Nk];
-        }
-        if (Nk == 8 && i % Nk == 4) {
+        } else if (Nk == 8 && i % Nk == 4) {
             // See note for 256-bit keys on Sec. 5.2 (Key Expansion) on FIPS.197
             substituteWord(&temp);
         }
@@ -186,11 +197,12 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
     return words;
 }
 
-void AES::addRoundKey(State* state, KeySchedule* keySchedule, int round)
+void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            state->at(i)[j] ^= keySchedule->at(i)[j];
+            int keyIdx = (round * kNb) + i;
+            state->at(i)[j] ^= keySchedule->at(keyIdx)[j];
         }
     }
 }
@@ -223,58 +235,52 @@ void AES::shiftRows(State *state)
 
 void AES::mixColumns(State* state)
 {
-    // taken from Finite Field article
-    auto polyProduct = [](byte a, byte b) -> byte {
-        byte result = 0x0;
-        while (a && b) {
-            if (b & 0x01) {
-                result ^= a;
-            }
-            if (a & 0x80) {
-                a = (a << 1) ^ 0x11b;
-            } else {
-                result <<= 1;
-            }
-            b >>= 1;
-        }
-        return result;
-    };
 
     auto multiplyColumn = [&](int col) {
         Word column = state->at(col);
         state->at(col)[0] =
-                (polyProduct(column[0], 2)) ^
-                (polyProduct(column[1], 3)) ^
+                (finiteFieldMultiply(column[0], 2)) ^
+                (finiteFieldMultiply(column[1], 3)) ^
                 (column[2]) ^
                 (column[3]);
         state->at(col)[1] =
                 (column[0]) ^
-                (polyProduct(column[1], 2)) ^
-                (polyProduct(column[2], 3)) ^
+                (finiteFieldMultiply(column[1], 2)) ^
+                (finiteFieldMultiply(column[2], 3)) ^
                 (column[3]);
         state->at(col)[2] =
                 (column[0]) ^
                 (column[1]) ^
-                (polyProduct(column[2], 2)) ^
-                (polyProduct(column[3], 3));
+                (finiteFieldMultiply(column[2], 2)) ^
+                (finiteFieldMultiply(column[3], 3));
         state->at(col)[3] =
-                (polyProduct(column[0], 3)) ^
+                (finiteFieldMultiply(column[0], 3)) ^
                 (column[1]) ^
                 (column[2]) ^
-                (polyProduct(column[3], 2));
+                (finiteFieldMultiply(column[3], 2));
     };
 
-    /*
-     expected
-04 e0 48 28
-66 cb f8 06
-81 19 d3 26
-e5 9a 7a 4c
-*/
     multiplyColumn(0);
     multiplyColumn(1);
     multiplyColumn(2);
     multiplyColumn(3);
+}
+
+byte AES::finiteFieldMultiply(byte a, byte b)
+{
+    byte result = 0x0;
+    while (a && b) {
+        if (b & 0x01) {
+            result ^= a;
+        }
+        if (a & 0x80) {
+            a = (a << 1) ^ 0x11b;
+        } else {
+            result <<= 1;
+        }
+        b >>= 1;
+    }
+    return result;
 }
 
 AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
@@ -282,6 +288,7 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
     State state;
     ByteArray result;
 
+    // TODO: remove this extra overhead
     std::copy_n(input.begin(), kBlockSize, std::back_inserter(result));
 
     // add padding if needed
@@ -329,6 +336,13 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
     subBytes(&state);
     shiftRows(&state);
     addRoundKey(&state, &keySchedule, round++);
+
+    int k = 0;
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            result[k++] = state.at(i)[j];
+        }
+    }
 
     return result;
 

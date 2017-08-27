@@ -234,16 +234,69 @@ TEST(AESTest, KeyExpansion)
         AES::KeySchedule expected = PARAM(2);
         ASSERT_EQ(expected, keys);
     }
+}
+TEST(AESTest, AddRoundKey)
+{
+    // Simple test with test data from FIPS.197 p.33 and 34
+    // round 1 and round 6 are tested
+    AES::Key key = {{
+                        0x2b, 0x7e, 0x15, 0x16,
+                        0x28, 0xae, 0xd2, 0xa6,
+                        0xab, 0xf7, 0x15, 0x88,
+                        0x09, 0xcf, 0x4f, 0x3c
+                    }};
+    AES::KeySchedule schedule = AES::keyExpansion(&key);
+    AES::State state = {{
+        {{ 0x04, 0x66, 0x81, 0xe5 }},
+        {{ 0xe0, 0xcb, 0x19, 0x9a }},
+        {{ 0x48, 0xf8, 0xd3, 0x7a }},
+        {{ 0x28, 0x06, 0x26, 0x4c }},
+    }};
+    AES::State expected2 = {{
+        {{ 0xa4, 0x9c, 0x7f, 0xf2 }},
+        {{ 0x68, 0x9f, 0x35, 0x2b }},
+        {{ 0x6b, 0x5b, 0xea, 0x43 }},
+        {{ 0x02, 0x6a, 0x50, 0x49 }},
+    }};
+    AES::State expected7 = {{
+        {{ 0x26, 0x0e, 0x2e, 0x17 }},
+        {{ 0x3d, 0x41, 0xb7, 0x7d }},
+        {{ 0xe8, 0x64, 0x72, 0xa9 }},
+        {{ 0xfd, 0xd2, 0x8b, 0x25 }},
+    }};
+    AES::addRoundKey(&state, &schedule, 1);
+    ASSERT_EQ(expected2, state);
 
+    state = {{
+        {{ 0x4b, 0x86, 0x8d, 0x6d }},
+        {{ 0x2c, 0x4a, 0x89, 0x80 }},
+        {{ 0x33, 0x9d, 0xf4, 0xe8 }},
+        {{ 0x37, 0xd2, 0x18, 0xd8 }},
+    }};
+    AES::addRoundKey(&state, &schedule, 6);
+    ASSERT_EQ(expected7, state);
+}
+
+
+TEST(AESTest, FiniteFieldMultiply)
+{
+    static TestData<byte, byte, byte> FiniteFieldMultiplyData = {
+        TestCase(0xd4, 0x02, 0x04),
+    };
+
+    for (auto& item : FiniteFieldMultiplyData) {
+        byte a = PARAM(0);
+        byte b = PARAM(1);
+        byte expected = PARAM(2);
+        ASSERT_EQ(AES::finiteFieldMultiply(a, b), expected);
+    }
 
 }
 
-// FIPS. 197 p. 33
-// this is not real test
-// this is only to aid implementation
-TEST(AESTest, SimpleCipher)
+TEST(AESTest, RawCipher)
 {
 
+    // FIPS. 197 p. 33
     AES::ByteArray input = {{
                                 0x32, 0x43, 0xf6, 0xa8,
                                 0x88, 0x5a, 0x30, 0x8d,
