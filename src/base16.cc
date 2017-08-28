@@ -29,6 +29,19 @@ const std::unordered_map<byte, byte> Base16::kDecodeMap = {
     {0x43, 0x0C}, {0x44, 0x0D}, {0x45, 0x0E}, {0x46, 0x0F}
 };
 
+ByteArray Base16::fromString(const std::string& hex)
+{
+    if (hex.size() % 2 != 0) {
+        throw std::invalid_argument("Invalid base-16 encoding");
+    }
+
+    ByteArray byteArr;
+    for (std::size_t i = 0; i < hex.length(); i += 2) {
+        byteArr.push_back(encode(hex.substr(i, 2).c_str()));
+    }
+    return byteArr;
+}
+
 void Base16::decode(char a, char b, std::ostringstream& ss)
 {
     int b0 = a & 0xff;

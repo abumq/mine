@@ -39,6 +39,11 @@ using byte = unsigned char;
 ///
 /// \brief Provides base64 encoding / decoding implementation
 ///
+/// This class also provides public interface to encode
+/// the iterators for other containers like vector etc.
+///
+/// This also handles unicode characters
+///
 class Base64 {
 public:
 
@@ -159,9 +164,7 @@ public:
 
     ///
     /// \brief Decodes encoded base64
-    /// \throws std::runtime if invalid encoding. Another time it is thrown
-    /// is if no padding is found
-    /// std::runtime::what() is set according to the error
+    /// \see decode(const Iter&, const Iter&)
     ///
     static std::string decode(const std::string& e)
     {
@@ -171,6 +174,12 @@ public:
         return decode(e.begin(), e.end());
     }
 
+    ///
+    /// \brief Decodes base64 iterator from begin to end
+    /// \throws std::runtime if invalid encoding. Another time it is thrown
+    /// is if no padding is found
+    /// std::runtime::what() is set according to the error
+    ///
     template <class Iter>
     static std::string decode(const Iter& begin, const Iter& end)
     {

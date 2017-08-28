@@ -101,16 +101,6 @@ void AES::printState(const State* state)
     std::cout << std::endl;
 }
 
-AES::ByteArray AES::hexStrToByteArray(const std::string& hex)
-{
-    AES::ByteArray byteArr;
-    for (std::size_t i = 0; i < hex.length(); i += 2) {
-        std::string hexByte = hex.substr(i, 2);
-        byteArr.push_back(static_cast<byte>(strtol(hexByte.c_str(), NULL, 16)));
-    }
-    return byteArr;
-  }
-
 AES::KeySchedule AES::keyExpansion(const Key* key)
 {
 
@@ -283,9 +273,10 @@ void AES::invShiftRows(State *state)
 
 void AES::invMixColumns(State* state)
 {
+
 }
 
-AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
+ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
     std::size_t keySize = key->size();
 
@@ -324,7 +315,7 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
 }
 
-AES::ByteArray AES::decipher(const ByteArray& input, const Key* key)
+ByteArray AES::decipher(const ByteArray& input, const Key* key)
 {
     std::size_t keySize = key->size();
 
@@ -378,7 +369,7 @@ void AES::initState(State* state, ByteArray input)
     }
 }
 
-AES::ByteArray AES::stateToByteArray(const State *state)
+ByteArray AES::stateToByteArray(const State *state)
 {
     ByteArray result(kBlockSize);
     int k = 0;
@@ -395,8 +386,8 @@ AES::ByteArray AES::stateToByteArray(const State *state)
 
 std::string AES::cipher(const std::string& input, const std::string& key)
 {
-    Key keyArr = hexStrToByteArray(key);
-    ByteArray inp = hexStrToByteArray(input);
+    Key keyArr = Base16::fromString(key);
+    ByteArray inp = Base16::fromString(input);
     ByteArray result = cipher(inp, &keyArr);
     return Base16::encode(result.begin(), result.end());
 }

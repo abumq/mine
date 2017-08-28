@@ -32,6 +32,10 @@ static TestData<std::string> InvalidBase16EncodingData = {
     TestCase("48656C6C6F20576F726C64F"),
 };
 
+static TestData<std::string, ByteArray> Base16FromStringData = {
+    TestCase("48656C6C6F", ByteArray { 0x48, 0x65, 0x6C, 0x6C, 0x6F }),
+};
+
 TEST(Base16Test, Encode)
 {
     for (const auto& item : Base16TestData) {
@@ -45,6 +49,14 @@ TEST(Base16Test, EncodeByteArray)
     for (const auto& item : Base16ByteArrayEncodingTestData) {
         std::string encoded = Base16::encode(PARAM(0).begin(), PARAM(0).end());
         ASSERT_STREQ(PARAM(1).c_str(), encoded.c_str());
+    }
+}
+
+TEST(Base16Test, ConvertToByteArray)
+{
+    for (const auto& item : Base16FromStringData) {
+        ByteArray result = Base16::fromString(PARAM(0));
+        ASSERT_EQ(PARAM(1), result);
     }
 }
 
@@ -75,7 +87,7 @@ TEST(Base16Test, DecodeInt)
 TEST(Base16Test, InvalidBase16Encoding)
 {
     for (const auto& item : InvalidBase16EncodingData) {
-        EXPECT_THROW(Base16::decode(PARAM(0)), std::runtime_error);
+        EXPECT_THROW(Base16::decode(PARAM(0)), std::invalid_argument);
     }
 }
 }

@@ -24,11 +24,17 @@
 #include <string>
 #include <array>
 #include <unordered_map>
+#include <vector>
 #include "src/rsa.h"
 
 namespace mine {
 
 using byte = unsigned char;
+
+///
+/// \brief Handy safe byte array
+///
+using ByteArray = std::vector<byte>;
 
 ///
 /// \brief Provides AES crypto functionalities
@@ -45,10 +51,6 @@ using byte = unsigned char;
 ///
 class AES {
 public:
-    ///
-    /// \brief Handy safe byte array
-    ///
-    using ByteArray = std::vector<byte>;
 
     ///
     /// \brief A key is a byte array
@@ -207,11 +209,6 @@ private:
     /// \brief Prints state for debugging
     ///
     static void printState(const State*);
-
-    ///
-    /// \brief Converts hex string to byte array
-    ///
-    static ByteArray hexStrToByteArray(const std::string& hex);
 
     AES() = delete;
     AES(const AES&) = delete;

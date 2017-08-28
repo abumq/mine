@@ -7,6 +7,7 @@
 #   include "package/mine.h"
 #else
 #   include "src/aes.h"
+#   include "src/base16.h"
 #endif
 
 namespace mine {
@@ -270,14 +271,17 @@ static TestData<std::string, std::string, std::string> RawCipherData = {
 
 TEST(AESTest, RawCipher)
 {
-
     for (auto& item : RawCipherData) {
-        AES::ByteArray input = AES::hexStrToByteArray(PARAM(0));
-        AES::Key key = static_cast<AES::Key>(AES::hexStrToByteArray(PARAM(1)));
-        AES::ByteArray expected = AES::hexStrToByteArray(PARAM(2));
-        AES::ByteArray output = AES::cipher(input, &key);
+        ByteArray input = Base16::fromString(PARAM(0));
+        AES::Key key = static_cast<AES::Key>(Base16::fromString(PARAM(1)));
+        ByteArray expected = Base16::fromString(PARAM(2));
+        ByteArray output = AES::cipher(input, &key);
         ASSERT_EQ(expected, output);
     }
+}
+
+TEST(AESTest, RawCipherDirect)
+{
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
@@ -291,7 +295,7 @@ TEST(AESTest, RawSimpleCipher)
 {
 
     // FIPS. 197 p. 33
-    AES::ByteArray input = {{
+    ByteArray input = {{
                                 0x32, 0x43, 0xf6, 0xa8,
                                 0x88, 0x5a, 0x30, 0x8d,
                                 0x31, 0x31, 0x98, 0xa2,
@@ -305,14 +309,14 @@ TEST(AESTest, RawSimpleCipher)
                         0x09, 0xcf, 0x4f, 0x3c
                     }};
 
-    AES::ByteArray expected = {{
+    ByteArray expected = {{
                                    0x39, 0x25, 0x84, 0x1d,
                                    0x02, 0xdc, 0x09, 0xfb,
                                    0xdc, 0x11, 0x85, 0x97,
                                    0x19, 0x6a, 0x0b, 0x32
                                }};
 
-    AES::ByteArray output = AES::cipher(input, &key);
+    ByteArray output = AES::cipher(input, &key);
     ASSERT_EQ(expected, output);
 }
 

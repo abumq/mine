@@ -25,13 +25,19 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 
 namespace mine {
 
 using byte = unsigned char;
+using ByteArray = std::vector<byte>;
 
 ///
 /// \brief Provides base16 encoding / decoding
+///
+/// This class also contains some helpers to convert various input types
+/// to byte array and also provides public interface to encode
+/// the iterators for other containers like vector etc.
 ///
 class Base16 {
 public:
@@ -56,6 +62,14 @@ public:
     }
 
     ///
+    /// \brief Wrapper function to encode single hex char to corresponding byte
+    ///
+    static byte encode(const char* e)
+    {
+        return static_cast<byte>(strtol(e, nullptr, 16));
+    }
+
+    ///
     /// \brief Encodes input iterator to hex encoding
     ///
     template <class Iter>
@@ -69,13 +83,12 @@ public:
     }
 
     ///
-    /// \brief Encodes single byte
+    /// \brief Converts hex stream (e.g, 48656C6C6F) to byte array
+    /// \param hex String stream e.g, 48656C6C6F (Hello)
+    /// \return Byte array (mine::ByteArray) containing bytes e.g, 0x48, 0x65, 0x6C, 0x6C, 0x6F
+    /// \throws invalid_argument if hex is not valid
     ///
-    static inline void encode(char b, std::ostringstream& ss) noexcept
-    {
-        int h = (b & 0xff);
-        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
-    }
+    static ByteArray fromString(const std::string& hex);
 
     ///
     /// \brief Encodes integer to hex
@@ -97,36 +110,16 @@ public:
 
     ///
     /// \brief Decodes encoded hex
-    /// \throws std::runtime if invalid encoding.
-    /// std::runtime::what() is set accordingly
+    /// \throws std::invalid_argument if invalid encoding.
+    /// std::invalid_argument::what() is set accordingly
     ///
     static std::string decode(const std::string& enc)
     {
         if (enc.size() % 2 != 0) {
-            throw std::runtime_error("Invalid base-16 encoding");
+            throw std::invalid_argument("Invalid base-16 encoding");
         }
         return decode(enc.begin(), enc.end());
     }
-
-    ///
-    /// \brief Encodes input iterator to hex encoding
-    /// \note User should check for the valid size or use decode(std::string)
-    /// \throws runtime_error if invalid base16-encoding
-    ///
-    template <class Iter>
-    static std::string decode(const Iter& begin, const Iter& end)
-    {
-        std::ostringstream ss;
-        for (auto it = begin; it != end; it += 2) {
-            decode(*it, *(it + 1), ss);
-        }
-        return ss.str();
-    }
-
-    ///
-    /// \brief Decodes single byte pair
-    ///
-    static void decode(char a, char b, std::ostringstream& ss);
 
     ///
     /// \brief Decodes encoding to single integer of type T
@@ -149,6 +142,35 @@ private:
     Base16() = delete;
     Base16(const Base16&) = delete;
     Base16& operator=(const Base16&) = delete;
+
+    ///
+    /// \brief Encodes single byte
+    ///
+    static inline void encode(char b, std::ostringstream& ss) noexcept
+    {
+        int h = (b & 0xff);
+        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
+    }
+
+    ///
+    /// \brief Encodes input iterator to hex encoding
+    /// \note User should check for the valid size or use decode(std::string)
+    /// \throws runtime_error if invalid base16-encoding
+    ///
+    template <class Iter>
+    static std::string decode(const Iter& begin, const Iter& end)
+    {
+        std::ostringstream ss;
+        for (auto it = begin; it != end; it += 2) {
+            decode(*it, *(it + 1), ss);
+        }
+        return ss.str();
+    }
+
+    ///
+    /// \brief Decodes single byte pair
+    ///
+    static void decode(char a, char b, std::ostringstream& ss);
 };
 } // end namespace mine
 
