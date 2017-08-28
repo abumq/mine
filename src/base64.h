@@ -207,8 +207,12 @@ public:
 
                 if (b1 != kPadding && b1 != '\0') {
                     if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
-                        // second biteset is 'partial byte'
-                        ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
+                        // second bitset is 'partial byte'
+
+                        // note: this line was causing issue when we had plain text length 16
+                        // b64 = uS2qrm5XdzsQZTcDrxJxbw==
+                        // it was adding a nul term char
+                        //ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                     } else {
                         ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
                                                                                         // first we clear the bits at pos 4 and 5
