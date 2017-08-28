@@ -23,12 +23,12 @@ We are very careful with our implementations and have [unit tests](/test/) in pl
 Mine _will_ support following features:
 
  * RSA (Encrypt, Decrypt, Sign and Verify) [[RFC-3447](https://tools.ietf.org/html/rfc3447)]
- * AES [[FIPS.197](http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)]
+ * AES [[FIPS Pub. 197](http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)]
  * ZLib (Depend upon libz, eventually implement [RFC-1950](https://tools.ietf.org/html/rfc3602))
  * Base16 (Encode, Decode)
  * Base64 (Encode, Decode)
  
-For _minimal_ library this is what we are aiming.
+This is what we are aiming for _minimal_ crypto library.
 
 # Contribution
 You can only contribute by testing on various platforms and reporting the issues. We are not accepting any pull requests until first release.
@@ -39,8 +39,8 @@ You can only contribute by testing on various platforms and reporting the issues
 Copyright 2017 Muflihun Labs
 
 https://github.com/muflihun/
-https://muflihun.com
 https://muflihun.github.io
+https://muflihun.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

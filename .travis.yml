@@ -8,6 +8,7 @@ before_install:
  - sudo apt-get install -y libssl-dev libgtest-dev php5-cli valgrind
  - sudo apt-get install --only-upgrade cmake
  - cmake --version 
+ - g++ --version
  # Crypto++ (We manually install it because we need Pem Pack as well)
  - wget https://raw.githubusercontent.com/muflihun/muflihun.github.io/master/downloads/cryptocpp.tar.gz
  - tar xf cryptocpp.tar.gz
