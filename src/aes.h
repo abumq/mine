@@ -74,6 +74,15 @@ public:
     ///
     static std::string cipher(const std::string& input, const std::string& key, InputMode inputMode = InputMode::Plain);
 
+    ///
+    /// \brief Ciphers the input with specified hex key using CBC mode
+    /// \param key Hex key
+    /// \param iv Initialization vector, passed by reference. If empty a random is generated and passed in
+    /// \param inputMode the type of input. Defaults to Plain
+    /// \return Base16 encoded cipher
+    ///
+    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, InputMode inputMode = InputMode::Plain);
+
 private:
 
     ///

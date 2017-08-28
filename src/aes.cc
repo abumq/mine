@@ -497,10 +497,6 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
         iv = generateRandomBytes(16);
     }
 
-    // FIXME: Need more fixes
-    // 2b7e151628aed2a6abf7158809cf4f3c
-    // 20 c7 04 40 ac 40 0d ba 84 06 57 00 74 f2 e2 2a
-
     const std::size_t inputSize = input.size();
     ByteArray result;
     ByteArray nextXorWith = iv;
@@ -575,5 +571,25 @@ std::string AES::cipher(const std::string& input, const std::string& key, InputM
         inp = Base16::fromString(Base16::encode(Base64::decode(input)));
     }
     ByteArray result = cipher(inp, &keyArr);
+    return Base16::encode(result.begin(), result.end());
+}
+
+std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, InputMode inputMode)
+{
+    bool ivecGenerated = iv.empty();
+    ByteArray ivec;
+    Key keyArr = Base16::fromString(key);
+    ByteArray inp;
+    if (inputMode == InputMode::Plain) {
+        inp = Base16::fromString(Base16::encode(input));
+    } else if (inputMode == InputMode::Base16) {
+        inp = Base16::fromString(input);
+    } else { // base64
+        inp = Base16::fromString(Base16::encode(Base64::decode(input)));
+    }
+    ByteArray result = cipher(inp, &keyArr, ivec);
+    if (ivecGenerated) {
+        iv = Base16::encode(ivec.begin(), ivec.end());
+    }
     return Base16::encode(result.begin(), result.end());
 }
