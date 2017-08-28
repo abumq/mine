@@ -216,6 +216,8 @@ private:
 
     friend class AESTest_RawCipher_Test;
     friend class AESTest_RawSimpleCipher_Test;
+    friend class AESTest_RawSimpleDecipher_Test;
+    friend class AESTest_SubByte_Test;
     friend class AESTest_FiniteFieldMultiply_Test;
     friend class AESTest_KeyExpansion_Test;
     friend class AESTest_AddRoundKey_Test;

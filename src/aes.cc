@@ -134,7 +134,7 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
     //      to each of the four bytes to produce an output word.
     //
     // Out definition:
-    // It's a simple substition with kSbox for corresponding bit
+    // It's a simple substition with kSbox for corresponding byte
     // index
     //
     auto substituteWord = [](Word* w) -> Word* {
@@ -252,7 +252,7 @@ void AES::mixColumns(State* state)
         Word column = state->at(col);
         // let's take example from publication, col: [212, 191, 93, 48]
         // t == 6
-        byte t = (column[0]) ^ (column[1]) ^ (column[2]) ^ (column[3]);
+        byte t = column[0] ^ column[1] ^ column[2] ^ column[3];
         // see Sec. 4.2.1 and Sec. 5.1.3 for more details
         state->at(col)[0] ^= xtime(column[0] ^ column[1]) ^ t;
         state->at(col)[1] ^= xtime(column[1] ^ column[2]) ^ t;
