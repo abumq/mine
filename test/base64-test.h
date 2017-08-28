@@ -7,6 +7,7 @@
 #   include "package/mine.h"
 #else
 #   include "src/base64.h"
+#   include "src/base16.h"
 #endif
 
 namespace mine {
@@ -99,15 +100,18 @@ TEST(Base64Test, Decode)
     }
 }
 
-static TestData<std::string, std::size_t> Base64SizeTestData = {
-    TestCase("Z0BiQ8NcwknqzbGrWBjXqw==", 16),
+static TestData<std::string, std::size_t, std::string> Base64RawTestData = {
+    TestCase("Z0BiQ8NcwknqzbGrWBjXqw==", 16, "67406243C35CC249EACDB1AB5818D7AB"),
+    TestCase("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==", 64, "12D62BE49168FFB92A616C68A0CBD4D8327EBA936150C0E28BD5FA2041D8C6F50D5D2546937E086A44F91FB19BCB32F9FC920C3004022E7514F36E11237CA681")
 };
 
 TEST(Base64Test, DecodeRawSize)
 {
-    for (const auto& item : Base64SizeTestData) {
+    for (const auto& item : Base64RawTestData) {
         std::string decoded = Base64::decode(PARAM(0));
         ASSERT_EQ(PARAM(1), decoded.size());
+        std::string b16 = Base16::encode(decoded);
+        ASSERT_STRCASEEQ(PARAM(2).c_str(), b16.c_str());
     }
 }
 
