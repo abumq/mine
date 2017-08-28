@@ -174,6 +174,16 @@ private:
     static void shiftRows(State* state);
 
     ///
+    /// \ref Sec. 4.2.1
+    ///
+    static byte xtime(byte x);
+
+    ///
+    /// \ref Sec. 4.2.1
+    ///
+    static byte multiply(byte x, byte y);
+
+    ///
     /// \brief Mixing columns for the state
     /// \ref Sec. 5.1.3
     ///

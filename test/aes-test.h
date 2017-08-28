@@ -504,7 +504,7 @@ TEST(AESTest, RawSimpleDecipher)
                           }};
 
     ByteArray output = AES::decipher(input, &key);
-    //ASSERT_EQ(expected, output);
+    ASSERT_EQ(expected, output);
 }
 
 }
