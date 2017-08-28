@@ -423,7 +423,30 @@ ByteArray AES::stateToByteArray(const State *state)
     return result;
 }
 
-ByteArray AES::cipher(const ByteArray& input, const Key* key)
+ByteArray AES::generateRandomBytes(const std::size_t len)
+{
+    ByteArray result;
+    const int kMax = 999;
+    srand(time(nullptr));
+    for (std::size_t i = 0; i < len; ++i) {
+        int r = rand() % kMax;
+        while (r == 0) {
+            r = rand() % kMax + 1;
+        }
+        result.push_back(static_cast<byte>(r));
+    }
+    return result;
+}
+
+ByteArray* AES::xorWith(ByteArray* input, const ByteArray* arr)
+{
+    for (std::size_t i = 0; i < kBlockSize; ++i) {
+        input->at(i) ^= arr->at(i);
+    }
+    return input;
+}
+
+ByteArray AES::rawCipher(const ByteArray& input, const Key* key)
 {
 
     State state;
@@ -456,30 +479,7 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
 }
 
-ByteArray AES::generateRandomBytes(const std::size_t len)
-{
-    ByteArray result;
-    const int kMax = 999;
-    srand(time(nullptr));
-    for (std::size_t i = 0; i < len; ++i) {
-        int r = rand() % kMax;
-        while (r == 0) {
-            r = rand() % kMax + 1;
-        }
-        result.push_back(static_cast<byte>(r));
-    }
-    return result;
-}
-
-ByteArray* AES::xorWith(ByteArray* input, const ByteArray* arr)
-{
-    for (std::size_t i = 0; i < kBlockSize; ++i) {
-        input->at(i) ^= arr->at(i);
-    }
-    return input;
-}
-
-ByteArray AES::decipher(const ByteArray& input, const Key* key)
+ByteArray AES::rawDecipher(const ByteArray& input, const Key* key)
 {
 
     State state;
@@ -543,7 +543,7 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
 
         xorWith(&inputBlock, &nextXorWith);
 
-        ByteArray outputBlock = cipher(inputBlock, key);
+        ByteArray outputBlock = rawCipher(inputBlock, key);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
         nextXorWith = outputBlock;
     }
@@ -577,7 +577,7 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
             inputBlock.at(j) = input.at(j + i);
         }
 
-        ByteArray outputBlock = decipher(inputBlock, key);
+        ByteArray outputBlock = rawDecipher(inputBlock, key);
 
         xorWith(&outputBlock, &nextXorWith);
         nextXorWith = inputBlock;
@@ -615,7 +615,7 @@ std::string AES::cipher(const std::string& input, const std::string& key, Conver
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputMode);
-    ByteArray result = cipher(inp, &keyArr);
+    ByteArray result = rawCipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 
@@ -636,7 +636,7 @@ std::string AES::decipher(const std::string& input, const std::string& key, Conv
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputMode);
-    ByteArray result = decipher(inp, &keyArr);
+    ByteArray result = rawDecipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 

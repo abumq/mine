@@ -263,7 +263,7 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
-    static ByteArray cipher(const ByteArray& input, const Key* key);
+    static ByteArray rawCipher(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
@@ -283,7 +283,7 @@ private:
     /// \param key Byte array of key
     /// \return 128-bit plain text
     ///
-    static ByteArray decipher(const ByteArray& input, const Key* key);
+    static ByteArray rawDecipher(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Deciphers with CBC-Mode, the input can be as long as user wants

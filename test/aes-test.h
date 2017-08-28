@@ -438,7 +438,7 @@ TEST(AESTest, RawCipher)
         ByteArray input = Base16::fromString(PARAM(0));
         AES::Key key = static_cast<AES::Key>(Base16::fromString(PARAM(1)));
         ByteArray expected = Base16::fromString(PARAM(2));
-        ByteArray output = AES::cipher(input, &key);
+        ByteArray output = AES::rawCipher(input, &key);
         ASSERT_EQ(expected, output);
     }
 }
@@ -507,7 +507,7 @@ TEST(AESTest, RawSimpleCipher)
                               0x19, 0x6a, 0x0b, 0x32
                           }};
 
-    ByteArray output = AES::cipher(input, &key);
+    ByteArray output = AES::rawCipher(input, &key);
     ASSERT_EQ(expected, output);
 }
 
@@ -537,7 +537,7 @@ TEST(AESTest, RawSimpleDecipher)
                               0xe0, 0x37, 0x07, 0x34
                           }};
 
-    ByteArray output = AES::decipher(input, &key);
+    ByteArray output = AES::rawDecipher(input, &key);
     ASSERT_EQ(expected, output);
 }
 
