@@ -703,10 +703,6 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
         throw std::invalid_argument("Invalid AES key size");
     }
 
-    if (input.size() % 16 != 0) {
-        throw std::invalid_argument("Invalid AES cipher");
-    }
-
     const std::size_t inputSize = input.size();
     ByteArray result;
 

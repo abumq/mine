@@ -768,6 +768,29 @@ TEST(AESTest, CbcDecipher)
     }
 }
 
+TEST(AESTest, RealDataIssues)
+{
+    std::string expected = R"("{"_t":1503928197,"logger_id":"default","access_code":"default"})";
+    std::string output = AES::decipher("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
+                                       "CBD437FA37772C66051A47D72367B38E",
+                                       "a14c54563269e9e368f56b325f04ff00",
+                                       AES::ConvertMode::Base64,
+                                       AES::ConvertMode::Plain);
+
+    //
+    // this worked => the only issue was padding std::string r = mine::AES::decipher(Ripe::stringToHex(Ripe::base64Decode(raw)), key, iv, mine::AES::ConvertMode::Base16, mine::AES::ConvertMode::Plain);
+
+    //ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
+    expected = R"("{"_t":1503928197,"logger_id":"default","access_code":"default"})";
+    output = AES::decipher("12D62BE49168FFB92A616C68A0CBD4D8327EBA936150C0E28BD5FA2041D8C6F50D5D2546937E086A44F91FB19BCB32F9FC920C3004022E7514F36E11237CA681",
+                                       "CBD437FA37772C66051A47D72367B38E",
+                                       "a14c54563269e9e368f56b325f04ff00",
+                                       AES::ConvertMode::Base16,
+                                       AES::ConvertMode::Plain);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+}
+
 }
 
 #endif // AES_TEST_H
