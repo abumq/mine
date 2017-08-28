@@ -408,6 +408,27 @@ void AES::invShiftRows(State *state)
 }
 
 ///
+/// Finds the product of {02} and the argument to
+/// xtime modulo {1b}
+///
+byte AES::xtime(byte x)
+{
+    return ((x << 1) ^ (((x >> 7) & 1) * 0x11b));
+}
+
+///
+/// Multiplies numbers in the GF(2^8) field
+///
+byte AES::multiply(byte x, byte y)
+{
+    return (((y & 0x01) * x) ^
+            ((y >> 1 & 0x01) * xtime(x)) ^
+            ((y >> 2 & 0x01) * xtime(xtime(x))) ^
+            ((y >> 3 & 0x01) * xtime(xtime(xtime(x)))) ^
+            ((y >> 4 & 0x01) * xtime(xtime(xtime(xtime(x))))));
+}
+
+///
 /// multiplies in GF(2^8) field selected column from state
 /// with constant matrix defined by publication
 ///
@@ -418,16 +439,7 @@ void AES::invShiftRows(State *state)
 ///
 void AES::mixColumns(State* state)
 {
-    // Finds the product of {02} and the argument to xtime modulo {1b}
-    // mentioned in Sec. 4.2.1 of FIPS.197
-    // taken from http://gauss.ececs.uc.edu/Courses/c653/extra/AES/xtime.cpp
-    auto xtime = [](byte x) {
-        return ((x << 1) ^ (((x >> 7) & 1) * 0x11b));
-    };
-
     for (int col = 0; col < 4; ++col) {
-
-
         Word column = state->at(col);
         // let's take example from publication, col: [212, 191, 93, 48]
         // t == 6
@@ -440,9 +452,24 @@ void AES::mixColumns(State* state)
     }
 }
 
+///
+/// Inverse multiplication with inverse matrix defined on Sec. 5.3.3
+///
+/// [ 0e  0b  0d  09 ]
+/// | 09  0e  0b  0d |
+/// | 0d  09  0e  0b |
+/// [ 0b  0d  09  0e ]
+///
 void AES::invMixColumns(State* state)
 {
-    (void)state;
+    for (int col = 0; col < 4; ++col) {
+        Word column = state->at(col);
+        // see Sec. 4.2.1 and Sec. 5.3.3 for more details
+        state->at(col)[0] = multiply(column[0], 0x0e) ^ multiply(column[1], 0x0b) ^ multiply(column[2], 0x0d) ^ multiply(column[3], 0x09);
+        state->at(col)[1] = multiply(column[0], 0x09) ^ multiply(column[1], 0x0e) ^ multiply(column[2], 0x0b) ^ multiply(column[3], 0x0d);
+        state->at(col)[2] = multiply(column[0], 0x0d) ^ multiply(column[1], 0x09) ^ multiply(column[2], 0x0e) ^ multiply(column[3], 0x0b);
+        state->at(col)[3] = multiply(column[0], 0x0b) ^ multiply(column[1], 0x0d) ^ multiply(column[2], 0x09) ^ multiply(column[3], 0x0e);
+    }
 }
 
 ByteArray AES::cipher(const ByteArray& input, const Key* key)
