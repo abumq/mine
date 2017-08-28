@@ -52,7 +52,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall  ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra ")
 
 require_cpp11()
 

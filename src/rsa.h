@@ -252,7 +252,7 @@ public:
     ///
     /// \brief Absolutely must override this - conversion from x to single byte
     ///
-    virtual inline byte bigIntegerToByte(const BigInteger& x) const
+    virtual inline byte bigIntegerToByte(const BigInteger&) const
     {
         return static_cast<byte>(0);
     }
@@ -590,59 +590,9 @@ public:
     /// \param signature Signature in hex
     /// \see https://tools.ietf.org/html/rfc3447#section-8.1.2
     ///
-    bool verify(const PublicKey* publicKey, const std::string& message,
-                       const std::string& signature)
+    bool verify(const PublicKey*, const std::string&, const std::string&)
     {
-        /*
-        // TODO: Add it to test
-        std::vector<byte> f = getByteArray(18537);
-        BigInteger s = i2osp(f, 2);
-        BigInteger os = os2ip(18537); // 105
 
-        std::cout << s << std::endl;
-        std::cout << os << std::endl;
-
-        std::vector<byte> f2 = getByteArray(1214841185);
-        BigInteger s2 = i2osp(f2, 4);
-        BigInteger os2 = os2ip(1214841185); // 97
-
-        std::cout << s2 << std::endl;
-        std::cout << os2 << std::endl;
-
-        std::cout << changeBase(54735, 8) << std::endl;
-
-        std::cout << std::hex << 16 << std::endl;
-        std::cout << std::oct << 72 << std::endl;
-
-        return true;
-
-        BigInteger sign = m_helper.hexToBigInteger(signature);
-        try {
-            BigInteger vp = createVerificationPrimitive(publicKey, sign);
-
-            const int xlen = (publicKey->n().BitCount() + 7) >> 3;
-
-            if (xlen < vp + 11) {
-                // throw std::runtime_error("Integer too large"); // Needed??! Where in RFC?
-            }
-
-            std::vector<int> em = m_helper.getByteArray(vp, xlen);
-
-
-            // todo: add check for following (as per https://tools.ietf.org/html/rfc3447#section-8.1.2)
-            // Note that emLen will be one less than k if modBits - 1 is
-            // divisible by 8 and equal to k otherwise.  If I2OSP outputs
-            // "integer too large," output "invalid signature" and stop.
-
-            // EMSA-PSS_VERIFY - https://tools.ietf.org/html/rfc3447#section-9.1.2
-
-
-
-            std::cout << "tt" << std::endl;
-            return true;
-        } catch (std::exception&) {
-        }
-*/
         return true;
     }
 
@@ -655,7 +605,7 @@ private:
     /// \return corresponding nonnegative integer
     ///
     template <class T = std::wstring>
-    BigInteger pkcs1pad2(const T& s, int n) {
+    BigInteger pkcs1pad2(const T& s, std::size_t n) {
         if (n < s.size() + 11) {
             throw std::runtime_error("Message too long");
         }
@@ -717,7 +667,7 @@ private:
         if (baLen <= 2 || ba[0] != 0 || ba[1] != 2) {
             throw std::runtime_error("Incorrect padding PKCS#1");
         }
-        int i = 2; // passed first two characters (0x0 and 0x2) test
+        std::size_t i = 2; // passed first two characters (0x0 and 0x2) test
         // lets check for the <PS>
 
         // if we hit end while still we're still with non-zeros, it's a padding error

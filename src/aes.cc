@@ -80,7 +80,7 @@ const std::unordered_map<uint8_t, std::vector<uint8_t>> AES::kKeyParams = {
 
 void AES::printBytes(const ByteArray& b)
 {
-    for (int i = 1; i <= b.size(); ++i) {
+    for (std::size_t i = 1; i <= b.size(); ++i) {
         std::cout << "0x" << (b[i - 1] < 10 ? "0" : "") << Base16::encode(b[i - 1]) << "  ";
         if (i % 4 == 0) {
             std::cout << std::endl;
@@ -263,17 +263,17 @@ void AES::mixColumns(State* state)
 
 void AES::invSubBytes(State* state)
 {
-
+    (void)state;
 }
 
 void AES::invShiftRows(State *state)
 {
-
+    (void)state;
 }
 
 void AES::invMixColumns(State* state)
 {
-
+    (void)state;
 }
 
 ByteArray AES::cipher(const ByteArray& input, const Key* key)
