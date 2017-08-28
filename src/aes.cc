@@ -395,19 +395,41 @@ void AES::invMixColumns(State* state)
     }
 }
 
+void AES::initState(State* state, ByteArray input)
+{
+    // Pad the input if needed
+    if (input.size() < kBlockSize) {
+        std::fill_n(input.end(), kBlockSize - input.size(), 0);
+    }
+
+    // assign it to state for processing
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            (*state)[i][j] = input[(kNb * i) + j];
+        }
+    }
+}
+
+ByteArray AES::stateToByteArray(const State *state)
+{
+    ByteArray result(kBlockSize);
+    int k = 0;
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            result[k++] = state->at(i)[j];
+        }
+    }
+
+    return result;
+}
+
 ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
-    std::size_t keySize = key->size();
-
-    // key size validation
-    if (keySize != 16 && keySize != 24 && keySize != 32) {
-        throw std::invalid_argument("Invalid AES key size");
-    }
 
     State state;
     initState(&state, input);
 
-    uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
+    uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
 
     // Create linear subkeys (key schedule)
     KeySchedule keySchedule = keyExpansion(key);
@@ -432,6 +454,72 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
     return stateToByteArray(&state);
 
+}
+
+ByteArray AES::generateRandomBytes(const std::size_t len)
+{
+    ByteArray result;
+    const int kMax = 999;
+    srand(time(nullptr));
+    for (std::size_t i = 0; i < len; ++i) {
+        int r = rand() % kMax;
+        while (r == 0) {
+            r = rand() % kMax + 1;
+        }
+        result.push_back(static_cast<byte>(r));
+    }
+    return result;
+}
+
+ByteArray AES::xorWith(ByteArray& input, const ByteArray& arr)
+{
+    for (std::size_t i = 0; i < kBlockSize; ++i) {
+        input.at(i) ^= arr.at(i);
+    }
+    return input;
+}
+
+
+ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    if (!iv.empty() && iv.size() != 16) {
+        throw std::invalid_argument("Invalid IV, it should be 128-bit");
+    } else if (iv.empty()) {
+        // generate IV
+        iv = generateRandomBytes(16);
+    }
+
+    // FIXME: Need more fixes
+    // 2b7e151628aed2a6abf7158809cf4f3c
+    // 20 c7 04 40 ac 40 0d ba 84 06 57 00 74 f2 e2 2a
+
+    const std::size_t inputSize = input.size();
+    ByteArray result;
+    ByteArray nextXorWith = iv;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        // don't use copy_n as we are setting the values
+        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        xorWith(inputBlock, nextXorWith);
+
+        ByteArray outputBlock = cipher(inputBlock, key);
+        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
+        nextXorWith = outputBlock;
+    }
+    return result;
 }
 
 ByteArray AES::decipher(const ByteArray& input, const Key* key)
@@ -471,34 +559,6 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
 
     return stateToByteArray(&state);
 
-}
-
-void AES::initState(State* state, ByteArray input)
-{
-    // Pad the input if needed
-    if (input.size() < kBlockSize) {
-        std::fill_n(input.end(), kBlockSize - input.size(), 0);
-    }
-
-    // assign it to state for processing
-    for (std::size_t i = 0; i < kNb; ++i) {
-        for (std::size_t j = 0; j < kNb; ++j) {
-            (*state)[i][j] = input[(kNb * i) + j];
-        }
-    }
-}
-
-ByteArray AES::stateToByteArray(const State *state)
-{
-    ByteArray result(kBlockSize);
-    int k = 0;
-    for (std::size_t i = 0; i < kNb; ++i) {
-        for (std::size_t j = 0; j < kNb; ++j) {
-            result[k++] = state->at(i)[j];
-        }
-    }
-
-    return result;
 }
 
 // public

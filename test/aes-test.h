@@ -535,6 +535,65 @@ TEST(AESTest, RawSimpleDecipher)
     ASSERT_EQ(expected, output);
 }
 
+TEST(AESTest, CbcCipher)
+{
+    //                 input      expected
+    static TestData<std::string, ByteArray> CbcCipherTestData = {
+        TestCase("this is test....", ByteArray {{
+                                                    0xa3, 0xd9, 0x36, 0xf1,
+                                                    0xfe, 0xd3, 0xb8, 0xd3,
+                                                    0xe7, 0x4e, 0x09, 0x4e,
+                                                    0x2c, 0x0f, 0x1b, 0xd9
+                                                }}),
+        TestCase("this is test.", ByteArray {{
+                                                    0x86, 0xae, 0xc0, 0x99,
+                                                    0xfc, 0x4e, 0xba, 0x5f,
+                                                    0xcd, 0xaa, 0xd2, 0x94,
+                                                    0x96, 0x48, 0x01, 0x65
+                                                }}),
+        TestCase("this is test longer", ByteArray {{
+                                                                    0x2c, 0x32, 0x8a, 0xa3,
+                                                                    0x6c, 0xff, 0xdd, 0xe8,
+                                                                    0xc1, 0x41, 0x2e, 0x12,
+                                                                    0x10, 0x2f, 0x22, 0x05,
+                                                                    0xe7, 0x4e, 0x98, 0x8c,
+                                                                    0x9a, 0x15, 0x42, 0xe9,
+                                                                    0x72, 0x84, 0xc5, 0x19,
+                                                                    0x76, 0xc2, 0x6a, 0x44
+                                                                }}),
+        TestCase("this is test longer than 128-bit", ByteArray {{
+                                                                    0x2c, 0x32, 0x8a, 0xa3,
+                                                                    0x6c, 0xff, 0xdd, 0xe8,
+                                                                    0xc1, 0x41, 0x2e, 0x12,
+                                                                    0x10, 0x2f, 0x22, 0x05,
+                                                                    0x49, 0x32, 0x6a, 0x1c,
+                                                                    0x3c, 0x51, 0xc3, 0x64,
+                                                                    0x33, 0x47, 0xdf, 0x21,
+                                                                    0xe4, 0x26, 0xe8, 0x45
+                                                                }}),
+    };
+
+    AES::Key key = {{
+                        0x2b, 0x7e, 0x15, 0x16,
+                        0x28, 0xae, 0xd2, 0xa6,
+                        0xab, 0xf7, 0x15, 0x88,
+                        0x09, 0xcf, 0x4f, 0x3c
+                    }};
+    ByteArray iv = {{
+                        0x20, 0xc7, 0x04, 0x40,
+                        0xac, 0x40, 0x0d, 0xba,
+                        0x84, 0x06, 0x57, 0x00,
+                        0x74, 0xf2, 0xe2, 0x2a
+                    }};
+
+    for (auto& item : CbcCipherTestData) {
+        ByteArray expected = PARAM(1);
+        ByteArray input = Base16::fromString(Base16::encode(PARAM(0)));
+        ByteArray output = AES::cipher(input, &key, iv);
+        ASSERT_EQ(expected, output);
+    }
+}
+
 }
 
 #endif // AES_TEST_H

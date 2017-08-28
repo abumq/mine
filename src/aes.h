@@ -129,39 +129,6 @@ private:
     static const uint8_t kNb = 4;
 
     ///
-    /// \brief Initializes the state with input. This function
-    /// also pads the input if needed (i.e, input is not block of 128-bit)
-    ///
-    static void initState(State* state, ByteArray input);
-
-    ///
-    /// \brief Raw encryption function - not for public use
-    /// \param input 128-bit plain input
-    /// If array is bigger it's chopped and if it's smaller, it's padded
-    /// please use alternative functions if your array is bigger. Those
-    /// function will handle all the bytes correctly.
-    /// \param key Byte array of key
-    /// \return 128-bit cipher text
-    ///
-    static ByteArray cipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Raw decryption function - not for public use
-    /// \param input 128-bit cipher input
-    /// If array is bigger it's chopped and if it's smaller, it's padded
-    /// please use alternative functions if your array is bigger. Those
-    /// function will handle all the bytes correctly.
-    /// \param key Byte array of key
-    /// \return 128-bit plain text
-    ///
-    static ByteArray decipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array
-    ///
-    static ByteArray stateToByteArray(const State* state);
-
-    ///
     /// \brief Key expansion function as described in FIPS.197
     ///
     static KeySchedule keyExpansion(const Key* key);
@@ -230,6 +197,59 @@ private:
     ///
     static void printState(const State*);
 
+    ///
+    /// \brief Initializes the state with input. This function
+    /// also pads the input if needed (i.e, input is not block of 128-bit)
+    ///
+    static void initState(State* state, ByteArray input);
+
+    ///
+    /// \brief Generates random bytes of length
+    ///
+    static ByteArray generateRandomBytes(const std::size_t len);
+
+    ///
+    /// \brief Exclusive XOR with arr
+    ///
+    static ByteArray xorWith(ByteArray &input, const ByteArray& arr);
+
+    ///
+    /// \brief Raw encryption function - not for public use
+    /// \param input 128-bit plain input
+    /// If array is bigger it's chopped and if it's smaller, it's padded
+    /// please use alternative functions if your array is bigger. Those
+    /// function will handle all the bytes correctly.
+    /// \param key Pointer to a valid AES key
+    /// \note This does not do any key or input validation
+    /// \return 128-bit cipher text
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
+
+    ///
+    /// \brief Raw decryption function - not for public use
+    /// \param input 128-bit cipher input
+    /// If array is bigger it's chopped and if it's smaller, it's padded
+    /// please use alternative functions if your array is bigger. Those
+    /// function will handle all the bytes correctly.
+    /// \param key Byte array of key
+    /// \return 128-bit plain text
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array
+    ///
+    static ByteArray stateToByteArray(const State* state);
+
     AES() = delete;
     AES(const AES&) = delete;
     AES& operator=(const AES&) = delete;
@@ -247,6 +267,7 @@ private:
     friend class AESTest_InvMixColumns_Test;
     friend class AESTest_KeyExpansion_Test;
     friend class AESTest_AddRoundKey_Test;
+    friend class AESTest_CbcCipher_Test;
 };
 } // end namespace mine
 

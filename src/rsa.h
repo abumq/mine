@@ -640,7 +640,7 @@ private:
 
         byteArray[--n] = 0;
 
-        srand(time(NULL));
+        srand(time(nullptr));
         int r = rand() % kLengthOfRandom + 1;
         while (n > 2) {
             r = 0;
