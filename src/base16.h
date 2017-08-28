@@ -92,6 +92,12 @@ public:
     static ByteArray fromString(const std::string& hex);
 
     ///
+    /// \brief Converts byte array to raw string.
+    /// This does not necessarily has to be base16 array
+    ///
+    static std::string toRawString(const ByteArray& byteArr);
+
+    ///
     /// \brief Encodes integer to hex
     ///
     template <typename T>
@@ -139,11 +145,6 @@ public:
         return result;
     }
 
-private:
-    Base16() = delete;
-    Base16(const Base16&) = delete;
-    Base16& operator=(const Base16&) = delete;
-
     ///
     /// \brief Encodes single byte
     ///
@@ -153,8 +154,13 @@ private:
         ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
     }
 
+private:
+    Base16() = delete;
+    Base16(const Base16&) = delete;
+    Base16& operator=(const Base16&) = delete;
+
     ///
-    /// \brief Encodes input iterator to hex encoding
+    /// \brief Decodes input iterator to hex encoding
     /// \note User should check for the valid size or use decode(std::string)
     /// \throws runtime_error if invalid base16-encoding
     ///

@@ -42,6 +42,15 @@ ByteArray Base16::fromString(const std::string& hex)
     return byteArr;
 }
 
+std::string Base16::toRawString(const ByteArray& input)
+{
+    std::ostringstream ss;
+    for (auto iter = input.begin(); iter < input.end(); ++iter) {
+        ss << static_cast<char>(*iter);
+    }
+    return ss.str();
+}
+
 void Base16::decode(char a, char b, std::ostringstream& ss)
 {
     int b0 = a & 0xff;

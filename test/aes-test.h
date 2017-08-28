@@ -417,13 +417,19 @@ TEST(AESTest, AddRoundKey)
 //              input           key         expected
 static TestData<std::string, std::string, std::string> RawCipherData = {
     // 128-bit key
-    TestCase("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f", "69c4e0d86a7b0430d8cdb78070b4c55a"),
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f",
+    "69c4e0d86a7b0430d8cdb78070b4c55a"),
 
     // 192-bit key
-    TestCase("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f1011121314151617", "dda97ca4864cdfe06eaf70a0ec0d7191"),
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f1011121314151617",
+    "dda97ca4864cdfe06eaf70a0ec0d7191"),
 
     // 256-bit key
-    TestCase("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "8ea2b7ca516745bfeafc49904b496089"),
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "8ea2b7ca516745bfeafc49904b496089"),
 };
 
 TEST(AESTest, RawCipher)
@@ -442,7 +448,7 @@ TEST(AESTest, RawCipherDirect)
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::InputMode::Base16);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::ConvertMode::Base16);
         // case insensitive comparison because hex can be upper or lower case
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
@@ -457,7 +463,7 @@ TEST(AESTest, RawCipherPlain)
 {
     for (auto& item : RawCipherPlainInputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::InputMode::Plain);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::ConvertMode::Plain);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -471,7 +477,7 @@ TEST(AESTest, RawCipherBase64)
 {
     for (auto& item : RawCipherBase64InputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::InputMode::Base64);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::ConvertMode::Base64);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -571,15 +577,23 @@ TEST(AESTest, CbcCipher)
                                                                     0x33, 0x47, 0xdf, 0x21,
                                                                     0xe4, 0x26, 0xe8, 0x45
                                                                 }}),
-        TestCase("this is test longer than 128-bit this is test longer than 128-bit this is test longer than 128-bit", ByteArray {{
-                                                                                                                                      0x2c, 0x32, 0x8a, 0xa3, 0x6c, 0xff, 0xdd, 0xe8, 0xc1, 0x41, 0x2e, 0x12, 0x10, 0x2f, 0x22, 0x05,
-                                                                                                                                      0x49, 0x32, 0x6a, 0x1c, 0x3c, 0x51, 0xc3, 0x64, 0x33, 0x47, 0xdf, 0x21, 0xe4, 0x26, 0xe8, 0x45,
-                                                                                                                                      0xf0, 0x82, 0xb4, 0x6e, 0xa2, 0xda, 0xcb, 0x82, 0xa3, 0x78, 0x90, 0x47, 0xf3, 0x9a, 0x33, 0x44,
-                                                                                                                                      0x56, 0x8d, 0xa6, 0x1c, 0x66, 0x53, 0x47, 0x96, 0x56, 0x05, 0xb9, 0xa9, 0x78, 0xc8, 0x1e, 0xc6,
-                                                                                                                                      0xa0, 0x46, 0x22, 0x38, 0x62, 0xdb, 0xbe, 0xf9, 0x78, 0xda, 0xdf, 0xc1, 0xe0, 0x57, 0x51, 0x23,
-                                                                                                                                      0x35, 0x67, 0xab, 0xa3, 0x6e, 0x95, 0x02, 0xdd, 0x66, 0x9f, 0x53, 0x00, 0x82, 0x79, 0x4f, 0x5d,
-                                                                                                                                      0xad, 0xe2, 0x58, 0x93, 0xef, 0xe3, 0x2f, 0x52, 0x58, 0x48, 0xd1, 0xef, 0x65, 0x87, 0xc8, 0xc7
-                                                                                                                                  }}),
+        TestCase("this is test longer than 128-bit this is test "
+        "longer than 128-bit this is test longer than 128-bit", ByteArray {{
+                                                                               0x2c, 0x32, 0x8a, 0xa3, 0x6c, 0xff, 0xdd, 0xe8,
+                                                                               0xc1, 0x41, 0x2e, 0x12, 0x10, 0x2f, 0x22, 0x05,
+                                                                               0x49, 0x32, 0x6a, 0x1c, 0x3c, 0x51, 0xc3, 0x64,
+                                                                               0x33, 0x47, 0xdf, 0x21, 0xe4, 0x26, 0xe8, 0x45,
+                                                                               0xf0, 0x82, 0xb4, 0x6e, 0xa2, 0xda, 0xcb, 0x82,
+                                                                               0xa3, 0x78, 0x90, 0x47, 0xf3, 0x9a, 0x33, 0x44,
+                                                                               0x56, 0x8d, 0xa6, 0x1c, 0x66, 0x53, 0x47, 0x96,
+                                                                               0x56, 0x05, 0xb9, 0xa9, 0x78, 0xc8, 0x1e, 0xc6,
+                                                                               0xa0, 0x46, 0x22, 0x38, 0x62, 0xdb, 0xbe, 0xf9,
+                                                                               0x78, 0xda, 0xdf, 0xc1, 0xe0, 0x57, 0x51, 0x23,
+                                                                               0x35, 0x67, 0xab, 0xa3, 0x6e, 0x95, 0x02, 0xdd,
+                                                                               0x66, 0x9f, 0x53, 0x00, 0x82, 0x79, 0x4f, 0x5d,
+                                                                               0xad, 0xe2, 0x58, 0x93, 0xef, 0xe3, 0x2f, 0x52,
+                                                                               0x58, 0x48, 0xd1, 0xef, 0x65, 0x87, 0xc8, 0xc7
+                                                                           }}),
     };
 
     AES::Key key = {{
@@ -604,9 +618,153 @@ TEST(AESTest, CbcCipher)
         ByteArray dec = AES::decipher(output, &key, iv);
         int f = 0;
         for (auto i = input.begin(); i < input.end(); ++i, ++f) {
-            // todo: chop the decrypted with what's expected
             ASSERT_EQ(*i, dec[f]);
         }
+    }
+
+    // specifies modes of input and output
+    for (auto& item : CbcCipherTestData) {
+        std::string expected = Base16::encode(Base16::toRawString(PARAM(1)));
+        std::string input = PARAM(0);
+        std::string k = Base16::encode(Base16::toRawString(key));
+        std::string initVec = Base16::encode(Base16::toRawString(iv));
+        std::string output = AES::cipher(input, k, initVec,
+                                         AES::ConvertMode::Plain,
+                                         AES::ConvertMode::Base16);
+        ASSERT_STREQ(expected.c_str(), output.c_str());
+
+    }
+}
+
+// from FIPS.197 p.35 onwards
+//              input           key         expected
+static TestData<std::string, std::string, std::string> RawDecipherData = {
+    // 128-bit key
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f",
+    "69c4e0d86a7b0430d8cdb78070b4c55a"),
+
+    // 192-bit key
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f1011121314151617",
+    "dda97ca4864cdfe06eaf70a0ec0d7191"),
+
+    // 256-bit key
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "8ea2b7ca516745bfeafc49904b496089"),
+};
+
+TEST(AESTest, HexStringDecipher)
+{
+    for (auto& item : RawDecipherData) {
+        std::string expected = PARAM(0);
+        std::string output = AES::decipher(PARAM(2), PARAM(1), AES::ConvertMode::Base16, AES::ConvertMode::Base16);
+        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    }
+}
+
+TEST(AESTest, Base64StringDecipher)
+{
+    // input mode = base16,
+    // output mode = base64
+    std::string expected = "dGhpcyBpcyB0ZXN0Li4uLg=="; // base64("this is test....")
+    std::string output = AES::decipher("b92daaae6e57773b10653703af12716f",
+                                       "000102030405060708090a0b0c0d0e0f",
+                                       AES::ConvertMode::Base16,
+                                       AES::ConvertMode::Base64);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+}
+
+TEST(AESTest, Base64StringInputDecipher)
+{
+    std::string expected = "this is test....";
+    std::string output = AES::decipher("uS2qrm5XdzsQZTcDrxJxbw==",
+                                       "000102030405060708090a0b0c0d0e0f",
+                                       AES::ConvertMode::Base64,
+                                       AES::ConvertMode::Plain);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+}
+
+TEST(AESTest, CbcDecipher)
+{
+
+    AES::Key key = {{
+                        0x2b, 0x7e, 0x15, 0x16,
+                        0x28, 0xae, 0xd2, 0xa6,
+                        0xab, 0xf7, 0x15, 0x88,
+                        0x09, 0xcf, 0x4f, 0x3c
+                    }};
+    ByteArray iv = {{
+                        0x20, 0xc7, 0x04, 0x40,
+                        0xac, 0x40, 0x0d, 0xba,
+                        0x84, 0x06, 0x57, 0x00,
+                        0x74, 0xf2, 0xe2, 0x2a
+                    }};
+
+    //                 input      expected
+    static TestData<std::string, ByteArray> CbcDecipherTestData = {
+        TestCase("this is test....", ByteArray {{
+                                                    0xa3, 0xd9, 0x36, 0xf1,
+                                                    0xfe, 0xd3, 0xb8, 0xd3,
+                                                    0xe7, 0x4e, 0x09, 0x4e,
+                                                    0x2c, 0x0f, 0x1b, 0xd9
+                                                }}),
+        TestCase("this is test.", ByteArray {{
+                                                    0x86, 0xae, 0xc0, 0x99,
+                                                    0xfc, 0x4e, 0xba, 0x5f,
+                                                    0xcd, 0xaa, 0xd2, 0x94,
+                                                    0x96, 0x48, 0x01, 0x65
+                                                }}),
+        TestCase("this is test longer", ByteArray {{
+                                                                    0x2c, 0x32, 0x8a, 0xa3,
+                                                                    0x6c, 0xff, 0xdd, 0xe8,
+                                                                    0xc1, 0x41, 0x2e, 0x12,
+                                                                    0x10, 0x2f, 0x22, 0x05,
+                                                                    0xe7, 0x4e, 0x98, 0x8c,
+                                                                    0x9a, 0x15, 0x42, 0xe9,
+                                                                    0x72, 0x84, 0xc5, 0x19,
+                                                                    0x76, 0xc2, 0x6a, 0x44
+                                                                }}),
+        TestCase("this is test longer than 128-bit", ByteArray {{
+                                                                    0x2c, 0x32, 0x8a, 0xa3,
+                                                                    0x6c, 0xff, 0xdd, 0xe8,
+                                                                    0xc1, 0x41, 0x2e, 0x12,
+                                                                    0x10, 0x2f, 0x22, 0x05,
+                                                                    0x49, 0x32, 0x6a, 0x1c,
+                                                                    0x3c, 0x51, 0xc3, 0x64,
+                                                                    0x33, 0x47, 0xdf, 0x21,
+                                                                    0xe4, 0x26, 0xe8, 0x45
+                                                                }}),
+        TestCase("this is test longer than 128-bit this is test "
+        "longer than 128-bit this is test longer than 128-bit", ByteArray {{
+                                                                               0x2c, 0x32, 0x8a, 0xa3, 0x6c, 0xff, 0xdd, 0xe8,
+                                                                               0xc1, 0x41, 0x2e, 0x12, 0x10, 0x2f, 0x22, 0x05,
+                                                                               0x49, 0x32, 0x6a, 0x1c, 0x3c, 0x51, 0xc3, 0x64,
+                                                                               0x33, 0x47, 0xdf, 0x21, 0xe4, 0x26, 0xe8, 0x45,
+                                                                               0xf0, 0x82, 0xb4, 0x6e, 0xa2, 0xda, 0xcb, 0x82,
+                                                                               0xa3, 0x78, 0x90, 0x47, 0xf3, 0x9a, 0x33, 0x44,
+                                                                               0x56, 0x8d, 0xa6, 0x1c, 0x66, 0x53, 0x47, 0x96,
+                                                                               0x56, 0x05, 0xb9, 0xa9, 0x78, 0xc8, 0x1e, 0xc6,
+                                                                               0xa0, 0x46, 0x22, 0x38, 0x62, 0xdb, 0xbe, 0xf9,
+                                                                               0x78, 0xda, 0xdf, 0xc1, 0xe0, 0x57, 0x51, 0x23,
+                                                                               0x35, 0x67, 0xab, 0xa3, 0x6e, 0x95, 0x02, 0xdd,
+                                                                               0x66, 0x9f, 0x53, 0x00, 0x82, 0x79, 0x4f, 0x5d,
+                                                                               0xad, 0xe2, 0x58, 0x93, 0xef, 0xe3, 0x2f, 0x52,
+                                                                               0x58, 0x48, 0xd1, 0xef, 0x65, 0x87, 0xc8, 0xc7
+                                                                           }}),
+    };
+
+    for (auto& item : CbcDecipherTestData) {
+        std::string expected = PARAM(0);
+        std::string input = Base16::toRawString(PARAM(1));
+        std::string k = Base16::encode(Base16::toRawString(key));
+        std::string initVec = Base16::encode(Base16::toRawString(iv));
+        std::string output = AES::decipher(input, k, initVec,
+                                         AES::ConvertMode::Plain,
+                                         AES::ConvertMode::Plain);
+        ASSERT_STREQ(expected.c_str(), output.c_str());
+
     }
 }
 

@@ -53,9 +53,9 @@ class AES {
 public:
 
     ///
-    /// \brief Input mode for various functions
+    /// \brief Convert mode for various functions
     ///
-    enum class InputMode {
+    enum class ConvertMode {
         Plain,
         Base16,
         Base64
@@ -70,18 +70,39 @@ public:
     /// \brief Ciphers the input with specified hex key
     /// \param key Hex key
     /// \param inputMode the type of input. Defaults to Plain
+    /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, InputMode inputMode = InputMode::Plain);
+    static std::string cipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
     /// \param key Hex key
     /// \param iv Initialization vector, passed by reference. If empty a random is generated and passed in
     /// \param inputMode the type of input. Defaults to Plain
+    /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, InputMode inputMode = InputMode::Plain);
+    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
+
+    ///
+    /// \brief Deciphers the input with specified hex key
+    /// \param key Hex key
+    /// \param inputMode the type of input. Defaults to base16
+    /// \param outputEncoding Type of encoding for result
+    /// \return Base16 encoded cipher
+    ///
+    static std::string decipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
+
+    ///
+    /// \brief Deciphers the input with specified hex key using CBC mode
+    /// \param key Hex key
+    /// \param iv Initialization vector
+    /// \param inputMode the type of input. Defaults to base16
+    /// \param outputEncoding Type of encoding for result
+    /// \return Base16 encoded cipher
+    ///
+    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
 
 private:
 
@@ -220,7 +241,12 @@ private:
     ///
     /// \brief Creates byte array from input based on input mode
     ///
-    static ByteArray resolveInputMode(const std::string& input, InputMode inputMode);
+    static ByteArray resolveInputMode(const std::string& input, ConvertMode inputMode);
+
+    ///
+    /// \brief Creates string from byte array based on convert mode
+    ///
+    static std::string resolveOutputMode(const ByteArray& input, ConvertMode outputMode);
 
     ///
     /// \brief Exclusive XOR with arr
