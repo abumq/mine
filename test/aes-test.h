@@ -600,6 +600,13 @@ TEST(AESTest, CbcCipher)
         ByteArray input = Base16::fromString(Base16::encode(PARAM(0)));
         ByteArray output = AES::cipher(input, &key, iv);
         ASSERT_EQ(expected, output);
+
+        ByteArray dec = AES::decipher(output, &key, iv);
+        int f = 0;
+        for (auto i = input.begin(); i < input.end(); ++i, ++f) {
+            // todo: chop the decrypted with what's expected
+            ASSERT_EQ(*i, dec[f]);
+        }
     }
 }
 

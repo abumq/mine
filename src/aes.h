@@ -225,7 +225,7 @@ private:
     ///
     /// \brief Exclusive XOR with arr
     ///
-    static ByteArray xorWith(ByteArray &input, const ByteArray& arr);
+    static ByteArray* xorWith(ByteArray* input, const ByteArray* arr);
 
     ///
     /// \brief Raw encryption function - not for public use
@@ -258,6 +258,15 @@ private:
     /// \return 128-bit plain text
     ///
     static ByteArray decipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array
