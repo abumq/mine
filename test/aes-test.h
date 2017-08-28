@@ -220,15 +220,15 @@ TEST(AESTest, SubByte)
     //             <input state> <expected state>
     static TestData<AES::State, AES::State> SubByteTestData = {
         TestCase(AES::State {{
-                                 {{ 0x04, 0x66, 0x81, 0xe5 }},
-                                 {{ 0xe0, 0xcb, 0x19, 0x9a }},
-                                 {{ 0x48, 0xf8, 0xd3, 0x7a }},
-                                 {{ 0x28, 0x06, 0x26, 0x4c }},
+                                 {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                                 {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                                 {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                                 {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
                              }}, AES::State {{
-                                                 {{ 0xf2, 0x33, 0x0c, 0xd9 }},
-                                                 {{ 0xe1, 0x1f, 0xd4, 0xb8 }},
-                                                 {{ 0x52, 0x41, 0x66, 0xda }},
-                                                 {{ 0x34, 0x6f, 0xf7, 0x29 }},
+                                                 {{ 0xf2, 0x33, 0x0c, 0xd9 }}, // c0
+                                                 {{ 0xe1, 0x1f, 0xd4, 0xb8 }}, // c1
+                                                 {{ 0x52, 0x41, 0x66, 0xda }}, // c2
+                                                 {{ 0x34, 0x6f, 0xf7, 0x29 }}, // c3
                                              }}
         ),
     };
@@ -237,6 +237,136 @@ TEST(AESTest, SubByte)
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
         AES::subBytes(&state);
+        ASSERT_EQ(expected, state);
+    }
+}
+
+TEST(AESTest, InvSubByte)
+{
+    //             <input state> <expected state>
+    static TestData<AES::State, AES::State> InvSubByteTestData = {
+        TestCase(AES::State {{
+                                 {{ 0xf2, 0x33, 0x0c, 0xd9 }}, // c0
+                                 {{ 0xe1, 0x1f, 0xd4, 0xb8 }}, // c1
+                                 {{ 0x52, 0x41, 0x66, 0xda }}, // c2
+                                 {{ 0x34, 0x6f, 0xf7, 0x29 }}, // c3
+                             }}, AES::State {{
+                                                 {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                                                 {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                                                 {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                                                 {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
+                                             }}
+        ),
+    };
+
+    for (auto& item : InvSubByteTestData) {
+        AES::State state = PARAM(0);
+        AES::State expected = PARAM(1);
+        AES::invSubBytes(&state);
+        ASSERT_EQ(expected, state);
+    }
+}
+
+TEST(AESTest, ShiftRows)
+{
+    //             <input state> <expected state>
+    static TestData<AES::State, AES::State> ShiftRowsTestData = {
+        TestCase(AES::State {{
+                                 {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                                 {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                                 {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                                 {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
+                             }}, AES::State {{
+                                                 {{ 0x04, 0xcb, 0xd3, 0x4c }}, // c0
+                                                 {{ 0xe0, 0xf8, 0x26, 0xe5 }}, // c1
+                                                 {{ 0x48, 0x06, 0x81, 0x9a }}, // c2
+                                                 {{ 0x28, 0x66, 0x19, 0x7a }}, // c3
+                                             }}
+        ),
+    };
+
+    for (auto& item : ShiftRowsTestData) {
+        AES::State state = PARAM(0);
+        AES::State expected = PARAM(1);
+        AES::shiftRows(&state);
+        ASSERT_EQ(expected, state);
+    }
+}
+
+TEST(AESTest, InvShiftRows)
+{
+    //             <input state> <expected state>
+    static TestData<AES::State, AES::State> InvShiftRowsTestData = {
+        TestCase(AES::State {{
+                                 {{ 0x04, 0xcb, 0xd3, 0x4c }}, // c0
+                                 {{ 0xe0, 0xf8, 0x26, 0xe5 }}, // c1
+                                 {{ 0x48, 0x06, 0x81, 0x9a }}, // c2
+                                 {{ 0x28, 0x66, 0x19, 0x7a }}, // c3
+                             }}, AES::State {{
+                                                 {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                                                 {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                                                 {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                                                 {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
+                                             }}
+        ),
+    };
+
+    for (auto& item : InvShiftRowsTestData) {
+        AES::State state = PARAM(0);
+        AES::State expected = PARAM(1);
+        AES::invShiftRows(&state);
+        ASSERT_EQ(expected, state);
+    }
+}
+
+TEST(AESTest, MixColumns)
+{
+    //             <input state> <expected state>
+    static TestData<AES::State, AES::State> MixColumnsTestData = {
+        TestCase(AES::State {{
+                                 {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                                 {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                                 {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                                 {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
+                             }}, AES::State {{
+                                                 {{ 0xc6, 0xb5, 0x4f, 0x3a }}, // c0
+                                                 {{ 0x1e, 0xdc, 0xac, 0xc6 }}, // c1
+                                                 {{ 0x2a, 0xb7, 0x83, 0x07 }}, // c2
+                                                 {{ 0x30, 0x02, 0xb6, 0xc0 }}, // c3
+                                             }}
+        ),
+    };
+
+    for (auto& item : MixColumnsTestData) {
+        AES::State state = PARAM(0);
+        AES::State expected = PARAM(1);
+        AES::mixColumns(&state);
+        ASSERT_EQ(expected, state);
+    }
+}
+
+TEST(AESTest, InvMixColumns)
+{
+    //             <input state> <expected state>
+    static TestData<AES::State, AES::State> InvMixColumnsTestData = {
+        TestCase(AES::State {{
+                                 {{ 0xc6, 0xb5, 0x4f, 0x3a }}, // c0
+                                 {{ 0x1e, 0xdc, 0xac, 0xc6 }}, // c1
+                                 {{ 0x2a, 0xb7, 0x83, 0x07 }}, // c2
+                                 {{ 0x30, 0x02, 0xb6, 0xc0 }}, // c3
+                             }}, AES::State {{
+                                                 {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                                                 {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                                                 {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                                                 {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
+                                             }}
+        ),
+    };
+
+    for (auto& item : InvMixColumnsTestData) {
+        AES::State state = PARAM(0);
+        AES::State expected = PARAM(1);
+        AES::invMixColumns(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -253,31 +383,31 @@ TEST(AESTest, AddRoundKey)
                     }};
     AES::KeySchedule schedule = AES::keyExpansion(&key);
     AES::State state = {{
-                            {{ 0x04, 0x66, 0x81, 0xe5 }},
-                            {{ 0xe0, 0xcb, 0x19, 0x9a }},
-                            {{ 0x48, 0xf8, 0xd3, 0x7a }},
-                            {{ 0x28, 0x06, 0x26, 0x4c }},
+                            {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
+                            {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
+                            {{ 0x48, 0xf8, 0xd3, 0x7a }}, // c2
+                            {{ 0x28, 0x06, 0x26, 0x4c }}, // c3
                         }};
     AES::State expected2 = {{
-                                {{ 0xa4, 0x9c, 0x7f, 0xf2 }},
-                                {{ 0x68, 0x9f, 0x35, 0x2b }},
-                                {{ 0x6b, 0x5b, 0xea, 0x43 }},
-                                {{ 0x02, 0x6a, 0x50, 0x49 }},
+                                {{ 0xa4, 0x9c, 0x7f, 0xf2 }}, // c0
+                                {{ 0x68, 0x9f, 0x35, 0x2b }}, // c1
+                                {{ 0x6b, 0x5b, 0xea, 0x43 }}, // c2
+                                {{ 0x02, 0x6a, 0x50, 0x49 }}, // c3
                             }};
     AES::State expected7 = {{
-                                {{ 0x26, 0x0e, 0x2e, 0x17 }},
-                                {{ 0x3d, 0x41, 0xb7, 0x7d }},
-                                {{ 0xe8, 0x64, 0x72, 0xa9 }},
-                                {{ 0xfd, 0xd2, 0x8b, 0x25 }},
+                                {{ 0x26, 0x0e, 0x2e, 0x17 }}, // c0
+                                {{ 0x3d, 0x41, 0xb7, 0x7d }}, // c1
+                                {{ 0xe8, 0x64, 0x72, 0xa9 }}, // c2
+                                {{ 0xfd, 0xd2, 0x8b, 0x25 }}, // c3
                             }};
     AES::addRoundKey(&state, &schedule, 1);
     ASSERT_EQ(expected2, state);
 
     state = {{
-                 {{ 0x4b, 0x86, 0x8d, 0x6d }},
-                 {{ 0x2c, 0x4a, 0x89, 0x80 }},
-                 {{ 0x33, 0x9d, 0xf4, 0xe8 }},
-                 {{ 0x37, 0xd2, 0x18, 0xd8 }},
+                 {{ 0x4b, 0x86, 0x8d, 0x6d }}, // c0
+                 {{ 0x2c, 0x4a, 0x89, 0x80 }}, // c1
+                 {{ 0x33, 0x9d, 0xf4, 0xe8 }}, // c2
+                 {{ 0x37, 0xd2, 0x18, 0xd8 }}, // c3
              }};
     AES::addRoundKey(&state, &schedule, 6);
     ASSERT_EQ(expected7, state);

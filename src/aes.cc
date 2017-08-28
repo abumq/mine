@@ -194,6 +194,24 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
     return words;
 }
 
+///
+/// Adding round key is simply a xor operation on
+/// corresponding key for the round
+/// which is generated during key expansion
+///
+/// Let's say we have state and a key
+///
+/// [ df  c3  e2  9c ]         [ ef  d4  49  11 ]
+/// | 0f  ad  1f  ca |         | 1f  ad  ac  fa |
+/// | 0c  9d  8d  fa |    ^    | cc  9e  15  dd |
+/// [ fe  ef  cc  b2 ]         [ fe  ea  02  dc ]
+///
+///
+/// [ df^ef   c3^d4   e2^49   9c^11 ]
+/// | 0f^1f   ad^ad   1f^ac   ca^fa |
+/// | 0c^cc   9d^9e   8d^15   fa^dd |
+/// [ fe^fe   ef^ea   cc^02   b2^dc ]
+///
 void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
@@ -203,6 +221,11 @@ void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
     }
 }
 
+///
+/// Simple substition for the byte
+/// from sbox - i.e, for 0x04 we will replace with the
+/// byte at index 0x04 => 0xf2
+///
 void AES::subBytes(State* state)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
@@ -212,6 +235,43 @@ void AES::subBytes(State* state)
     }
 }
 
+///
+/// A simple substition of bytes using kSBoxInverse
+///
+void AES::invSubBytes(State* state)
+{
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            state->at(i)[j] = kSBoxInverse[state->at(i)[j]];
+        }
+    }
+}
+
+///
+/// Shifting rows is beautifully explained by diagram
+/// that helped in implementation as well
+///
+/// Let's say we have state
+///
+/// [ df  c3  e2  9c ]
+/// | 0f  ad  1f  ca |
+/// | 0c  9d  8d  fa |
+/// [ fe  ef  cc  b2 ]
+///
+/// shifting means
+///
+///              [ df  c3  e2  9c ]
+///           0f | ad  1f  ca |
+///       0c  9d | 8d  fa |
+///   fe  ef  cc [ b2 ]
+///
+/// and filling the spaces with shifted rows
+///
+/// [ df  c3  e2  9c ]
+/// | ad  1f  ca  0f |
+/// | 8d  fa  0c  9d |
+/// [ b2  fe  ef  cc ]
+///
 void AES::shiftRows(State *state)
 {
     // row 1
@@ -229,6 +289,56 @@ void AES::shiftRows(State *state)
     std::swap(state->at(0)[3], state->at(2)[3]);
 }
 
+///
+/// This is reverse of shift rows operation
+///
+/// Let's say we have state
+///
+/// [ df  c3  e2  9c ]
+/// | ad  1f  ca  0f |
+/// | 8d  fa  0c  9d |
+/// [ b2  fe  ef  cc ]
+///
+/// shifting means
+///
+/// [ df  c3  e2  9c  ]
+///      | ad  1f  ca | 0f
+///          | 8d  fa | 0c  9d
+///              [ b2 | fe  ef  cc
+///
+/// and filling the spaces with shifted rows
+///
+/// [ df  c3  e2  9c ]
+/// | 0f  ad  1f  ca |
+/// | 0c  9d  8d  fa |
+/// [ fe  ef  cc  b2 ]
+///
+void AES::invShiftRows(State *state)
+{
+    // row 1
+    std::swap(state->at(0)[1], state->at(3)[1]);
+    std::swap(state->at(0)[1], state->at(1)[1]);
+    std::swap(state->at(1)[1], state->at(2)[1]);
+
+    // row 2
+    std::swap(state->at(0)[2], state->at(2)[2]);
+    std::swap(state->at(1)[2], state->at(3)[2]);
+
+    // row 3
+    std::swap(state->at(0)[3], state->at(1)[3]);
+    std::swap(state->at(2)[3], state->at(3)[3]);
+    std::swap(state->at(0)[3], state->at(2)[3]);
+}
+
+///
+/// multiplies in GF(2^8) field selected column from state
+/// with constant matrix defined by publication
+///
+/// [ 02  03  01  01 ]
+/// | 01  02  03  01 |
+/// | 01  01  02  03 |
+/// [ 03  01  01  02 ]
+///
 void AES::mixColumns(State* state)
 {
     // Finds the product of {02} and the argument to xtime modulo {1b}
@@ -240,15 +350,7 @@ void AES::mixColumns(State* state)
 
     for (int col = 0; col < 4; ++col) {
 
-        //
-        // multiplies in GF(2^8) field selected column from state
-        // with constant matrix defined by publication
-        //
-        // [ 02  03  01  01 ]
-        // | 01  02  03  01 |
-        // | 01  01  02  03 |
-        // [ 03  01  01  02 ]
-        //
+
         Word column = state->at(col);
         // let's take example from publication, col: [212, 191, 93, 48]
         // t == 6
@@ -259,16 +361,6 @@ void AES::mixColumns(State* state)
         state->at(col)[2] ^= xtime(column[2] ^ column[3]) ^ t;
         state->at(col)[3] ^= xtime(column[3] ^ column[0]) ^ t;
     }
-}
-
-void AES::invSubBytes(State* state)
-{
-    (void)state;
-}
-
-void AES::invShiftRows(State *state)
-{
-    (void)state;
 }
 
 void AES::invMixColumns(State* state)

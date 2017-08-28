@@ -218,7 +218,11 @@ private:
     friend class AESTest_RawSimpleCipher_Test;
     friend class AESTest_RawSimpleDecipher_Test;
     friend class AESTest_SubByte_Test;
-    friend class AESTest_FiniteFieldMultiply_Test;
+    friend class AESTest_InvSubByte_Test;
+    friend class AESTest_ShiftRows_Test;
+    friend class AESTest_InvShiftRows_Test;
+    friend class AESTest_MixColumns_Test;
+    friend class AESTest_InvMixColumns_Test;
     friend class AESTest_KeyExpansion_Test;
     friend class AESTest_AddRoundKey_Test;
 };
