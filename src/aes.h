@@ -218,6 +218,11 @@ private:
     static ByteArray generateRandomBytes(const std::size_t len);
 
     ///
+    /// \brief Creates byte array from input based on input mode
+    ///
+    static ByteArray resolveInputMode(const std::string& input, InputMode inputMode);
+
+    ///
     /// \brief Exclusive XOR with arr
     ///
     static ByteArray xorWith(ByteArray &input, const ByteArray& arr);

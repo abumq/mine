@@ -557,36 +557,32 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
 
 }
 
+ByteArray AES::resolveInputMode(const std::string& input, InputMode inputMode)
+{
+    if (inputMode == InputMode::Plain) {
+        return Base16::fromString(Base16::encode(input));
+    } else if (inputMode == InputMode::Base16) {
+        return Base16::fromString(input);
+    }
+    return Base16::fromString(Base16::encode(Base64::decode(input)));
+}
+
 // public
 
 std::string AES::cipher(const std::string& input, const std::string& key, InputMode inputMode)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp;
-    if (inputMode == InputMode::Plain) {
-        inp = Base16::fromString(Base16::encode(input));
-    } else if (inputMode == InputMode::Base16) {
-        inp = Base16::fromString(input);
-    } else { // base64
-        inp = Base16::fromString(Base16::encode(Base64::decode(input)));
-    }
+    ByteArray inp = resolveInputMode(input, inputMode);
     ByteArray result = cipher(inp, &keyArr);
     return Base16::encode(result.begin(), result.end());
 }
 
 std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, InputMode inputMode)
 {
-    bool ivecGenerated = iv.empty();
-    ByteArray ivec;
     Key keyArr = Base16::fromString(key);
-    ByteArray inp;
-    if (inputMode == InputMode::Plain) {
-        inp = Base16::fromString(Base16::encode(input));
-    } else if (inputMode == InputMode::Base16) {
-        inp = Base16::fromString(input);
-    } else { // base64
-        inp = Base16::fromString(Base16::encode(Base64::decode(input)));
-    }
+    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray ivec;
+    bool ivecGenerated = iv.empty();
     ByteArray result = cipher(inp, &keyArr, ivec);
     if (ivecGenerated) {
         iv = Base16::encode(ivec.begin(), ivec.end());
