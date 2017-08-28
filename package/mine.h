@@ -92,6 +92,12 @@ public:
     static ByteArray fromString(const std::string& hex);
 
     ///
+    /// \brief Converts byte array to raw string.
+    /// This does not necessarily has to be base16 array
+    ///
+    static std::string toRawString(const ByteArray& byteArr);
+
+    ///
     /// \brief Encodes integer to hex
     ///
     template <typename T>
@@ -139,11 +145,6 @@ public:
         return result;
     }
 
-private:
-    Base16() = delete;
-    Base16(const Base16&) = delete;
-    Base16& operator=(const Base16&) = delete;
-
     ///
     /// \brief Encodes single byte
     ///
@@ -153,8 +154,13 @@ private:
         ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
     }
 
+private:
+    Base16() = delete;
+    Base16(const Base16&) = delete;
+    Base16& operator=(const Base16&) = delete;
+
     ///
-    /// \brief Encodes input iterator to hex encoding
+    /// \brief Decodes input iterator to hex encoding
     /// \note User should check for the valid size or use decode(std::string)
     /// \throws runtime_error if invalid base16-encoding
     ///
@@ -332,7 +338,7 @@ public:
 
         const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
         std::stringstream ss;
-        for (auto it = begin; it != end; it += 4) {
+        for (auto it = begin; it < end; it += 4) {
             try {
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
                 if (b0 == kPadding || b0 == '\0') {
@@ -347,8 +353,12 @@ public:
 
                 if (b1 != kPadding && b1 != '\0') {
                     if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
-                        // second biteset is 'partial byte'
-                        ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
+                        // second bitset is 'partial byte'
+
+                        // note: this line was causing issue when we had plain text length 16
+                        // b64 = uS2qrm5XdzsQZTcDrxJxbw==
+                        // it was adding a nul term char
+                        //ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                     } else {
                         ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
                                                                                         // first we clear the bits at pos 4 and 5
@@ -452,9 +462,9 @@ class AES {
 public:
 
     ///
-    /// \brief Input mode for various functions
+    /// \brief Convert mode for various functions
     ///
-    enum class InputMode {
+    enum class ConvertMode {
         Plain,
         Base16,
         Base64
@@ -469,18 +479,39 @@ public:
     /// \brief Ciphers the input with specified hex key
     /// \param key Hex key
     /// \param inputMode the type of input. Defaults to Plain
+    /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, InputMode inputMode = InputMode::Plain);
+    static std::string cipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
     /// \param key Hex key
     /// \param iv Initialization vector, passed by reference. If empty a random is generated and passed in
     /// \param inputMode the type of input. Defaults to Plain
+    /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, InputMode inputMode = InputMode::Plain);
+    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
+
+    ///
+    /// \brief Deciphers the input with specified hex key
+    /// \param key Hex key
+    /// \param inputMode the type of input. Defaults to base16
+    /// \param outputEncoding Type of encoding for result
+    /// \return Base16 encoded cipher
+    ///
+    static std::string decipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
+
+    ///
+    /// \brief Deciphers the input with specified hex key using CBC mode
+    /// \param key Hex key
+    /// \param iv Initialization vector
+    /// \param inputMode the type of input. Defaults to base16
+    /// \param outputEncoding Type of encoding for result
+    /// \return Base16 encoded cipher
+    ///
+    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
 
 private:
 
@@ -617,9 +648,19 @@ private:
     static ByteArray generateRandomBytes(const std::size_t len);
 
     ///
+    /// \brief Creates byte array from input based on input mode
+    ///
+    static ByteArray resolveInputMode(const std::string& input, ConvertMode inputMode);
+
+    ///
+    /// \brief Creates string from byte array based on convert mode
+    ///
+    static std::string resolveOutputMode(const ByteArray& input, ConvertMode outputMode);
+
+    ///
     /// \brief Exclusive XOR with arr
     ///
-    static ByteArray xorWith(ByteArray &input, const ByteArray& arr);
+    static ByteArray* xorWith(ByteArray* input, const ByteArray* arr);
 
     ///
     /// \brief Raw encryption function - not for public use
@@ -631,7 +672,36 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
+    static ByteArray rawCipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Raw decryption function - not for public use
+    /// \param input 128-bit cipher input
+    /// If array is bigger it's chopped and if it's smaller, it's padded
+    /// please use alternative functions if your array is bigger. Those
+    /// function will handle all the bytes correctly.
+    /// \param key Byte array of key
+    /// \return 128-bit plain text
+    ///
+    static ByteArray rawDecipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
     static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
@@ -643,15 +713,13 @@ private:
     static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
-    /// \brief Raw decryption function - not for public use
-    /// \param input 128-bit cipher input
-    /// If array is bigger it's chopped and if it's smaller, it's padded
-    /// please use alternative functions if your array is bigger. Those
-    /// function will handle all the bytes correctly.
-    /// \param key Byte array of key
-    /// \return 128-bit plain text
+    /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
     ///
-    static ByteArray decipher(const ByteArray& input, const Key* key);
+    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array

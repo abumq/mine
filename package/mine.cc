@@ -48,6 +48,15 @@ ByteArray Base16::fromString(const std::string& hex)
     return byteArr;
 }
 
+std::string Base16::toRawString(const ByteArray& input)
+{
+    std::ostringstream ss;
+    for (auto iter = input.begin(); iter < input.end(); ++iter) {
+        ss << static_cast<char>(*iter);
+    }
+    return ss.str();
+}
+
 void Base16::decode(char a, char b, std::ostringstream& ss)
 {
     int b0 = a & 0xff;
@@ -500,7 +509,30 @@ ByteArray AES::stateToByteArray(const State *state)
     return result;
 }
 
-ByteArray AES::cipher(const ByteArray& input, const Key* key)
+ByteArray AES::generateRandomBytes(const std::size_t len)
+{
+    ByteArray result;
+    const int kMax = 999;
+    srand(time(nullptr));
+    for (std::size_t i = 0; i < len; ++i) {
+        int r = rand() % kMax;
+        while (r == 0) {
+            r = rand() % kMax + 1;
+        }
+        result.push_back(static_cast<byte>(r));
+    }
+    return result;
+}
+
+ByteArray* AES::xorWith(ByteArray* input, const ByteArray* arr)
+{
+    for (std::size_t i = 0; i < kBlockSize; ++i) {
+        input->at(i) ^= arr->at(i);
+    }
+    return input;
+}
+
+ByteArray AES::rawCipher(const ByteArray& input, const Key* key)
 {
 
     State state;
@@ -533,81 +565,13 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
 }
 
-ByteArray AES::generateRandomBytes(const std::size_t len)
+ByteArray AES::rawDecipher(const ByteArray& input, const Key* key)
 {
-    ByteArray result;
-    const int kMax = 999;
-    srand(time(nullptr));
-    for (std::size_t i = 0; i < len; ++i) {
-        int r = rand() % kMax;
-        while (r == 0) {
-            r = rand() % kMax + 1;
-        }
-        result.push_back(static_cast<byte>(r));
-    }
-    return result;
-}
-
-ByteArray AES::xorWith(ByteArray& input, const ByteArray& arr)
-{
-    for (std::size_t i = 0; i < kBlockSize; ++i) {
-        input.at(i) ^= arr.at(i);
-    }
-    return input;
-}
-
-
-ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
-{
-
-    std::size_t keySize = key->size();
-
-    // key size validation
-    if (keySize != 16 && keySize != 24 && keySize != 32) {
-        throw std::invalid_argument("Invalid AES key size");
-    }
-
-    if (!iv.empty() && iv.size() != 16) {
-        throw std::invalid_argument("Invalid IV, it should be 128-bit");
-    } else if (iv.empty()) {
-        // generate IV
-        iv = generateRandomBytes(16);
-    }
-
-    const std::size_t inputSize = input.size();
-    ByteArray result;
-    ByteArray nextXorWith = iv;
-
-    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
-        ByteArray inputBlock(kBlockSize, 0);
-
-        // don't use copy_n as we are setting the values
-        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock.at(j) = input.at(j + i);
-        }
-
-        xorWith(inputBlock, nextXorWith);
-
-        ByteArray outputBlock = cipher(inputBlock, key);
-        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
-        nextXorWith = outputBlock;
-    }
-    return result;
-}
-
-ByteArray AES::decipher(const ByteArray& input, const Key* key)
-{
-    std::size_t keySize = key->size();
-
-    // key size validation
-    if (keySize != 16 && keySize != 24 && keySize != 32) {
-        throw std::invalid_argument("Invalid AES key size");
-    }
 
     State state;
     initState(&state, input);
 
-    uint8_t kTotalRounds = kKeyParams.at(keySize)[1];
+    uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
 
     // Create linear subkeys (key schedule)
     KeySchedule keySchedule = keyExpansion(key);
@@ -631,44 +595,201 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
     addRoundKey(&state, &keySchedule, round);
 
     return stateToByteArray(&state);
+}
 
+ByteArray AES::cipher(const ByteArray& input, const Key* key)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    const std::size_t inputSize = input.size();
+
+    ByteArray result;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        // don't use copy_n as we are setting the values
+        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        ByteArray outputBlock = rawCipher(inputBlock, key);
+        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
+    }
+    return result;
+}
+
+ByteArray AES::decipher(const ByteArray& input, const Key* key)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    const std::size_t inputSize = input.size();
+    ByteArray result;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        std::size_t j = 0;
+        // don't use copy_n here as we are setting the values
+        for (; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        ByteArray outputBlock = rawDecipher(inputBlock, key);
+
+        std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
+    }
+    return result;
+}
+
+ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    if (!iv.empty() && iv.size() != 16) {
+        throw std::invalid_argument("Invalid IV, it should be 128-bit");
+    } else if (iv.empty()) {
+        // generate IV
+        iv = generateRandomBytes(16);
+    }
+
+    const std::size_t inputSize = input.size();
+
+    ByteArray result;
+    ByteArray nextXorWith = iv;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        // don't use copy_n as we are setting the values
+        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        xorWith(&inputBlock, &nextXorWith);
+
+        ByteArray outputBlock = rawCipher(inputBlock, key);
+        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
+        nextXorWith = outputBlock;
+    }
+    return result;
+}
+
+ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    if (input.size() % 16 != 0) {
+        throw std::invalid_argument("Invalid AES cipher");
+    }
+
+    const std::size_t inputSize = input.size();
+    ByteArray result;
+
+    ByteArray nextXorWith = iv;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        // don't use copy_n as we are setting the values
+        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        ByteArray outputBlock = rawDecipher(inputBlock, key);
+
+        xorWith(&outputBlock, &nextXorWith);
+        nextXorWith = inputBlock;
+
+        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
+    }
+    return result;
+}
+
+ByteArray AES::resolveInputMode(const std::string& input, ConvertMode inputMode)
+{
+    if (inputMode == ConvertMode::Plain) {
+        return Base16::fromString(Base16::encode(input));
+    } else if (inputMode == ConvertMode::Base16) {
+        return Base16::fromString(input);
+    }
+    // base64
+    return Base16::fromString(Base16::encode(Base64::decode(input)));
+}
+
+std::string AES::resolveOutputMode(const ByteArray& input, ConvertMode outputMode)
+{
+    if (outputMode == ConvertMode::Plain) {
+        return Base16::toRawString(input);
+    } else if (outputMode == ConvertMode::Base16) {
+        return Base16::encode(input.begin(), input.end());
+    }
+    // base64
+    return Base64::encode(input.begin(), input.end());
 }
 
 // public
 
-std::string AES::cipher(const std::string& input, const std::string& key, InputMode inputMode)
+std::string AES::cipher(const std::string& input, const std::string& key, ConvertMode inputMode, ConvertMode outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp;
-    if (inputMode == InputMode::Plain) {
-        inp = Base16::fromString(Base16::encode(input));
-    } else if (inputMode == InputMode::Base16) {
-        inp = Base16::fromString(input);
-    } else { // base64
-        inp = Base16::fromString(Base16::encode(Base64::decode(input)));
-    }
+    ByteArray inp = resolveInputMode(input, inputMode);
     ByteArray result = cipher(inp, &keyArr);
-    return Base16::encode(result.begin(), result.end());
+    return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, InputMode inputMode)
+std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, ConvertMode inputMode, ConvertMode outputEncoding)
 {
-    bool ivecGenerated = iv.empty();
-    ByteArray ivec;
     Key keyArr = Base16::fromString(key);
-    ByteArray inp;
-    if (inputMode == InputMode::Plain) {
-        inp = Base16::fromString(Base16::encode(input));
-    } else if (inputMode == InputMode::Base16) {
-        inp = Base16::fromString(input);
-    } else { // base64
-        inp = Base16::fromString(Base16::encode(Base64::decode(input)));
-    }
+    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray ivec = Base16::fromString(iv);
+    bool ivecGenerated = iv.empty();
     ByteArray result = cipher(inp, &keyArr, ivec);
     if (ivecGenerated) {
         iv = Base16::encode(ivec.begin(), ivec.end());
     }
-    return Base16::encode(result.begin(), result.end());
+    return resolveOutputMode(result, outputEncoding);
+}
+
+std::string AES::decipher(const std::string& input, const std::string& key, ConvertMode inputMode, ConvertMode outputEncoding)
+{
+    Key keyArr = Base16::fromString(key);
+    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray result = decipher(inp, &keyArr);
+    return resolveOutputMode(result, outputEncoding);
+}
+
+std::string AES::decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode, ConvertMode outputEncoding)
+{
+    Key keyArr = Base16::fromString(key);
+    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray ivec = Base16::fromString(iv);
+    ByteArray result = decipher(inp, &keyArr, ivec);
+    return resolveOutputMode(result, outputEncoding);
 }
 
 
