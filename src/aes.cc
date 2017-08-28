@@ -19,7 +19,6 @@
 // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 //
 
-#include <cstdlib>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -316,18 +315,18 @@ void AES::shiftRows(State *state)
 void AES::invShiftRows(State *state)
 {
     // row 1
-    std::swap(state->at(0)[1], state->at(3)[1]);
     std::swap(state->at(0)[1], state->at(1)[1]);
-    std::swap(state->at(1)[1], state->at(2)[1]);
+    std::swap(state->at(0)[1], state->at(2)[1]);
+    std::swap(state->at(0)[1], state->at(3)[1]);
 
     // row 2
     std::swap(state->at(0)[2], state->at(2)[2]);
     std::swap(state->at(1)[2], state->at(3)[2]);
 
     // row 3
-    std::swap(state->at(0)[3], state->at(1)[3]);
-    std::swap(state->at(2)[3], state->at(3)[3]);
+    std::swap(state->at(0)[3], state->at(3)[3]);
     std::swap(state->at(0)[3], state->at(2)[3]);
+    std::swap(state->at(0)[3], state->at(1)[3]);
 }
 
 ///

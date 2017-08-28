@@ -17,22 +17,28 @@
 #ifndef MINE_CRYPTO_H
 #define MINE_CRYPTO_H
 
+#include <cstdlib>
 #include <algorithm>
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 #include <array>
 #include <cmath>
 #include <stdexcept>
 #include <map>
-#include <vector>
 
 namespace mine {
 
 using byte = unsigned char;
+using ByteArray = std::vector<byte>;
 
 ///
 /// \brief Provides base16 encoding / decoding
+///
+/// This class also contains some helpers to convert various input types
+/// to byte array and also provides public interface to encode
+/// the iterators for other containers like vector etc.
 ///
 class Base16 {
 public:
@@ -57,6 +63,14 @@ public:
     }
 
     ///
+    /// \brief Wrapper function to encode single hex char to corresponding byte
+    ///
+    static byte encode(const char* e)
+    {
+        return static_cast<byte>(strtol(e, nullptr, 16));
+    }
+
+    ///
     /// \brief Encodes input iterator to hex encoding
     ///
     template <class Iter>
@@ -70,13 +84,12 @@ public:
     }
 
     ///
-    /// \brief Encodes single byte
+    /// \brief Converts hex stream (e.g, 48656C6C6F) to byte array
+    /// \param hex String stream e.g, 48656C6C6F (Hello)
+    /// \return Byte array (mine::ByteArray) containing bytes e.g, 0x48, 0x65, 0x6C, 0x6C, 0x6F
+    /// \throws invalid_argument if hex is not valid
     ///
-    static inline void encode(char b, std::ostringstream& ss) noexcept
-    {
-        int h = (b & 0xff);
-        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
-    }
+    static ByteArray fromString(const std::string& hex);
 
     ///
     /// \brief Encodes integer to hex
@@ -98,36 +111,16 @@ public:
 
     ///
     /// \brief Decodes encoded hex
-    /// \throws std::runtime if invalid encoding.
-    /// std::runtime::what() is set accordingly
+    /// \throws std::invalid_argument if invalid encoding.
+    /// std::invalid_argument::what() is set accordingly
     ///
     static std::string decode(const std::string& enc)
     {
         if (enc.size() % 2 != 0) {
-            throw std::runtime_error("Invalid base-16 encoding");
+            throw std::invalid_argument("Invalid base-16 encoding");
         }
         return decode(enc.begin(), enc.end());
     }
-
-    ///
-    /// \brief Encodes input iterator to hex encoding
-    /// \note User should check for the valid size or use decode(std::string)
-    /// \throws runtime_error if invalid base16-encoding
-    ///
-    template <class Iter>
-    static std::string decode(const Iter& begin, const Iter& end)
-    {
-        std::ostringstream ss;
-        for (auto it = begin; it != end; it += 2) {
-            decode(*it, *(it + 1), ss);
-        }
-        return ss.str();
-    }
-
-    ///
-    /// \brief Decodes single byte pair
-    ///
-    static void decode(char a, char b, std::ostringstream& ss);
 
     ///
     /// \brief Decodes encoding to single integer of type T
@@ -150,12 +143,46 @@ private:
     Base16() = delete;
     Base16(const Base16&) = delete;
     Base16& operator=(const Base16&) = delete;
+
+    ///
+    /// \brief Encodes single byte
+    ///
+    static inline void encode(char b, std::ostringstream& ss) noexcept
+    {
+        int h = (b & 0xff);
+        ss << kValidChars[(h >> 4) & 0xf] << kValidChars[(h & 0xf)];
+    }
+
+    ///
+    /// \brief Encodes input iterator to hex encoding
+    /// \note User should check for the valid size or use decode(std::string)
+    /// \throws runtime_error if invalid base16-encoding
+    ///
+    template <class Iter>
+    static std::string decode(const Iter& begin, const Iter& end)
+    {
+        std::ostringstream ss;
+        for (auto it = begin; it != end; it += 2) {
+            decode(*it, *(it + 1), ss);
+        }
+        return ss.str();
+    }
+
+    ///
+    /// \brief Decodes single byte pair
+    ///
+    static void decode(char a, char b, std::ostringstream& ss);
 };
 
 using byte = unsigned char;
 
 ///
 /// \brief Provides base64 encoding / decoding implementation
+///
+/// This class also provides public interface to encode
+/// the iterators for other containers like vector etc.
+///
+/// This also handles unicode characters
 ///
 class Base64 {
 public:
@@ -277,9 +304,7 @@ public:
 
     ///
     /// \brief Decodes encoded base64
-    /// \throws std::runtime if invalid encoding. Another time it is thrown
-    /// is if no padding is found
-    /// std::runtime::what() is set according to the error
+    /// \see decode(const Iter&, const Iter&)
     ///
     static std::string decode(const std::string& e)
     {
@@ -289,6 +314,12 @@ public:
         return decode(e.begin(), e.end());
     }
 
+    ///
+    /// \brief Decodes base64 iterator from begin to end
+    /// \throws std::runtime if invalid encoding. Another time it is thrown
+    /// is if no padding is found
+    /// std::runtime::what() is set according to the error
+    ///
     template <class Iter>
     static std::string decode(const Iter& begin, const Iter& end)
     {
@@ -400,6 +431,11 @@ private:
 using byte = unsigned char;
 
 ///
+/// \brief Handy safe byte array
+///
+using ByteArray = std::vector<byte>;
+
+///
 /// \brief Provides AES crypto functionalities
 ///
 /// This is validated against NIST test data and all
@@ -414,10 +450,6 @@ using byte = unsigned char;
 ///
 class AES {
 public:
-    ///
-    /// \brief Handy safe byte array
-    ///
-    using ByteArray = std::vector<byte>;
 
     ///
     /// \brief A key is a byte array
@@ -548,21 +580,21 @@ private:
 
     ///
     /// \brief Transformation in the Inverse Cipher
-    /// that is the inverse of subBytes()
+    /// that is the reverse of subBytes()
     /// \ref Sec. 5.3.2
     ///
     static void invSubBytes(State* state);
 
     ///
     /// \brief  Transformation in the Inverse Cipher that is
-    /// the inverse of shiftRows()
+    /// the reverse of shiftRows()
     /// \ref Sec. 5.3.1
     ///
     static void invShiftRows(State* state);
 
     ///
     /// \brief Transformation in the Inverse Cipher
-    /// that is the inverse of mixColumns()
+    /// that is the reverse of mixColumns()
     /// \ref Sec. 5.3.3
     ///
     static void invMixColumns(State* state);
@@ -582,7 +614,14 @@ private:
     AES& operator=(const AES&) = delete;
 
     friend class AESTest_RawCipher_Test;
-    friend class AESTest_FiniteFieldMultiply_Test;
+    friend class AESTest_RawSimpleCipher_Test;
+    friend class AESTest_RawSimpleDecipher_Test;
+    friend class AESTest_SubByte_Test;
+    friend class AESTest_InvSubByte_Test;
+    friend class AESTest_ShiftRows_Test;
+    friend class AESTest_InvShiftRows_Test;
+    friend class AESTest_MixColumns_Test;
+    friend class AESTest_InvMixColumns_Test;
     friend class AESTest_KeyExpansion_Test;
     friend class AESTest_AddRoundKey_Test;
 };
@@ -808,7 +847,7 @@ public:
     ///
     /// \brief Absolutely must override this - conversion from x to single byte
     ///
-    virtual inline byte bigIntegerToByte(const BigInteger& x) const
+    virtual inline byte bigIntegerToByte(const BigInteger&) const
     {
         return static_cast<byte>(0);
     }
@@ -1146,59 +1185,9 @@ public:
     /// \param signature Signature in hex
     /// \see https://tools.ietf.org/html/rfc3447#section-8.1.2
     ///
-    bool verify(const PublicKey* publicKey, const std::string& message,
-                       const std::string& signature)
+    bool verify(const PublicKey*, const std::string&, const std::string&)
     {
-        /*
-        // TODO: Add it to test
-        std::vector<byte> f = getByteArray(18537);
-        BigInteger s = i2osp(f, 2);
-        BigInteger os = os2ip(18537); // 105
 
-        std::cout << s << std::endl;
-        std::cout << os << std::endl;
-
-        std::vector<byte> f2 = getByteArray(1214841185);
-        BigInteger s2 = i2osp(f2, 4);
-        BigInteger os2 = os2ip(1214841185); // 97
-
-        std::cout << s2 << std::endl;
-        std::cout << os2 << std::endl;
-
-        std::cout << changeBase(54735, 8) << std::endl;
-
-        std::cout << std::hex << 16 << std::endl;
-        std::cout << std::oct << 72 << std::endl;
-
-        return true;
-
-        BigInteger sign = m_helper.hexToBigInteger(signature);
-        try {
-            BigInteger vp = createVerificationPrimitive(publicKey, sign);
-
-            const int xlen = (publicKey->n().BitCount() + 7) >> 3;
-
-            if (xlen < vp + 11) {
-                // throw std::runtime_error("Integer too large"); // Needed??! Where in RFC?
-            }
-
-            std::vector<int> em = m_helper.getByteArray(vp, xlen);
-
-
-            // todo: add check for following (as per https://tools.ietf.org/html/rfc3447#section-8.1.2)
-            // Note that emLen will be one less than k if modBits - 1 is
-            // divisible by 8 and equal to k otherwise.  If I2OSP outputs
-            // "integer too large," output "invalid signature" and stop.
-
-            // EMSA-PSS_VERIFY - https://tools.ietf.org/html/rfc3447#section-9.1.2
-
-
-
-            std::cout << "tt" << std::endl;
-            return true;
-        } catch (std::exception&) {
-        }
-*/
         return true;
     }
 
@@ -1211,7 +1200,7 @@ private:
     /// \return corresponding nonnegative integer
     ///
     template <class T = std::wstring>
-    BigInteger pkcs1pad2(const T& s, int n) {
+    BigInteger pkcs1pad2(const T& s, std::size_t n) {
         if (n < s.size() + 11) {
             throw std::runtime_error("Message too long");
         }
@@ -1273,7 +1262,7 @@ private:
         if (baLen <= 2 || ba[0] != 0 || ba[1] != 2) {
             throw std::runtime_error("Incorrect padding PKCS#1");
         }
-        int i = 2; // passed first two characters (0x0 and 0x2) test
+        std::size_t i = 2; // passed first two characters (0x0 and 0x2) test
         // lets check for the <PS>
 
         // if we hit end while still we're still with non-zeros, it's a padding error

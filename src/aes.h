@@ -181,21 +181,21 @@ private:
 
     ///
     /// \brief Transformation in the Inverse Cipher
-    /// that is the inverse of subBytes()
+    /// that is the reverse of subBytes()
     /// \ref Sec. 5.3.2
     ///
     static void invSubBytes(State* state);
 
     ///
     /// \brief  Transformation in the Inverse Cipher that is
-    /// the inverse of shiftRows()
+    /// the reverse of shiftRows()
     /// \ref Sec. 5.3.1
     ///
     static void invShiftRows(State* state);
 
     ///
     /// \brief Transformation in the Inverse Cipher
-    /// that is the inverse of mixColumns()
+    /// that is the reverse of mixColumns()
     /// \ref Sec. 5.3.3
     ///
     static void invMixColumns(State* state);

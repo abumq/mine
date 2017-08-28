@@ -35,6 +35,19 @@ const std::unordered_map<byte, byte> Base16::kDecodeMap = {
     {0x43, 0x0C}, {0x44, 0x0D}, {0x45, 0x0E}, {0x46, 0x0F}
 };
 
+ByteArray Base16::fromString(const std::string& hex)
+{
+    if (hex.size() % 2 != 0) {
+        throw std::invalid_argument("Invalid base-16 encoding");
+    }
+
+    ByteArray byteArr;
+    for (std::size_t i = 0; i < hex.length(); i += 2) {
+        byteArr.push_back(encode(hex.substr(i, 2).c_str()));
+    }
+    return byteArr;
+}
+
 void Base16::decode(char a, char b, std::ostringstream& ss)
 {
     int b0 = a & 0xff;
@@ -144,7 +157,7 @@ const std::unordered_map<uint8_t, std::vector<uint8_t>> AES::kKeyParams = {
 
 void AES::printBytes(const ByteArray& b)
 {
-    for (int i = 1; i <= b.size(); ++i) {
+    for (std::size_t i = 1; i <= b.size(); ++i) {
         std::cout << "0x" << (b[i - 1] < 10 ? "0" : "") << Base16::encode(b[i - 1]) << "  ";
         if (i % 4 == 0) {
             std::cout << std::endl;
@@ -198,7 +211,7 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
     //      to each of the four bytes to produce an output word.
     //
     // Out definition:
-    // It's a simple substition with kSbox for corresponding bit
+    // It's a simple substition with kSbox for corresponding byte
     // index
     //
     auto substituteWord = [](Word* w) -> Word* {
@@ -258,6 +271,24 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
     return words;
 }
 
+///
+/// Adding round key is simply a xor operation on
+/// corresponding key for the round
+/// which is generated during key expansion
+///
+/// Let's say we have state and a key
+///
+/// [ df  c3  e2  9c ]         [ ef  d4  49  11 ]
+/// | 0f  ad  1f  ca |         | 1f  ad  ac  fa |
+/// | 0c  9d  8d  fa |    ^    | cc  9e  15  dd |
+/// [ fe  ef  cc  b2 ]         [ fe  ea  02  dc ]
+///
+///
+/// [ df^ef   c3^d4   e2^49   9c^11 ]
+/// | 0f^1f   ad^ad   1f^ac   ca^fa |
+/// | 0c^cc   9d^9e   8d^15   fa^dd |
+/// [ fe^fe   ef^ea   cc^02   b2^dc ]
+///
 void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
@@ -267,6 +298,11 @@ void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
     }
 }
 
+///
+/// Simple substition for the byte
+/// from sbox - i.e, for 0x04 we will replace with the
+/// byte at index 0x04 => 0xf2
+///
 void AES::subBytes(State* state)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
@@ -276,6 +312,43 @@ void AES::subBytes(State* state)
     }
 }
 
+///
+/// A simple substition of bytes using kSBoxInverse
+///
+void AES::invSubBytes(State* state)
+{
+    for (std::size_t i = 0; i < kNb; ++i) {
+        for (std::size_t j = 0; j < kNb; ++j) {
+            state->at(i)[j] = kSBoxInverse[state->at(i)[j]];
+        }
+    }
+}
+
+///
+/// Shifting rows is beautifully explained by diagram
+/// that helped in implementation as well
+///
+/// Let's say we have state
+///
+/// [ df  c3  e2  9c ]
+/// | 0f  ad  1f  ca |
+/// | 0c  9d  8d  fa |
+/// [ fe  ef  cc  b2 ]
+///
+/// shifting means
+///
+///              [ df  c3  e2  9c ]
+///           0f | ad  1f  ca |
+///       0c  9d | 8d  fa |
+///   fe  ef  cc [ b2 ]
+///
+/// and filling the spaces with shifted rows
+///
+/// [ df  c3  e2  9c ]
+/// | ad  1f  ca  0f |
+/// | 8d  fa  0c  9d |
+/// [ b2  fe  ef  cc ]
+///
 void AES::shiftRows(State *state)
 {
     // row 1
@@ -293,6 +366,56 @@ void AES::shiftRows(State *state)
     std::swap(state->at(0)[3], state->at(2)[3]);
 }
 
+///
+/// This is reverse of shift rows operation
+///
+/// Let's say we have state
+///
+/// [ df  c3  e2  9c ]
+/// | ad  1f  ca  0f |
+/// | 8d  fa  0c  9d |
+/// [ b2  fe  ef  cc ]
+///
+/// shifting means
+///
+/// [ df  c3  e2  9c  ]
+///      | ad  1f  ca | 0f
+///          | 8d  fa | 0c  9d
+///              [ b2 | fe  ef  cc
+///
+/// and filling the spaces with shifted rows
+///
+/// [ df  c3  e2  9c ]
+/// | 0f  ad  1f  ca |
+/// | 0c  9d  8d  fa |
+/// [ fe  ef  cc  b2 ]
+///
+void AES::invShiftRows(State *state)
+{
+    // row 1
+    std::swap(state->at(0)[1], state->at(1)[1]);
+    std::swap(state->at(0)[1], state->at(2)[1]);
+    std::swap(state->at(0)[1], state->at(3)[1]);
+
+    // row 2
+    std::swap(state->at(0)[2], state->at(2)[2]);
+    std::swap(state->at(1)[2], state->at(3)[2]);
+
+    // row 3
+    std::swap(state->at(0)[3], state->at(3)[3]);
+    std::swap(state->at(0)[3], state->at(2)[3]);
+    std::swap(state->at(0)[3], state->at(1)[3]);
+}
+
+///
+/// multiplies in GF(2^8) field selected column from state
+/// with constant matrix defined by publication
+///
+/// [ 02  03  01  01 ]
+/// | 01  02  03  01 |
+/// | 01  01  02  03 |
+/// [ 03  01  01  02 ]
+///
 void AES::mixColumns(State* state)
 {
     // Finds the product of {02} and the argument to xtime modulo {1b}
@@ -304,19 +427,11 @@ void AES::mixColumns(State* state)
 
     for (int col = 0; col < 4; ++col) {
 
-        //
-        // multiplies in GF(2^8) field selected column from state
-        // with constant matrix defined by publication
-        //
-        // [ 02  03  01  01 ]
-        // | 01  02  03  01 |
-        // | 01  01  02  03 |
-        // [ 03  01  01  02 ]
-        //
+
         Word column = state->at(col);
         // let's take example from publication, col: [212, 191, 93, 48]
         // t == 6
-        byte t = (column[0]) ^ (column[1]) ^ (column[2]) ^ (column[3]);
+        byte t = column[0] ^ column[1] ^ column[2] ^ column[3];
         // see Sec. 4.2.1 and Sec. 5.1.3 for more details
         state->at(col)[0] ^= xtime(column[0] ^ column[1]) ^ t;
         state->at(col)[1] ^= xtime(column[1] ^ column[2]) ^ t;
@@ -325,21 +440,12 @@ void AES::mixColumns(State* state)
     }
 }
 
-void AES::invSubBytes(State* state)
-{
-
-}
-
-void AES::invShiftRows(State *state)
-{
-
-}
-
 void AES::invMixColumns(State* state)
 {
+    (void)state;
 }
 
-AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
+ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
     std::size_t keySize = key->size();
 
@@ -378,7 +484,7 @@ AES::ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
 }
 
-AES::ByteArray AES::decipher(const ByteArray& input, const Key* key)
+ByteArray AES::decipher(const ByteArray& input, const Key* key)
 {
     std::size_t keySize = key->size();
 
@@ -432,7 +538,7 @@ void AES::initState(State* state, ByteArray input)
     }
 }
 
-AES::ByteArray AES::stateToByteArray(const State *state)
+ByteArray AES::stateToByteArray(const State *state)
 {
     ByteArray result(kBlockSize);
     int k = 0;
@@ -449,11 +555,9 @@ AES::ByteArray AES::stateToByteArray(const State *state)
 
 std::string AES::cipher(const std::string& input, const std::string& key)
 {
-    Key k(key.size());
-    std::copy(key.begin(), key.end(), k.begin());
-    ByteArray inp(kBlockSize);
-    std::copy(input.begin(), input.end(), inp.begin());
-    ByteArray result = cipher(inp, &k);
+    Key keyArr = Base16::fromString(key);
+    ByteArray inp = Base16::fromString(input);
+    ByteArray result = cipher(inp, &keyArr);
     return Base16::encode(result.begin(), result.end());
 }
 

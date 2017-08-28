@@ -21,6 +21,7 @@
 #ifndef Base16_H
 #define Base16_H
 
+#include <cstdlib>
 #include <algorithm>
 #include <string>
 #include <sstream>
