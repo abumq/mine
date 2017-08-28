@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "src/base16.h"
+#include "src/base64.h"
 #include "src/aes.h"
 
 using namespace mine;
@@ -502,10 +503,17 @@ ByteArray AES::stateToByteArray(const State *state)
 
 // public
 
-std::string AES::cipher(const std::string& input, const std::string& key)
+std::string AES::cipher(const std::string& input, const std::string& key, InputMode inputMode)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp = Base16::fromString(input);
+    ByteArray inp;
+    if (inputMode == InputMode::Plain) {
+        inp = Base16::fromString(Base16::encode(input));
+    } else if (inputMode == InputMode::Base16) {
+        inp = Base16::fromString(input);
+    } else { // base64
+        inp = Base16::fromString(Base16::encode(Base64::decode(input)));
+    }
     ByteArray result = cipher(inp, &keyArr);
     return Base16::encode(result.begin(), result.end());
 }

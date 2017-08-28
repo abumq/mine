@@ -442,8 +442,36 @@ TEST(AESTest, RawCipherDirect)
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1));
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::InputMode::Base16);
         // case insensitive comparison because hex can be upper or lower case
+        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    }
+}
+
+//              input           key         expected
+static TestData<std::string, std::string, std::string> RawCipherPlainInputData = {
+    TestCase("this is test...", "000102030405060708090a0b0c0d0e0f", "da14fb09b2378948c5b4966414a6779f"),
+};
+
+TEST(AESTest, RawCipherPlain)
+{
+    for (auto& item : RawCipherPlainInputData) {
+        std::string expected = PARAM(2);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::InputMode::Plain);
+        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    }
+}
+
+//              input           key         expected
+static TestData<std::string, std::string, std::string> RawCipherBase64InputData = {
+    TestCase("dGhpcyBpcyB0ZXN0Li4u", "000102030405060708090a0b0c0d0e0f", "da14fb09b2378948c5b4966414a6779f"),
+};
+
+TEST(AESTest, RawCipherBase64)
+{
+    for (auto& item : RawCipherBase64InputData) {
+        std::string expected = PARAM(2);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::InputMode::Base64);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }

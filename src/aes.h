@@ -53,6 +53,15 @@ class AES {
 public:
 
     ///
+    /// \brief Input mode for various functions
+    ///
+    enum class InputMode {
+        Plain,
+        Base16,
+        Base64
+    };
+
+    ///
     /// \brief A key is a byte array
     ///
     using Key = ByteArray;
@@ -60,9 +69,10 @@ public:
     ///
     /// \brief Ciphers the input with specified hex key
     /// \param key Hex key
+    /// \param inputMode the type of input. Defaults to Plain
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key);
+    static std::string cipher(const std::string& input, const std::string& key, InputMode inputMode = InputMode::Plain);
 
 private:
 
@@ -225,6 +235,8 @@ private:
     AES& operator=(const AES&) = delete;
 
     friend class AESTest_RawCipher_Test;
+    friend class AESTest_RawCipherPlain_Test;
+    friend class AESTest_RawCipherBase64_Test;
     friend class AESTest_RawSimpleCipher_Test;
     friend class AESTest_RawSimpleDecipher_Test;
     friend class AESTest_SubByte_Test;
