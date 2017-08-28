@@ -192,7 +192,7 @@ public:
 
         const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
         std::stringstream ss;
-        for (auto it = begin; it != end; it += 4) {
+        for (auto it = begin; it < end; it += 4) {
             try {
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
                 if (b0 == kPadding || b0 == '\0') {

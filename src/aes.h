@@ -266,15 +266,6 @@ private:
     static ByteArray rawCipher(const ByteArray& input, const Key* key);
 
     ///
-    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
-
-    ///
     /// \brief Raw decryption function - not for public use
     /// \param input 128-bit cipher input
     /// If array is bigger it's chopped and if it's smaller, it's padded
@@ -284,6 +275,33 @@ private:
     /// \return 128-bit plain text
     ///
     static ByteArray rawDecipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Deciphers with CBC-Mode, the input can be as long as user wants

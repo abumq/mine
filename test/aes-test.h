@@ -678,8 +678,8 @@ TEST(AESTest, Base64StringDecipher)
 
 TEST(AESTest, Base64StringInputDecipher)
 {
-    std::string expected = "this is test....";
-    std::string output = AES::decipher("uS2qrm5XdzsQZTcDrxJxbw==",
+    std::string expected = "this is test..";
+    std::string output = AES::decipher("Z0BiQ8NcwknqzbGrWBjXqw==",
                                        "000102030405060708090a0b0c0d0e0f",
                                        AES::ConvertMode::Base64,
                                        AES::ConvertMode::Plain);

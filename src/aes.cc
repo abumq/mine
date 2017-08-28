@@ -511,6 +511,63 @@ ByteArray AES::rawDecipher(const ByteArray& input, const Key* key)
     return stateToByteArray(&state);
 }
 
+ByteArray AES::cipher(const ByteArray& input, const Key* key)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    const std::size_t inputSize = input.size();
+
+    ByteArray result;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        // don't use copy_n as we are setting the values
+        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        ByteArray outputBlock = rawCipher(inputBlock, key);
+        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
+    }
+    return result;
+}
+
+ByteArray AES::decipher(const ByteArray& input, const Key* key)
+{
+
+    std::size_t keySize = key->size();
+
+    // key size validation
+    if (keySize != 16 && keySize != 24 && keySize != 32) {
+        throw std::invalid_argument("Invalid AES key size");
+    }
+
+    const std::size_t inputSize = input.size();
+    ByteArray result;
+
+    for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
+        ByteArray inputBlock(kBlockSize, 0);
+
+        std::size_t j = 0;
+        // don't use copy_n here as we are setting the values
+        for (; j < kBlockSize && inputSize > j + i; ++j) {
+            inputBlock.at(j) = input.at(j + i);
+        }
+
+        ByteArray outputBlock = rawDecipher(inputBlock, key);
+
+        std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
+    }
+    return result;
+}
+
 ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
 {
 
@@ -615,7 +672,7 @@ std::string AES::cipher(const std::string& input, const std::string& key, Conver
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputMode);
-    ByteArray result = rawCipher(inp, &keyArr);
+    ByteArray result = cipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 
@@ -636,7 +693,7 @@ std::string AES::decipher(const std::string& input, const std::string& key, Conv
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputMode);
-    ByteArray result = rawDecipher(inp, &keyArr);
+    ByteArray result = decipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 

@@ -99,6 +99,18 @@ TEST(Base64Test, Decode)
     }
 }
 
+static TestData<std::string, std::size_t> Base64SizeTestData = {
+    TestCase("Z0BiQ8NcwknqzbGrWBjXqw==", 16),
+};
+
+TEST(Base64Test, DecodeRawSize)
+{
+    for (const auto& item : Base64SizeTestData) {
+        std::string decoded = Base64::decode(PARAM(0));
+        ASSERT_EQ(PARAM(1), decoded.size());
+    }
+}
+
 #ifdef MINE_BASE64_WSTRING_CONVERSION
 TEST(Base64Test, EncodeWString)
 {
