@@ -730,6 +730,8 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
     ByteArray result;
 
     ByteArray nextXorWith = iv;
+    ByteArray::const_iterator nextXorWithBeg = iv.begin();
+    ByteArray::const_iterator nextXorWithEnd = iv.end();
 
 
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
@@ -743,9 +745,10 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
 
         ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
 
-        xorWith(&outputBlock, &nextXorWith);
+        xorWithRange(&outputBlock, nextXorWithBeg, nextXorWithEnd);
 
-        nextXorWith = inputBlock;
+        nextXorWithBeg = input.begin() + i;
+        nextXorWithEnd = input.begin() + i + kBlockSize;
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
