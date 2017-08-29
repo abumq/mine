@@ -782,10 +782,13 @@ TEST(AESTest, CbcDecipher)
     }
 }
 
-TEST(AESTest, RealDataIssuesTest)
+TEST(AESTest, CrossAppsDataTest)
 {
-    std::string expected = "WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=";
     std::string iv = "a14c54563269e9e368f56b325f04ff00";
+    const std::string key = "CBD437FA37772C66051A47D72367B38E";
+
+    // genearted using online tool
+    std::string expected = "WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=";
     std::string output = AES::encrypt("test this test this",
                           "CBD437FA37772C66051A47D72367B38E",
                           iv,
@@ -794,10 +797,19 @@ TEST(AESTest, RealDataIssuesTest)
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
+    std::string nextexp = "test this test this";
+    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
+                          key,
+                          iv,
+                          AES::Encoding::Base64,
+                          AES::Encoding::Raw);
+
+    ASSERT_STRCASEEQ(nextexp.c_str(), output.c_str());
+
     expected = "EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==";
 
     output = AES::encrypt(R"({"_t":1503928197,"logger_id":"default","access_code":"default"})",
-                          "CBD437FA37772C66051A47D72367B38E",
+                          key,
                           iv,
                           AES::Encoding::Raw,
                           AES::Encoding::Base64);
@@ -809,29 +821,35 @@ TEST(AESTest, RealDataIssuesTest)
     //
     expected = R"({"_t":1503928197,"logger_id":"default","access_code":"default"})";
     output = AES::decrypt("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
-                                       "CBD437FA37772C66051A47D72367B38E",
-                                       "a14c54563269e9e368f56b325f04ff00",
+                                       key,
+                                       iv,
                                        AES::Encoding::Base64,
                                        AES::Encoding::Raw);
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
+    // generated with ripe
+    // echo test this test this | ripe -e --aes --key CBD437FA37772C66051A47D72367B38E --iv a14c54563269e9e368f56b325f04ff00
     expected = "test this test this";
-    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJc/uwM2APneVOH9mBq15bOk=",
-                                       "CBD437FA37772C66051A47D72367B38E",
-                                       "a14c54563269e9e368f56b325f04ff00",
+    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
+                                       key,
+                                       iv,
                                        AES::Encoding::Base64,
                                        AES::Encoding::Raw);
 
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
-    expected = R"({"_t":1503928197,"logger_id":"default","access_code":"default"})";
-    output = AES::decrypt("12D62BE49168FFB92A616C68A0CBD4D8327EBA936150C0E28BD5FA2041D8C6F50D5D2546937E086A44F91FB19BCB32F9FC920C3004022E7514F36E11237CA681",
-                                       "CBD437FA37772C66051A47D72367B38E",
-                                       "a14c54563269e9e368f56b325f04ff00",
-                                       AES::Encoding::Base16,
+     // generated with openssl
+    // echo test this test this | openssl enc -aes-128-cbc -K CBD437FA37772C66051A47D72367B38E -iv a14c54563269e9e368f56b325f04ff00 -base64
+    expected = "test this test this\n"; // openssl adds newline char
+    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJdSsXR5NwysOnq+cuf5C6cs=",
+                                       key,
+                                       iv,
+                                       AES::Encoding::Base64,
                                        AES::Encoding::Raw);
+
+
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 

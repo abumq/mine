@@ -622,6 +622,26 @@ std::string AES::resolveOutputMode(const ByteArray& input, Encoding outputMode)
     return Base64::encode(input.begin(), input.end());
 }
 
+std::size_t AES::getPaddingIndex(const ByteArray& byteArr)
+{
+    char lastChar = byteArr[kBlockSize - 1];
+    int c = lastChar & 0xff;
+    if (c > 0 && c < kBlockSize - 1) {
+        bool validPadding = true;
+        for (int chkIdx = kBlockSize - c; chkIdx < kBlockSize; ++chkIdx) {
+            if ((byteArr[chkIdx] & 0xff) != c) {
+                // with openssl we found padding
+                validPadding = false;
+                break;
+            }
+        }
+        if (validPadding) {
+            return kBlockSize - c;
+        }
+    }
+    return kBlockSize;
+}
+
 // public
 
 ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding)
@@ -685,6 +705,10 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key)
         }
         ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
 
+        if (i + kBlockSize == inputSize) {
+            // check padding
+            j = getPaddingIndex(outputBlock);
+        }
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
     return result;
@@ -785,21 +809,7 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
 
         if (i + kBlockSize == inputSize) {
             // check padding
-            char lastChar = outputBlock[kBlockSize - 1];
-            int c = lastChar & 0xff;
-            if (c > 0 && c < kBlockSize - 1) {
-                bool validPadding = true;
-                for (int chkIdx = c; chkIdx < kBlockSize - 2; ++chkIdx) {
-                    if ((outputBlock[chkIdx] & 0xff) != c) {
-                        // with openssl we found padding
-                        validPadding = false;
-                        break;
-                    }
-                }
-                if (validPadding) {
-                    j = c;
-                }
-            }
+            j = getPaddingIndex(outputBlock);
         } else {
             nextXorWithBeg = input.begin() + i;
             nextXorWithEnd = input.begin() + i + kBlockSize;
