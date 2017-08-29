@@ -129,12 +129,26 @@ void AES::printState(const State* state)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            byte b = state->at(j)[i];
+            byte b = (*state)[j][i];
             std::cout << "0x" << (b < 10 ? "0" : "") << Base16::encode(b) << "  ";
         }
         std::cout << std::endl;
     }
     std::cout << std::endl;
+}
+
+void AES::rotateWord(Word* w) {
+    byte t = (*w)[0];
+    (*w)[0] = (*w)[1];
+    (*w)[1] = (*w)[2];
+    (*w)[2] = (*w)[3];
+    (*w)[3] = t;
+}
+
+void AES::substituteWord(Word* w) {
+    for (uint8_t i = 0; i < 4; ++i) {
+        (*w)[i] = kSBox[(*w)[i]];
+    }
 }
 
 AES::KeySchedule AES::keyExpansion(const Key* key)
@@ -143,45 +157,6 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
 #if MINE_PROFILING
     auto started = std::chrono::steady_clock::now();
 #endif
-    // rotateWord function is specified in FIPS.197 Sec. 5.2:
-    //      The function RotWord() takes a
-    //      word [a0,a1,a2,a3] as input, performs a cyclic permutation,
-    //      and returns the word [a1,a2,a3,a0]. The
-    //      round constant word array
-    //
-    // Our definition:
-    //      We swap the first byte
-    //      to last one causing it to shift to the left
-    //      i.e,
-    //           [a1]      [a2]
-    //           [a2]      [a3]
-    //           [a3]  =>  [a4]
-    //           [a4]      [a1]
-    //
-    auto rotateWord = [](Word* w) -> Word* {
-        byte t = w->at(0);
-        w->at(0) = w->at(1);
-        w->at(1) = w->at(2);
-        w->at(2) = w->at(3);
-        w->at(3) = t;
-        return w;
-    };
-
-    // this function is also specified in FIPS.197 Sec. 5.2:
-    //      SubWord() is a function that takes a four-byte
-    //      input word and applies the S-box
-    //      to each of the four bytes to produce an output word.
-    //
-    // Out definition:
-    // It's a simple substition with kSbox for corresponding byte
-    // index
-    //
-    auto substituteWord = [](Word* w) -> Word* {
-        for (uint8_t i = 0; i < 4; ++i) {
-            w->at(i) = kSBox[w->at(i)];
-        }
-        return w;
-    };
 
     std::size_t keySize = key->size();
 
@@ -192,7 +167,7 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
     uint8_t Nk = kKeyParams.at(keySize)[0],
             Nr = kKeyParams.at(keySize)[1];
 
-    KeySchedule words(kNb * (Nr+1));
+    KeySchedule words;//(kNb * (Nr+1));
 
     uint8_t i = 0;
     // copy main key as is for the first round
@@ -217,7 +192,6 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
             // See note for 256-bit keys on Sec. 5.2 on FIPS.197
             substituteWord(&temp);
         }
-
 
         // xor previous column of new key with corresponding column of
         // previous round key
@@ -255,14 +229,14 @@ AES::KeySchedule AES::keyExpansion(const Key* key)
 /// | 0c^cc   9d^9e   8d^15   fa^dd |
 /// [ fe^fe   ef^ea   cc^02   b2^dc ]
 ///
-void AES::addRoundKey(State* state, const KeySchedule* keySchedule, int round)
+void AES::addRoundKey(State* state, KeySchedule* keySchedule, int round)
 {
 #if MINE_PROFILING
     auto started = std::chrono::steady_clock::now();
 #endif
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            state->at(i)[j] ^= keySchedule->at((round * kNb) + i)[j];
+            (*state)[i][j] ^= (*keySchedule)[(round * kNb) + i][j];
         }
     }
 #if MINE_PROFILING
@@ -282,7 +256,7 @@ void AES::subBytes(State* state)
 #endif
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            state->at(i)[j] = kSBox[state->at(i)[j]];
+            (*state)[i][j] = kSBox[(*state)[i][j]];
         }
     }
 
@@ -298,7 +272,7 @@ void AES::invSubBytes(State* state)
 {
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            state->at(i)[j] = kSBoxInverse[state->at(i)[j]];
+            (*state)[i][j] = kSBoxInverse[(*state)[i][j]];
         }
     }
 }
@@ -334,18 +308,18 @@ void AES::shiftRows(State *state)
     auto started = std::chrono::steady_clock::now();
 #endif
     // row 1
-    std::swap(state->at(0)[1], state->at(3)[1]);
-    std::swap(state->at(0)[1], state->at(1)[1]);
-    std::swap(state->at(1)[1], state->at(2)[1]);
+    std::swap((*state)[0][1], (*state)[3][1]);
+    std::swap((*state)[0][1], (*state)[1][1]);
+    std::swap((*state)[1][1], (*state)[2][1]);
 
     // row 2
-    std::swap(state->at(0)[2], state->at(2)[2]);
-    std::swap(state->at(1)[2], state->at(3)[2]);
+    std::swap((*state)[0][2], (*state)[2][2]);
+    std::swap((*state)[1][2], (*state)[3][2]);
 
     // row 3
-    std::swap(state->at(0)[3], state->at(1)[3]);
-    std::swap(state->at(2)[3], state->at(3)[3]);
-    std::swap(state->at(0)[3], state->at(2)[3]);
+    std::swap((*state)[0][3], (*state)[1][3]);
+    std::swap((*state)[2][3], (*state)[3][3]);
+    std::swap((*state)[0][3], (*state)[2][3]);
 
 #if MINE_PROFILING
     endProfiling(started, "shiftRows");
@@ -379,18 +353,18 @@ void AES::shiftRows(State *state)
 void AES::invShiftRows(State *state)
 {
     // row 1
-    std::swap(state->at(0)[1], state->at(1)[1]);
-    std::swap(state->at(0)[1], state->at(2)[1]);
-    std::swap(state->at(0)[1], state->at(3)[1]);
+    std::swap((*state)[0][1], (*state)[1][1]);
+    std::swap((*state)[0][1], (*state)[2][1]);
+    std::swap((*state)[0][1], (*state)[3][1]);
 
     // row 2
-    std::swap(state->at(0)[2], state->at(2)[2]);
-    std::swap(state->at(1)[2], state->at(3)[2]);
+    std::swap((*state)[0][2], (*state)[2][2]);
+    std::swap((*state)[1][2], (*state)[3][2]);
 
     // row 3
-    std::swap(state->at(0)[3], state->at(3)[3]);
-    std::swap(state->at(0)[3], state->at(2)[3]);
-    std::swap(state->at(0)[3], state->at(1)[3]);
+    std::swap((*state)[0][3], (*state)[3][3]);
+    std::swap((*state)[0][3], (*state)[2][3]);
+    std::swap((*state)[0][3], (*state)[1][3]);
 }
 
 ///
@@ -429,15 +403,15 @@ void AES::mixColumns(State* state)
     auto started = std::chrono::steady_clock::now();
 #endif
     for (int col = 0; col < 4; ++col) {
-        Word column = state->at(col);
+        Word column = (*state)[col];
         // let's take example from publication, col: [212, 191, 93, 48]
         // t == 6
         byte t = column[0] ^ column[1] ^ column[2] ^ column[3];
         // see Sec. 4.2.1 and Sec. 5.1.3 for more details
-        state->at(col)[0] ^= xtime(column[0] ^ column[1]) ^ t;
-        state->at(col)[1] ^= xtime(column[1] ^ column[2]) ^ t;
-        state->at(col)[2] ^= xtime(column[2] ^ column[3]) ^ t;
-        state->at(col)[3] ^= xtime(column[3] ^ column[0]) ^ t;
+        (*state)[col][0] ^= xtime(column[0] ^ column[1]) ^ t;
+        (*state)[col][1] ^= xtime(column[1] ^ column[2]) ^ t;
+        (*state)[col][2] ^= xtime(column[2] ^ column[3]) ^ t;
+        (*state)[col][3] ^= xtime(column[3] ^ column[0]) ^ t;
     }
 #if MINE_PROFILING
     endProfiling(started, "mixColumns");
@@ -455,12 +429,12 @@ void AES::mixColumns(State* state)
 void AES::invMixColumns(State* state)
 {
     for (int col = 0; col < 4; ++col) {
-        Word column = state->at(col);
+        Word column = (*state)[col];
         // see Sec. 4.2.1 and Sec. 5.3.3 for more details
-        state->at(col)[0] = multiply(column[0], 0x0e) ^ multiply(column[1], 0x0b) ^ multiply(column[2], 0x0d) ^ multiply(column[3], 0x09);
-        state->at(col)[1] = multiply(column[0], 0x09) ^ multiply(column[1], 0x0e) ^ multiply(column[2], 0x0b) ^ multiply(column[3], 0x0d);
-        state->at(col)[2] = multiply(column[0], 0x0d) ^ multiply(column[1], 0x09) ^ multiply(column[2], 0x0e) ^ multiply(column[3], 0x0b);
-        state->at(col)[3] = multiply(column[0], 0x0b) ^ multiply(column[1], 0x0d) ^ multiply(column[2], 0x09) ^ multiply(column[3], 0x0e);
+        (*state)[col][0] = multiply(column[0], 0x0e) ^ multiply(column[1], 0x0b) ^ multiply(column[2], 0x0d) ^ multiply(column[3], 0x09);
+        (*state)[col][1] = multiply(column[0], 0x09) ^ multiply(column[1], 0x0e) ^ multiply(column[2], 0x0b) ^ multiply(column[3], 0x0d);
+        (*state)[col][2] = multiply(column[0], 0x0d) ^ multiply(column[1], 0x09) ^ multiply(column[2], 0x0e) ^ multiply(column[3], 0x0b);
+        (*state)[col][3] = multiply(column[0], 0x0b) ^ multiply(column[1], 0x0d) ^ multiply(column[2], 0x09) ^ multiply(column[3], 0x0e);
     }
 }
 
@@ -492,7 +466,7 @@ ByteArray AES::stateToByteArray(const State *state)
     int k = 0;
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
-            result[k++] = state->at(i)[j];
+            result[k++] = (*state)[i][j];
         }
     }
 #if MINE_PROFILING
@@ -517,21 +491,21 @@ ByteArray AES::generateRandomBytes(const std::size_t len)
 ByteArray* AES::xorWith(ByteArray* input, const ByteArray* arr)
 {
     for (std::size_t i = 0; i < kBlockSize; ++i) {
-        input->at(i) ^= arr->at(i);
+        (*input)[i] ^= (*arr)[i];
     }
     return input;
 }
 
-ByteArray* AES::xorWithIter(ByteArray* input, const ByteArray::const_iterator& beg, const ByteArray::const_iterator& end)
+ByteArray* AES::xorWithRange(ByteArray* input, const ByteArray::const_iterator& begin, const ByteArray::const_iterator& end)
 {
     int i = 0;
-    for (auto iter = beg; iter < end; ++iter, ++i) {
-        input->at(i) ^= *iter;
+    for (auto iter = begin; iter < end; ++iter, ++i) {
+        (*input)[i] ^= *iter;
     }
     return input;
 }
 
-ByteArray AES::rawCipher(const ByteArray::const_iterator& begin, const Key* key, const KeySchedule* keySchedule)
+ByteArray AES::rawCipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule)
 {
 
     if (key == nullptr || keySchedule == nullptr) {
@@ -539,9 +513,9 @@ ByteArray AES::rawCipher(const ByteArray::const_iterator& begin, const Key* key,
     }
 
     State state;
-    initState(&state, begin);
+    initState(&state, range);
 
-    uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
+    const uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
 
     int round = 0;
 
@@ -553,11 +527,11 @@ ByteArray AES::rawCipher(const ByteArray::const_iterator& begin, const Key* key,
     auto started = std::chrono::steady_clock::now();
 #endif
     // intermediate round
-    while (round < kTotalRounds) {
+    for (; round < kTotalRounds; ++round) {
         subBytes(&state);
         shiftRows(&state);
         mixColumns(&state);
-        addRoundKey(&state, keySchedule, round++);
+        addRoundKey(&state, keySchedule, round);
     }
 
 #if MINE_PROFILING
@@ -573,7 +547,7 @@ ByteArray AES::rawCipher(const ByteArray::const_iterator& begin, const Key* key,
 
 }
 
-ByteArray AES::rawDecipher(const ByteArray::const_iterator& begin, const Key* key, const KeySchedule* keySchedule)
+ByteArray AES::rawDecipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule)
 {
 
     if (key == nullptr || keySchedule == nullptr) {
@@ -581,9 +555,9 @@ ByteArray AES::rawDecipher(const ByteArray::const_iterator& begin, const Key* ke
     }
 
     State state;
-    initState(&state, begin);
+    initState(&state, range);
 
-    uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
+    const uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
 
     int round = kTotalRounds;
 
@@ -591,10 +565,10 @@ ByteArray AES::rawDecipher(const ByteArray::const_iterator& begin, const Key* ke
     addRoundKey(&state, keySchedule, round--);
 
     // intermediate round
-    while (round > 0) {
+    for (; round > 0; --round) {
         invShiftRows(&state);
         invSubBytes(&state);
-        addRoundKey(&state, keySchedule, round--);
+        addRoundKey(&state, keySchedule, round);
         invMixColumns(&state);
     }
 
@@ -651,7 +625,7 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
         // don't use copy_n as we are setting the values
         for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock.at(j) = input.at(j + i);
+            inputBlock[j] = input[j + i];
         }
 
         ByteArray outputBlock = rawCipher(inputBlock.begin() + i, key, &keySchedule);
@@ -681,7 +655,7 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
         std::size_t j = 0;
         // don't use copy_n here as we are setting the values
         for (; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock.at(j) = input.at(j + i);
+            inputBlock[j] = input[j + i];
         }
 
         ByteArray outputBlock = rawDecipher(inputBlock.begin(), key, &keySchedule);
@@ -725,9 +699,9 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
 
         // don't use copy_n as we are setting the values
         for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock.at(j) = input.at(j + i);
+            inputBlock[j] = input[j + i];
         }
-        xorWithIter(&inputBlock, nextXorWithBeg, nextXorWithEnd);
+        xorWithRange(&inputBlock, nextXorWithBeg, nextXorWithEnd);
 
         ByteArray outputBlock = rawCipher(inputBlock.begin(), key, &keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
@@ -764,7 +738,7 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
         std::size_t j = 0;
         // don't use copy_n as we are setting the values
         for (; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock.at(j) = input.at(j + i);
+            inputBlock[j] = input[j + i];
         }
 
         ByteArray outputBlock = rawDecipher(inputBlock.begin(), key, &keySchedule);

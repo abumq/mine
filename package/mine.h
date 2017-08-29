@@ -564,7 +564,7 @@ private:
     /// \brief KeySchedule is linear array of 4-byte words
     /// \ref FIPS.197 Sec 5.2
     ///
-    using KeySchedule = std::unordered_map<uint8_t, Word>;
+    using KeySchedule = std::map<uint8_t, Word>;
 
     ///
     /// \brief State as described in FIPS.197 Sec. 3.4
@@ -617,6 +617,35 @@ private:
     ///
     static const uint8_t kNb = 4;
 
+
+    /// rotateWord function is specified in FIPS.197 Sec. 5.2:
+    ///      The function RotWord() takes a
+    ///      word [a0,a1,a2,a3] as input, performs a cyclic permutation,
+    ///      and returns the word [a1,a2,a3,a0]. The
+    ///      round constant word array
+    ///
+    /// Our definition:
+    ///      We swap the first byte
+    ///      to last one causing it to shift to the left
+    ///      i.e,
+    ///           [a1]      [a2]
+    ///           [a2]      [a3]
+    ///           [a3]  =>  [a4]
+    ///           [a4]      [a1]
+    ///
+    static void rotateWord(Word* w);
+
+    /// this function is also specified in FIPS.197 Sec. 5.2:
+    ///      SubWord() is a function that takes a four-byte
+    ///      input word and applies the S-box
+    ///      to each of the four bytes to produce an output word.
+    ///
+    /// Out definition:
+    /// It's a simple substition with kSbox for corresponding byte
+    /// index
+    ///
+    static void substituteWord(Word* w);
+
     ///
     /// \brief Key expansion function as described in FIPS.197
     ///
@@ -625,7 +654,7 @@ private:
     ///
     /// \brief Adds round to the state using specified key schedule
     ///
-    static void addRoundKey(State* state, const KeySchedule* keySchedule, int round);
+    static void addRoundKey(State* state, KeySchedule* keySchedule, int round);
 
     ///
     /// \brief Substitution step for state
@@ -715,7 +744,7 @@ private:
     ///
     /// \brief Exclusive XOR with iter of range size as input
     ///
-    static ByteArray* xorWithIter(ByteArray* input, const ByteArray::const_iterator& beg, const ByteArray::const_iterator& end);
+    static ByteArray* xorWithRange(ByteArray* input, const ByteArray::const_iterator& begin, const ByteArray::const_iterator& end);
 
     ///
     /// \brief Raw encryption function - not for public use
@@ -727,7 +756,7 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
-    static ByteArray rawCipher(const ByteArray::const_iterator& begin, const Key* key, const KeySchedule* keySchedule);
+    static ByteArray rawCipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
 
     ///
     /// \brief Raw decryption function - not for public use
@@ -738,7 +767,7 @@ private:
     /// \param key Byte array of key
     /// \return 128-bit plain text
     ///
-    static ByteArray rawDecipher(const ByteArray::const_iterator& begin, const Key* key, const KeySchedule* keySchedule);
+    static ByteArray rawDecipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array
