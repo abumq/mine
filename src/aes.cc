@@ -234,9 +234,11 @@ void AES::addRoundKey(State* state, KeySchedule* keySchedule, int round)
 #if MINE_PROFILING
     auto started = std::chrono::steady_clock::now();
 #endif
+    const int iR = (round * kNb);
     for (std::size_t i = 0; i < kNb; ++i) {
+        std::size_t iR2 = iR + i;
         for (std::size_t j = 0; j < kNb; ++j) {
-            (*state)[i][j] ^= (*keySchedule)[(round * kNb) + i][j];
+            (*state)[i][j] ^= (*keySchedule)[iR2][j];
         }
     }
 #if MINE_PROFILING
@@ -270,11 +272,17 @@ void AES::subBytes(State* state)
 ///
 void AES::invSubBytes(State* state)
 {
+#if MINE_PROFILING
+    auto started = std::chrono::steady_clock::now();
+#endif
     for (std::size_t i = 0; i < kNb; ++i) {
         for (std::size_t j = 0; j < kNb; ++j) {
             (*state)[i][j] = kSBoxInverse[(*state)[i][j]];
         }
     }
+#if MINE_PROFILING
+    endProfiling(started, "invSubBytes");
+#endif
 }
 
 ///
@@ -352,6 +360,9 @@ void AES::shiftRows(State *state)
 ///
 void AES::invShiftRows(State *state)
 {
+#if MINE_PROFILING
+    auto started = std::chrono::steady_clock::now();
+#endif
     // row 1
     std::swap((*state)[0][1], (*state)[1][1]);
     std::swap((*state)[0][1], (*state)[2][1]);
@@ -365,6 +376,9 @@ void AES::invShiftRows(State *state)
     std::swap((*state)[0][3], (*state)[3][3]);
     std::swap((*state)[0][3], (*state)[2][3]);
     std::swap((*state)[0][3], (*state)[1][3]);
+#if MINE_PROFILING
+    endProfiling(started, "intShiftRows");
+#endif
 }
 
 ///
@@ -428,6 +442,9 @@ void AES::mixColumns(State* state)
 ///
 void AES::invMixColumns(State* state)
 {
+#if MINE_PROFILING
+    auto started = std::chrono::steady_clock::now();
+#endif
     for (int col = 0; col < 4; ++col) {
         Word column = (*state)[col];
         // see Sec. 4.2.1 and Sec. 5.3.3 for more details
@@ -436,6 +453,9 @@ void AES::invMixColumns(State* state)
         (*state)[col][2] = multiply(column[0], 0x0d) ^ multiply(column[1], 0x09) ^ multiply(column[2], 0x0e) ^ multiply(column[3], 0x0b);
         (*state)[col][3] = multiply(column[0], 0x0b) ^ multiply(column[1], 0x0d) ^ multiply(column[2], 0x09) ^ multiply(column[3], 0x0e);
     }
+#if MINE_PROFILING
+    endProfiling(started, "invMixColumns");
+#endif
 }
 
 void AES::initState(State* state, const ByteArray::const_iterator& begin)
@@ -729,11 +749,12 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
     const std::size_t inputSize = input.size();
     ByteArray result;
 
-    ByteArray nextXorWith = iv;
     ByteArray::const_iterator nextXorWithBeg = iv.begin();
     ByteArray::const_iterator nextXorWithEnd = iv.end();
 
-
+#if MINE_PROFILING
+    auto started = std::chrono::steady_clock::now();
+#endif
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
         ByteArray inputBlock(kBlockSize, 0);
 
@@ -752,6 +773,9 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
+#if MINE_PROFILING
+    endProfiling(started, "block decryption");
+#endif
     return result;
 }
 
