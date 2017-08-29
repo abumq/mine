@@ -83,6 +83,15 @@ set (CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET_SAVE})
 file (GLOB_RECURSE all_headers ${CMAKE_SOURCE_DIR}/*.h)
 add_custom_target (all_placeholder SOURCES ${all_headers})
 
+##########################################   CLI Tool  ###################################
+
+add_executable (mine-bin cli/mine.cc package/mine.cc)
+
+set_target_properties (mine-bin PROPERTIES
+    OUTPUT_NAME "mine"
+    VERSION ${MINE_VERSION}
+)
+install (TARGETS mine-bin DESTINATION bin)
 
 ########################################## Unit Testing ###################################
 

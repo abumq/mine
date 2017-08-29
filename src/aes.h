@@ -55,8 +55,8 @@ public:
     ///
     /// \brief Convert mode for various functions
     ///
-    enum class ConvertMode {
-        Plain,
+    enum class Encoding {
+        Raw,
         Base16,
         Base64
     };
@@ -69,40 +69,40 @@ public:
     ///
     /// \brief Ciphers the input with specified hex key
     /// \param key Hex key
-    /// \param inputMode the type of input. Defaults to Plain
+    /// \param inputEncoding the type of input. Defaults to Plain
     /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
+    static std::string cipher(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
     /// \param key Hex key
     /// \param iv Initialization vector, passed by reference. If empty a random is generated and passed in
-    /// \param inputMode the type of input. Defaults to Plain
+    /// \param inputEncoding the type of input. Defaults to Plain
     /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
+    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
 
     ///
     /// \brief Deciphers the input with specified hex key
     /// \param key Hex key
-    /// \param inputMode the type of input. Defaults to base16
+    /// \param inputEncoding the type of input. Defaults to base16
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
+    static std::string decipher(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Deciphers the input with specified hex key using CBC mode
     /// \param key Hex key
     /// \param iv Initialization vector
-    /// \param inputMode the type of input. Defaults to base16
+    /// \param inputEncoding the type of input. Defaults to base16
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
+    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
@@ -139,6 +139,11 @@ public:
     /// \return Cipher text byte array
     ///
     static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
+
+    ///
+    /// \brief Generates random key of valid length
+    ///
+    static std::string generateRandomKey(const std::size_t len);
 private:
 
     ///
@@ -276,12 +281,12 @@ private:
     ///
     /// \brief Creates byte array from input based on input mode
     ///
-    static ByteArray resolveInputMode(const std::string& input, ConvertMode inputMode);
+    static ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
 
     ///
     /// \brief Creates string from byte array based on convert mode
     ///
-    static std::string resolveOutputMode(const ByteArray& input, ConvertMode outputMode);
+    static std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
 
     ///
     /// \brief Exclusive XOR with arr

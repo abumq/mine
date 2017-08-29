@@ -188,7 +188,7 @@ using byte = unsigned char;
 /// This class also provides public interface to encode
 /// the iterators for other containers like vector etc.
 ///
-/// This also handles unicode characters
+/// This also handles 16-bit, 24-bit and 32-bit characters
 ///
 class Base64 {
 public:
@@ -315,16 +315,16 @@ public:
     static std::string decode(const std::string& e)
     {
         if (e.size() % 4 != 0) {
-            throw std::runtime_error("Invalid base64 encoding. Padding is required");
+            throw std::invalid_argument("Invalid base64 encoding. Padding is required");
         }
         return decode(e.begin(), e.end());
     }
 
     ///
     /// \brief Decodes base64 iterator from begin to end
-    /// \throws std::runtime if invalid encoding. Another time it is thrown
+    /// \throws std::invalid_argument if invalid encoding. Another time it is thrown
     /// is if no padding is found
-    /// std::runtime::what() is set according to the error
+    /// std::invalid_argument::what() is set according to the error
     ///
     template <class Iter>
     static std::string decode(const Iter& begin, const Iter& end)
@@ -342,7 +342,7 @@ public:
             try {
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
                 if (b0 == kPadding || b0 == '\0') {
-                    throw std::runtime_error("Invalid base64 encoding. No data available");
+                    throw std::invalid_argument("Invalid base64 encoding. No data available");
                 }
                 int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
                 int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
@@ -350,23 +350,22 @@ public:
 
                 ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
                                         b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
+                // std::string s(ss.str());
 
-                if (b1 != kPadding && b1 != '\0') {
-                    if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
-                        // second bitset is 'partial byte'
+                if (b1 != kPadding/* && b1 != '\0'*/) {
+                    if (b2 == kPadding/* || (b2 == '\0' && b3 == '\0')*/) {
+                        // second bitset is only 4 bits
 
-                        // note: this line was causing issue when we had plain text length 16
-                        // b64 = uS2qrm5XdzsQZTcDrxJxbw==
-                        // it was adding a nul term char
                         //ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                     } else {
                         ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
                                                                                         // first we clear the bits at pos 4 and 5
                                                                                         // then we concat with next bit
                                                  b2 >> 2); // 001001 >> 2 ==> 00000010 ==> 01100010 = 98
-                        if (b3 == kPadding || b3 == '\0') {
-                            // third bitset is 'partial byte'
-                            ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
+                        if (b3 == kPadding/* || b3 == '\0'*/) {
+                            // third bitset is only 4 bits
+                            // std::string s(ss.str());
+                            //ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
                                                     // first we clear first 4 bits
                         } else {
                             ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6 |     // 001001 ==> 000001 << 6 ==> 01000000
@@ -377,7 +376,7 @@ public:
                     }
                 }
             } catch (const std::exception&) {
-                throw std::runtime_error("Invalid base64 character");
+                throw std::invalid_argument("Invalid base64 character");
             }
         }
         return ss.str();
@@ -464,8 +463,8 @@ public:
     ///
     /// \brief Convert mode for various functions
     ///
-    enum class ConvertMode {
-        Plain,
+    enum class Encoding {
+        Raw,
         Base16,
         Base64
     };
@@ -478,41 +477,81 @@ public:
     ///
     /// \brief Ciphers the input with specified hex key
     /// \param key Hex key
-    /// \param inputMode the type of input. Defaults to Plain
+    /// \param inputEncoding the type of input. Defaults to Plain
     /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
+    static std::string cipher(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
     /// \param key Hex key
     /// \param iv Initialization vector, passed by reference. If empty a random is generated and passed in
-    /// \param inputMode the type of input. Defaults to Plain
+    /// \param inputEncoding the type of input. Defaults to Plain
     /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, ConvertMode inputMode = ConvertMode::Plain, ConvertMode outputEncoding = ConvertMode::Base16);
+    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
 
     ///
     /// \brief Deciphers the input with specified hex key
     /// \param key Hex key
-    /// \param inputMode the type of input. Defaults to base16
+    /// \param inputEncoding the type of input. Defaults to base16
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decipher(const std::string& input, const std::string& key, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
+    static std::string decipher(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Deciphers the input with specified hex key using CBC mode
     /// \param key Hex key
     /// \param iv Initialization vector
-    /// \param inputMode the type of input. Defaults to base16
+    /// \param inputEncoding the type of input. Defaults to base16
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
+    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
+    ///
+    /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
+
+    ///
+    /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
+
+    ///
+    /// \brief Generates random key of valid length
+    ///
+    static std::string generateRandomKey(const std::size_t len);
 private:
 
     ///
@@ -650,12 +689,12 @@ private:
     ///
     /// \brief Creates byte array from input based on input mode
     ///
-    static ByteArray resolveInputMode(const std::string& input, ConvertMode inputMode);
+    static ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
 
     ///
     /// \brief Creates string from byte array based on convert mode
     ///
-    static std::string resolveOutputMode(const ByteArray& input, ConvertMode outputMode);
+    static std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
 
     ///
     /// \brief Exclusive XOR with arr
@@ -684,42 +723,6 @@ private:
     /// \return 128-bit plain text
     ///
     static ByteArray rawDecipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray cipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray decipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
-
-    ///
-    /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array

@@ -511,22 +511,22 @@ ByteArray AES::rawDecipher(const ByteArray& input, const Key* key)
     return stateToByteArray(&state);
 }
 
-ByteArray AES::resolveInputMode(const std::string& input, ConvertMode inputMode)
+ByteArray AES::resolveInputMode(const std::string& input, Encoding inputMode)
 {
-    if (inputMode == ConvertMode::Plain) {
+    if (inputMode == Encoding::Raw) {
         return Base16::fromString(Base16::encode(input));
-    } else if (inputMode == ConvertMode::Base16) {
+    } else if (inputMode == Encoding::Base16) {
         return Base16::fromString(input);
     }
     // base64
     return Base16::fromString(Base16::encode(Base64::decode(input)));
 }
 
-std::string AES::resolveOutputMode(const ByteArray& input, ConvertMode outputMode)
+std::string AES::resolveOutputMode(const ByteArray& input, Encoding outputMode)
 {
-    if (outputMode == ConvertMode::Plain) {
+    if (outputMode == Encoding::Raw) {
         return Base16::toRawString(input);
-    } else if (outputMode == ConvertMode::Base16) {
+    } else if (outputMode == Encoding::Base16) {
         return Base16::encode(input.begin(), input.end());
     }
     // base64
@@ -665,18 +665,18 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
     return result;
 }
 
-std::string AES::cipher(const std::string& input, const std::string& key, ConvertMode inputMode, ConvertMode outputEncoding)
+std::string AES::cipher(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray result = cipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, ConvertMode inputMode, ConvertMode outputEncoding)
+std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray ivec = Base16::fromString(iv);
     bool ivecGenerated = iv.empty();
     ByteArray result = cipher(inp, &keyArr, ivec);
@@ -686,19 +686,28 @@ std::string AES::cipher(const std::string& input, const std::string& key, std::s
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::decipher(const std::string& input, const std::string& key, ConvertMode inputMode, ConvertMode outputEncoding)
+std::string AES::decipher(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray result = decipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode, ConvertMode outputEncoding)
+std::string AES::decipher(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
-    ByteArray inp = resolveInputMode(input, inputMode);
+    ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray ivec = Base16::fromString(iv);
     ByteArray result = decipher(inp, &keyArr, ivec);
     return resolveOutputMode(result, outputEncoding);
+}
+
+std::string AES::generateRandomKey(const std::size_t len)
+{
+    if (len != 128 && len != 192 && len != 256) {
+        throw std::invalid_argument("Please choose valid key length of 128, 192 or 256 bits");
+    }
+    ByteArray bytes = generateRandomBytes(len);
+    return Base16::encode(bytes.begin(), bytes.end());
 }

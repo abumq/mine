@@ -448,7 +448,7 @@ TEST(AESTest, RawCipherDirect)
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::ConvertMode::Base16);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::Encoding::Base16);
         // case insensitive comparison because hex can be upper or lower case
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
@@ -463,7 +463,7 @@ TEST(AESTest, RawCipherPlain)
 {
     for (auto& item : RawCipherPlainInputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::ConvertMode::Plain);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::Encoding::Raw);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -477,7 +477,7 @@ TEST(AESTest, RawCipherBase64)
 {
     for (auto& item : RawCipherBase64InputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::ConvertMode::Base64);
+        std::string output = AES::cipher(PARAM(0), PARAM(1), AES::Encoding::Base64);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -629,8 +629,8 @@ TEST(AESTest, CbcCipher)
         std::string k = Base16::encode(Base16::toRawString(key));
         std::string initVec = Base16::encode(Base16::toRawString(iv));
         std::string output = AES::cipher(input, k, initVec,
-                                         AES::ConvertMode::Plain,
-                                         AES::ConvertMode::Base16);
+                                         AES::Encoding::Raw,
+                                         AES::Encoding::Base16);
         ASSERT_STREQ(expected.c_str(), output.c_str());
 
     }
@@ -659,7 +659,7 @@ TEST(AESTest, HexStringDecipher)
 {
     for (auto& item : RawDecipherData) {
         std::string expected = PARAM(0);
-        std::string output = AES::decipher(PARAM(2), PARAM(1), AES::ConvertMode::Base16, AES::ConvertMode::Base16);
+        std::string output = AES::decipher(PARAM(2), PARAM(1), AES::Encoding::Base16, AES::Encoding::Base16);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -671,8 +671,8 @@ TEST(AESTest, Base64StringDecipher)
     std::string expected = "dGhpcyBpcyB0ZXN0Li4uLg=="; // base64("this is test....")
     std::string output = AES::decipher("b92daaae6e57773b10653703af12716f",
                                        "000102030405060708090a0b0c0d0e0f",
-                                       AES::ConvertMode::Base16,
-                                       AES::ConvertMode::Base64);
+                                       AES::Encoding::Base16,
+                                       AES::Encoding::Base64);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -681,8 +681,8 @@ TEST(AESTest, Base64StringInputDecipher)
     std::string expected = "this is test..";
     std::string output = AES::decipher("Z0BiQ8NcwknqzbGrWBjXqw==",
                                        "000102030405060708090a0b0c0d0e0f",
-                                       AES::ConvertMode::Base64,
-                                       AES::ConvertMode::Plain);
+                                       AES::Encoding::Base64,
+                                       AES::Encoding::Raw);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -770,8 +770,8 @@ TEST(AESTest, CbcDecipher)
         std::string k = Base16::encode(Base16::toRawString(key));
         std::string initVec = Base16::encode(Base16::toRawString(iv));
         std::string output = AES::decipher(input, k, initVec,
-                                         AES::ConvertMode::Plain,
-                                         AES::ConvertMode::Plain);
+                                         AES::Encoding::Raw,
+                                         AES::Encoding::Raw);
         ASSERT_STREQ(expected.c_str(), output.c_str());
 
     }
@@ -785,8 +785,8 @@ TEST(AESTest, RealDataIssuesTest)
     std::string output = AES::decipher("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
                                        "CBD437FA37772C66051A47D72367B38E",
                                        "a14c54563269e9e368f56b325f04ff00",
-                                       AES::ConvertMode::Base64,
-                                       AES::ConvertMode::Plain);
+                                       AES::Encoding::Base64,
+                                       AES::Encoding::Raw);
 
     //
     // this worked => the only issue was padding std::string r = mine::AES::decipher(Ripe::stringToHex(Ripe::base64Decode(raw)), key, iv, mine::AES::ConvertMode::Base16, mine::AES::ConvertMode::Plain);
@@ -796,8 +796,8 @@ TEST(AESTest, RealDataIssuesTest)
     output = AES::decipher("12D62BE49168FFB92A616C68A0CBD4D8327EBA936150C0E28BD5FA2041D8C6F50D5D2546937E086A44F91FB19BCB32F9FC920C3004022E7514F36E11237CA681",
                                        "CBD437FA37772C66051A47D72367B38E",
                                        "a14c54563269e9e368f56b325f04ff00",
-                                       AES::ConvertMode::Base16,
-                                       AES::ConvertMode::Plain);
+                                       AES::Encoding::Base16,
+                                       AES::Encoding::Raw);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
