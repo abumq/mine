@@ -79,7 +79,7 @@ void encryptAES(std::string& data, const std::string& key, std::string& iv)
 void decryptAES(std::string& data, const std::string& key, std::string& iv)
 {
     TRY
-        std::cout << AES::decipher(data, key, iv);
+        std::cout << AES::decipher(data, key, iv, AES::Encoding::Base64);
     CATCH
 }
 

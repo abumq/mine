@@ -341,8 +341,8 @@ public:
         for (auto it = begin; it < end; it += 4) {
             try {
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
-                if (b0 == kPadding || b0 == '\0') {
-                    throw std::invalid_argument("Invalid base64 encoding. No data available");
+                if (b0 == kPadding/* || b0 == '\0'*/) {
+                    throw std::invalid_argument("No data available");
                 }
                 int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
                 int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
@@ -375,8 +375,8 @@ public:
                         }
                     }
                 }
-            } catch (const std::exception&) {
-                throw std::invalid_argument("Invalid base64 character");
+            } catch (const std::exception& e) {
+                throw std::invalid_argument(std::string("Invalid base64 encoding: " + std::string(e.what())));
             }
         }
         return ss.str();
