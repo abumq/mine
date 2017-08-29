@@ -690,7 +690,7 @@ private:
     /// \brief Initializes the state with input. This function
     /// also pads the input if needed (i.e, input is not block of 128-bit)
     ///
-    static void initState(State* state, ByteArray input);
+    static void initState(State* state, const ByteArray& input);
 
     ///
     /// \brief Generates random bytes of length

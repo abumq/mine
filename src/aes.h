@@ -282,7 +282,7 @@ private:
     /// \brief Initializes the state with input. This function
     /// also pads the input if needed (i.e, input is not block of 128-bit)
     ///
-    static void initState(State* state, ByteArray input);
+    static void initState(State* state, const ByteArray& input);
 
     ///
     /// \brief Generates random bytes of length
@@ -319,7 +319,7 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
-    static ByteArray rawCipher(const ByteArray& input, const Key* key, const KeySchedule* keySchedule);
+    static ByteArray rawCipher(const ByteArray::const_iterator& beg, const ByteArray::const_iterator& end, const Key* key, const KeySchedule* keySchedule);
 
     ///
     /// \brief Raw decryption function - not for public use

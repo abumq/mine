@@ -506,12 +506,15 @@ void AES::invMixColumns(State* state)
     }
 }
 
-void AES::initState(State* state, ByteArray input)
+void AES::initState(State* state, const ByteArray& input)
 {
     // Pad the input if needed
-    if (input.size() < kBlockSize) {
+    // 29/08 removed this check because it's not needed as
+    // this function is only called from private interface
+    // this removal helped made input pass by ref
+    /*if (input.size() < kBlockSize) {
         std::fill_n(input.end(), kBlockSize - input.size(), 0);
-    }
+    }*/
 
     // assign it to state for processing
     for (std::size_t i = 0; i < kNb; ++i) {
