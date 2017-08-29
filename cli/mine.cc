@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    if ((type == 1 || type == 2 || type == 3) && !fileArgSpecified) {
+    if ((type == 1 || type == 2) && !fileArgSpecified) {
         std::stringstream ss;
         for (std::string line; std::getline(std::cin, line);) {
             ss << line << std::endl;

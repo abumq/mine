@@ -581,6 +581,16 @@ private:
     static const std::unordered_map<uint8_t, std::vector<uint8_t>> kKeyParams;
 
     ///
+    /// \brief Total items in random bytes list
+    ///
+    static const int kRandomBytesCount = 256;
+
+    ///
+    /// \brief List to choose random byte from
+    ///
+    static const byte kRandomBytesList[];
+
+    ///
     /// \brief As defined in FIPS. 197 Sec. 5.1.1
     ///
     static const byte kSBox[];
