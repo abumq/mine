@@ -441,7 +441,7 @@ TEST(AESTest, RawCipher)
 
         AES::KeySchedule keySchedule = AES::keyExpansion(&key);
 
-        ByteArray output = AES::rawCipher(input, &key, &keySchedule);
+        ByteArray output = AES::rawCipher(input.begin(), &key, &keySchedule);
         ASSERT_EQ(expected, output);
     }
 }
@@ -511,7 +511,7 @@ TEST(AESTest, RawSimpleCipher)
                           }};
 
     AES::KeySchedule keySchedule = AES::keyExpansion(&key);
-    ByteArray output = AES::rawCipher(input, &key, &keySchedule);
+    ByteArray output = AES::rawCipher(input.begin(), &key, &keySchedule);
     ASSERT_EQ(expected, output);
 }
 
@@ -542,7 +542,7 @@ TEST(AESTest, RawSimpleDecipher)
                           }};
 
     AES::KeySchedule keySchedule = AES::keyExpansion(&key);
-    ByteArray output = AES::rawDecipher(input, &key, &keySchedule);
+    ByteArray output = AES::rawDecipher(input.begin(), &key, &keySchedule);
     ASSERT_EQ(expected, output);
 }
 
