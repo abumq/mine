@@ -68,7 +68,7 @@ void encryptAES(std::string& data, const std::string& key, std::string& iv)
 {
     TRY
         bool newIv = iv.empty();
-        std::cout << AES::cipher(data, key, iv);
+        std::cout << AES::cipher(data, key, iv, AES::Encoding::Raw, AES::Encoding::Base64);
 
         if (newIv) {
             std::cout << std::endl << "IV: " << iv << std::endl;

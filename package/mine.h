@@ -552,6 +552,7 @@ public:
     /// \brief Generates random key of valid length
     ///
     static std::string generateRandomKey(const std::size_t len);
+
 private:
 
     ///

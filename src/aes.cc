@@ -683,9 +683,15 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
     return result;
 }
 
+static std::string normalizeBase16(std::string enc)
+{
+    enc.erase(std::remove_if(enc.begin(), enc.end(), iswspace), enc.end());
+    return enc;
+}
+
 std::string AES::cipher(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
-    Key keyArr = Base16::fromString(key);
+    Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray result = cipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
@@ -693,9 +699,9 @@ std::string AES::cipher(const std::string& input, const std::string& key, Encodi
 
 std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
-    Key keyArr = Base16::fromString(key);
+    Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    ByteArray ivec = Base16::fromString(iv);
+    ByteArray ivec = Base16::fromString(normalizeBase16(iv));
     bool ivecGenerated = iv.empty();
     ByteArray result = cipher(inp, &keyArr, ivec);
     if (ivecGenerated) {
@@ -706,7 +712,7 @@ std::string AES::cipher(const std::string& input, const std::string& key, std::s
 
 std::string AES::decipher(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
-    Key keyArr = Base16::fromString(key);
+    Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray result = decipher(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
@@ -714,7 +720,7 @@ std::string AES::decipher(const std::string& input, const std::string& key, Enco
 
 std::string AES::decipher(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
-    Key keyArr = Base16::fromString(key);
+    Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray ivec = Base16::fromString(iv);
     ByteArray result = decipher(inp, &keyArr, ivec);
