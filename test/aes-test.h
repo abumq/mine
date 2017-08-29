@@ -691,6 +691,22 @@ TEST(AESTest, Base64StringInputDecipher)
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
+TEST(AESTest, CbcCipherPadding)
+{
+    const std::string key = "F1EF6477CC39E65DE106C33BB0EC651386CD0932A9DE491CF960BC3EB79EBE78";
+    const std::string iv = "000102030405060708090a0b0c0d0e0f";
+
+    std::string cipherB64 = "OcTPoBeDqlA/igjnNcl5yw==";
+    std::string expected = "o1223456789012";
+    std::string output = AES::decrypt(cipherB64, key, iv, AES::Encoding::Base64);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
+    cipherB64 = "NNH44Ybac3AhcP4+sTq8j4miT04jHtoaj7a/Wv0/TQ8=";
+    expected = "sho4123456789014";
+    output = AES::decrypt(cipherB64, key, iv, AES::Encoding::Base64);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+}
+
 TEST(AESTest, EcbDecipher)
 {
     const std::string key = "F1EF6477CC39E65DE106C33BB0EC651386CD0932A9DE491CF960BC3EB79EBE78";

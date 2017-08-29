@@ -710,7 +710,7 @@ std::size_t AES::getPaddingIndex(const ByteArray& byteArr)
 {
     char lastChar = byteArr[kBlockSize - 1];
     int c = lastChar & 0xff;
-    if (c > 0 && c < kBlockSize - 1) {
+    if (c > 0 && c <= kBlockSize) {
         bool validPadding = true;
         for (int chkIdx = kBlockSize - c; chkIdx < kBlockSize; ++chkIdx) {
             if ((byteArr[chkIdx] & 0xff) != c) {
@@ -721,6 +721,8 @@ std::size_t AES::getPaddingIndex(const ByteArray& byteArr)
         }
         if (validPadding) {
             return kBlockSize - c;
+        } else {
+            throw std::runtime_error("Incorrect padding");
         }
     }
     return kBlockSize;

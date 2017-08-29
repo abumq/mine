@@ -810,7 +810,7 @@ private:
     static ByteArray stateToByteArray(const State* state);
 
     ///
-    /// \brief Get padding index for stripping the padding
+    /// \brief Get padding index for stripping the padding (unpadding)
     ///
     static std::size_t getPaddingIndex(const ByteArray& byteArr);
 

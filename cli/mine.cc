@@ -71,11 +71,11 @@ void displayVersion()
 #define TRY try {
 #define CATCH }  catch (const std::exception& e) { std::cout << "ERROR: " << e.what() << std::endl; }
 
-void encryptAES(std::string& data, const std::string& key, std::string& iv)
+void encryptAES(std::string& data, const std::string& key, std::string& iv, bool isBase64)
 {
     TRY
         bool newIv = iv.empty();
-        std::cout << AES::encrypt(data, key, iv, AES::Encoding::Raw, AES::Encoding::Base64);
+        std::cout << AES::encrypt(data, key, iv, AES::Encoding::Raw, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
 
         if (newIv) {
             std::cout << std::endl << "IV: " << iv << std::endl;
@@ -83,10 +83,10 @@ void encryptAES(std::string& data, const std::string& key, std::string& iv)
     CATCH
 }
 
-void decryptAES(std::string& data, const std::string& key, std::string& iv)
+void decryptAES(std::string& data, const std::string& key, std::string& iv, bool isBase64)
 {
     TRY
-        std::cout << AES::decrypt(data, key, iv, AES::Encoding::Base64);
+        std::cout << AES::decrypt(data, key, iv, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
     CATCH
 }
 
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
             decodeHex(data);
         } else {
             // AES decrypt (base64-flexible)
-            decryptAES(data, key, iv);
+            decryptAES(data, key, iv, isBase64);
         }
     } else if (type == 2) { // Encrypt / Encode
         if (isBase64 && key.empty() && iv.empty()) {
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
         } else if (isHex && key.empty() && iv.empty()) {
             encodeHex(data);
         } else {
-            encryptAES(data, key, iv);
+            encryptAES(data, key, iv, isBase64);
         }
     } else if (type == 3) { // Generate
         if (isAES) {
