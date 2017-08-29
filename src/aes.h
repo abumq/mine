@@ -104,6 +104,41 @@ public:
     ///
     static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, ConvertMode inputMode = ConvertMode::Base16, ConvertMode outputEncoding = ConvertMode::Plain);
 
+    ///
+    /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key);
+
+    ///
+    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
+
+    ///
+    /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
+    /// \param input Plain input of any length
+    /// \param key Pointer to a valid AES key
+    /// \param iv Initialization vector
+    /// \return Cipher text byte array
+    ///
+    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
 private:
 
     ///
@@ -275,42 +310,6 @@ private:
     /// \return 128-bit plain text
     ///
     static ByteArray rawDecipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray cipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray decipher(const ByteArray& input, const Key* key);
-
-    ///
-    /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
-
-    ///
-    /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
-    /// \param input Plain input of any length
-    /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
-    /// \return Cipher text byte array
-    ///
-    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array

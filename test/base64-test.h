@@ -95,7 +95,7 @@ TEST(Base64Test, Decode)
 {
     for (const auto& item : Base64TestData) {
         std::string decoded = Base64::decode(PARAM(0));
-        std::cout << decoded << std::endl;
+        //std::cout << decoded << std::endl;
         ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
     }
 }
@@ -112,7 +112,7 @@ TEST(Base64Test, DecodeRawSize)
         std::string decoded = Base64::decode(PARAM(0));
         ASSERT_EQ(PARAM(1), decoded.size());
         std::string b16 = Base16::encode(decoded);
-        std::cout << decoded << std::endl;
+        //std::cout << decoded << std::endl;
         ASSERT_STRCASEEQ(PARAM(2).c_str(), b16.c_str());
     }
 }
@@ -130,9 +130,9 @@ TEST(Base64Test, DecodeWString)
 {
     for (const auto& item : Base64WStringTestData) {
         std::wstring decoded = Base64::decodeAsWString(PARAM(0));
-        std::wcout << std::wstring(decoded.begin(), decoded.end());
-        std::wcout.clear(); // clear the stream in case of failbit or badbit
-        std::cout << std::endl;
+        //std::wcout << std::wstring(decoded.begin(), decoded.end());
+        //std::wcout.clear(); // clear the stream in case of failbit or badbit
+        //std::cout << std::endl;
         ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
     }
 }

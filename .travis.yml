@@ -53,7 +53,7 @@ before_install:
  - pwd
  - ls -l
  - ls -l ..
- - cmake -Dtest_main_header=ON ..
+ - cmake -Dtest_main_header=ON -Dtest_wstring_conversions=OFF ..
  - make
 
 script: "./mine-unit-tests"

@@ -686,6 +686,15 @@ TEST(AESTest, Base64StringInputDecipher)
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
+TEST(AESTest, EcbDecipher)
+{
+    const std::string key = "F1EF6477CC39E65DE106C33BB0EC651386CD0932A9DE491CF960BC3EB79EBE78";
+    const std::string cipherHex = "b939427f4231593f5cbf73449439a847726b1898b03db028a6f0824108678f78";
+    const std::string expected = "this is slightly longer";
+    std::string output = AES::decipher(cipherHex, key);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+}
+
 TEST(AESTest, CbcDecipher)
 {
 

@@ -45,9 +45,7 @@ ByteArray Base16::fromString(const std::string& hex)
 std::string Base16::toRawString(const ByteArray& input)
 {
     std::ostringstream ss;
-    for (auto iter = input.begin(); iter < input.end(); ++iter) {
-        ss << static_cast<char>(*iter);
-    }
+    std::copy(input.begin(), input.end(), std::ostream_iterator<char>(ss));
     return ss.str();
 }
 
@@ -58,6 +56,6 @@ void Base16::decode(char a, char b, std::ostringstream& ss)
     try {
         ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
     } catch (const std::exception&) {
-        throw std::runtime_error("Invalid base-16 encoding");
+        throw std::invalid_argument("Invalid base-16 encoding");
     }
 }

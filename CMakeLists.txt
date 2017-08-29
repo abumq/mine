@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 project(Mine)
 
 option (test_main_header "Test main header (mine.h)" OFF)
+option (test_wstring_conversions "Test std::wstring (wchar_t*) conversions for encodings" ON)
 
 set (MINE_VERSION "4.0.0")
 set (MINE_SOVERSION "4.0.0")
@@ -114,6 +115,12 @@ else()
         src/base64.cc
         src/zlib.cc
         ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
+    )
+endif()
+
+if (test_wstring_conversions)
+    target_compile_definitions (mine-unit-tests PUBLIC
+        MINE_BASE64_WSTRING_CONVERSION
     )
 endif()
 

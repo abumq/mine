@@ -511,6 +511,30 @@ ByteArray AES::rawDecipher(const ByteArray& input, const Key* key)
     return stateToByteArray(&state);
 }
 
+ByteArray AES::resolveInputMode(const std::string& input, ConvertMode inputMode)
+{
+    if (inputMode == ConvertMode::Plain) {
+        return Base16::fromString(Base16::encode(input));
+    } else if (inputMode == ConvertMode::Base16) {
+        return Base16::fromString(input);
+    }
+    // base64
+    return Base16::fromString(Base16::encode(Base64::decode(input)));
+}
+
+std::string AES::resolveOutputMode(const ByteArray& input, ConvertMode outputMode)
+{
+    if (outputMode == ConvertMode::Plain) {
+        return Base16::toRawString(input);
+    } else if (outputMode == ConvertMode::Base16) {
+        return Base16::encode(input.begin(), input.end());
+    }
+    // base64
+    return Base64::encode(input.begin(), input.end());
+}
+
+// public
+
 ByteArray AES::cipher(const ByteArray& input, const Key* key)
 {
 
@@ -625,8 +649,9 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
         ByteArray inputBlock(kBlockSize, 0);
 
+        std::size_t j = 0;
         // don't use copy_n as we are setting the values
-        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+        for (; j < kBlockSize && inputSize > j + i; ++j) {
             inputBlock.at(j) = input.at(j + i);
         }
 
@@ -635,34 +660,10 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
         xorWith(&outputBlock, &nextXorWith);
         nextXorWith = inputBlock;
 
-        std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
+        std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
     return result;
 }
-
-ByteArray AES::resolveInputMode(const std::string& input, ConvertMode inputMode)
-{
-    if (inputMode == ConvertMode::Plain) {
-        return Base16::fromString(Base16::encode(input));
-    } else if (inputMode == ConvertMode::Base16) {
-        return Base16::fromString(input);
-    }
-    // base64
-    return Base16::fromString(Base16::encode(Base64::decode(input)));
-}
-
-std::string AES::resolveOutputMode(const ByteArray& input, ConvertMode outputMode)
-{
-    if (outputMode == ConvertMode::Plain) {
-        return Base16::toRawString(input);
-    } else if (outputMode == ConvertMode::Base16) {
-        return Base16::encode(input.begin(), input.end());
-    }
-    // base64
-    return Base64::encode(input.begin(), input.end());
-}
-
-// public
 
 std::string AES::cipher(const std::string& input, const std::string& key, ConvertMode inputMode, ConvertMode outputEncoding)
 {

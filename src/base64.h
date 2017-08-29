@@ -42,7 +42,7 @@ using byte = unsigned char;
 /// This class also provides public interface to encode
 /// the iterators for other containers like vector etc.
 ///
-/// This also handles unicode characters
+/// This also handles 16-bit, 24-bit and 32-bit characters
 ///
 class Base64 {
 public:

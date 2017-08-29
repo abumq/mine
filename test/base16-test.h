@@ -32,10 +32,6 @@ static TestData<std::string> InvalidBase16EncodingData = {
     TestCase("48656C6C6F20576F726C64F"),
 };
 
-static TestData<std::string, ByteArray> Base16FromStringData = {
-    TestCase("48656C6C6F", ByteArray { 0x48, 0x65, 0x6C, 0x6C, 0x6F }),
-};
-
 TEST(Base16Test, Encode)
 {
     for (const auto& item : Base16TestData) {
@@ -52,11 +48,25 @@ TEST(Base16Test, EncodeByteArray)
     }
 }
 
+
+// hex str    hex arr     raw str
+static TestData<std::string, ByteArray, std::string> Base16FromStringData = {
+    TestCase("48656C6C6F", ByteArray { 0x48, 0x65, 0x6C, 0x6C, 0x6F }, "Hello"),
+};
+
 TEST(Base16Test, ConvertToByteArray)
 {
     for (const auto& item : Base16FromStringData) {
         ByteArray result = Base16::fromString(PARAM(0));
         ASSERT_EQ(PARAM(1), result);
+    }
+}
+
+TEST(Base16Test, ConvertToRaw)
+{
+    for (const auto& item : Base16FromStringData) {
+        std::string result = Base16::toRawString(PARAM(1));
+        ASSERT_EQ(PARAM(2), result);
     }
 }
 
