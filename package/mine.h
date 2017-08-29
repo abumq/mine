@@ -481,7 +481,7 @@ public:
     /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
+    static std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
@@ -491,7 +491,7 @@ public:
     /// \param outputEncoding Type of encoding for cipher
     /// \return Base16 encoded cipher
     ///
-    static std::string cipher(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
+    static std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
 
     ///
     /// \brief Deciphers the input with specified hex key
@@ -500,7 +500,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decipher(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    static std::string decrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Deciphers the input with specified hex key using CBC mode
@@ -510,7 +510,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decipher(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    static std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
@@ -519,7 +519,7 @@ public:
     /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
-    static ByteArray cipher(const ByteArray& input, const Key* key);
+    static ByteArray encrypt(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
@@ -528,7 +528,7 @@ public:
     /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
-    static ByteArray decipher(const ByteArray& input, const Key* key);
+    static ByteArray decrypt(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
@@ -537,7 +537,7 @@ public:
     /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
-    static ByteArray cipher(const ByteArray& input, const Key* key, ByteArray& iv);
+    static ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
@@ -546,7 +546,7 @@ public:
     /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
-    static ByteArray decipher(const ByteArray& input, const Key* key, ByteArray& iv);
+    static ByteArray decrypt(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Generates random key of valid length
@@ -756,7 +756,7 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
-    static ByteArray rawCipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
+    static ByteArray encryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
 
     ///
     /// \brief Raw decryption function - not for public use
@@ -767,7 +767,7 @@ private:
     /// \param key Byte array of key
     /// \return 128-bit plain text
     ///
-    static ByteArray rawDecipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
+    static ByteArray decryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array

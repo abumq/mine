@@ -505,7 +505,7 @@ ByteArray* AES::xorWithRange(ByteArray* input, const ByteArray::const_iterator& 
     return input;
 }
 
-ByteArray AES::rawCipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule)
+ByteArray AES::encryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule)
 {
 
     if (key == nullptr || keySchedule == nullptr) {
@@ -547,7 +547,7 @@ ByteArray AES::rawCipher(const ByteArray::const_iterator& range, const Key* key,
 
 }
 
-ByteArray AES::rawDecipher(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule)
+ByteArray AES::decryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule)
 {
 
     if (key == nullptr || keySchedule == nullptr) {
@@ -604,7 +604,7 @@ std::string AES::resolveOutputMode(const ByteArray& input, Encoding outputMode)
 
 // public
 
-ByteArray AES::cipher(const ByteArray& input, const Key* key)
+ByteArray AES::encrypt(const ByteArray& input, const Key* key)
 {
 
     std::size_t keySize = key->size();
@@ -628,13 +628,13 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
             inputBlock[j] = input[j + i];
         }
 
-        ByteArray outputBlock = rawCipher(inputBlock.begin() + i, key, &keySchedule);
+        ByteArray outputBlock = encryptSingleBlock(inputBlock.begin() + i, key, &keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
     }
     return result;
 }
 
-ByteArray AES::decipher(const ByteArray& input, const Key* key)
+ByteArray AES::decrypt(const ByteArray& input, const Key* key)
 {
 
     std::size_t keySize = key->size();
@@ -658,14 +658,14 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
             inputBlock[j] = input[j + i];
         }
 
-        ByteArray outputBlock = rawDecipher(inputBlock.begin(), key, &keySchedule);
+        ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
     return result;
 }
 
-ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
+ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv)
 {
 
     std::size_t keySize = key->size();
@@ -703,7 +703,7 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
         }
         xorWithRange(&inputBlock, nextXorWithBeg, nextXorWithEnd);
 
-        ByteArray outputBlock = rawCipher(inputBlock.begin(), key, &keySchedule);
+        ByteArray outputBlock = encryptSingleBlock(inputBlock.begin(), key, &keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
         nextXorWithBeg = result.end() - kBlockSize;
         nextXorWithEnd = result.end();
@@ -715,7 +715,7 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
     return result;
 }
 
-ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
+ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
 {
 
     std::size_t keySize = key->size();
@@ -741,7 +741,7 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
             inputBlock[j] = input[j + i];
         }
 
-        ByteArray outputBlock = rawDecipher(inputBlock.begin(), key, &keySchedule);
+        ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
 
         xorWith(&outputBlock, &nextXorWith);
 
@@ -758,41 +758,41 @@ static std::string normalizeBase16(std::string enc)
     return enc;
 }
 
-std::string AES::cipher(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::encrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    ByteArray result = cipher(inp, &keyArr);
+    ByteArray result = encrypt(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::cipher(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray ivec = Base16::fromString(normalizeBase16(iv));
     bool ivecGenerated = iv.empty();
-    ByteArray result = cipher(inp, &keyArr, ivec);
+    ByteArray result = encrypt(inp, &keyArr, ivec);
     if (ivecGenerated) {
         iv = Base16::encode(ivec.begin(), ivec.end());
     }
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::decipher(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::decrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    ByteArray result = decipher(inp, &keyArr);
+    ByteArray result = decrypt(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::decipher(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(normalizeBase16(key));
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray ivec = Base16::fromString(iv);
-    ByteArray result = decipher(inp, &keyArr, ivec);
+    ByteArray result = decrypt(inp, &keyArr, ivec);
     return resolveOutputMode(result, outputEncoding);
 }
 
