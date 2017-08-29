@@ -809,6 +809,11 @@ private:
     ///
     static ByteArray stateToByteArray(const State* state);
 
+    ///
+    /// \brief Get padding index for stripping the padding
+    ///
+    static std::size_t getPaddingIndex(const ByteArray& byteArr);
+
     AES() = delete;
     AES(const AES&) = delete;
     AES& operator=(const AES&) = delete;

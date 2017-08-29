@@ -786,6 +786,7 @@ TEST(AESTest, CrossAppsDataTest)
 {
     std::string iv = "a14c54563269e9e368f56b325f04ff00";
     const std::string key = "CBD437FA37772C66051A47D72367B38E";
+    const std::string keyBig = "163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF";
 
     // genearted using online tool
     std::string expected = "WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=";
@@ -845,6 +846,18 @@ TEST(AESTest, CrossAppsDataTest)
     expected = "test this test this\n"; // openssl adds newline char
     output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJdSsXR5NwysOnq+cuf5C6cs=",
                                        key,
+                                       iv,
+                                       AES::Encoding::Base64,
+                                       AES::Encoding::Raw);
+
+
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
+    // generated with openssl
+    // echo test this test this | openssl enc -aes-256-cbc -K 163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF -iv a14c54563269e9e368f56b325f04ff00 -base64
+    expected = "test this test this\n"; // openssl adds newline char
+    output = AES::decrypt("vVMWB9aLpcfRgfai7OnCCLI5aAK+kK3Yem/E03uEM+w=",
+                                       keyBig,
                                        iv,
                                        AES::Encoding::Base64,
                                        AES::Encoding::Raw);
