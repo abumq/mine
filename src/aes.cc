@@ -24,6 +24,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <iterator>
 #include <random>
 #include "src/base16.h"
 #include "src/base64.h"
