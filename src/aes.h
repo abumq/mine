@@ -71,9 +71,10 @@ public:
     /// \param key Hex key
     /// \param inputEncoding the type of input. Defaults to Plain
     /// \param outputEncoding Type of encoding for cipher
+    /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    static std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
+    static std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
@@ -81,9 +82,10 @@ public:
     /// \param iv Initialization vector, passed by reference. If empty a random is generated and passed in
     /// \param inputEncoding the type of input. Defaults to Plain
     /// \param outputEncoding Type of encoding for cipher
+    /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    static std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16);
+    static std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers the input with specified hex key
@@ -108,16 +110,15 @@ public:
     /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
     /// \param input Plain input of any length
     /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
+    /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Cipher text byte array
     ///
-    static ByteArray encrypt(const ByteArray& input, const Key* key);
+    static ByteArray encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
     /// \param input Plain input of any length
     /// \param key Pointer to a valid AES key
-    /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
     static ByteArray decrypt(const ByteArray& input, const Key* key);
@@ -127,9 +128,10 @@ public:
     /// \param input Plain input of any length
     /// \param key Pointer to a valid AES key
     /// \param iv Initialization vector
+    /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Cipher text byte array
     ///
-    static ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv);
+    static ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers with CBC-Mode, the input can be as long as user wants

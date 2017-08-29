@@ -466,7 +466,7 @@ TEST(AESTest, RawCipherPlain)
 {
     for (auto& item : RawCipherPlainInputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw);
+        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw, AES::Encoding::Base16, false);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -480,7 +480,7 @@ TEST(AESTest, RawCipherBase64)
 {
     for (auto& item : RawCipherBase64InputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64);
+        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64, AES::Encoding::Base16, false);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -617,7 +617,7 @@ TEST(AESTest, CbcCipher)
     for (auto& item : CbcCipherTestData) {
         ByteArray expected = PARAM(1);
         ByteArray input = Base16::fromString(Base16::encode(PARAM(0)));
-        ByteArray output = AES::encrypt(input, &key, iv);
+        ByteArray output = AES::encrypt(input, &key, iv, false);
         ASSERT_EQ(expected, output);
 
         ByteArray dec = AES::decrypt(output, &key, iv);
@@ -635,7 +635,7 @@ TEST(AESTest, CbcCipher)
         std::string initVec = Base16::encode(Base16::toRawString(iv));
         std::string output = AES::encrypt(input, k, initVec,
                                          AES::Encoding::Raw,
-                                         AES::Encoding::Base16);
+                                         AES::Encoding::Base16, false);
         ASSERT_STREQ(expected.c_str(), output.c_str());
 
     }
@@ -784,26 +784,44 @@ TEST(AESTest, CbcDecipher)
 
 TEST(AESTest, RealDataIssuesTest)
 {
+    std::string expected = "WQ73OMIum+OHKGHnAhQKJc/uwM2APneVOH9mBq15bOk=";
+    std::string iv = "a14c54563269e9e368f56b325f04ff00";
+    std::string output = AES::encrypt("test this test this",
+                          "CBD437FA37772C66051A47D72367B38E",
+                          iv,
+                          AES::Encoding::Raw,
+                          AES::Encoding::Base64);
+
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
     // this is real data from residue logging server (development)
     //
-    const std::string expected = R"({"_t":1503928197,"logger_id":"default","access_code":"default"})";
-    std::string output = AES::decrypt("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
+    expected = R"({"_t":1503928197,"logger_id":"default","access_code":"default"})";
+    output = AES::decrypt("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
                                        "CBD437FA37772C66051A47D72367B38E",
                                        "a14c54563269e9e368f56b325f04ff00",
                                        AES::Encoding::Base64,
                                        AES::Encoding::Raw);
 
-    //
-    // this worked => the only issue was padding std::string r = mine::AES::decipher(Ripe::stringToHex(Ripe::base64Decode(raw)), key, iv, mine::AES::ConvertMode::Base16, mine::AES::ConvertMode::Plain);
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
-    //ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    expected = "test this test this";
+    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJc/uwM2APneVOH9mBq15bOk=",
+                                       "CBD437FA37772C66051A47D72367B38E",
+                                       "a14c54563269e9e368f56b325f04ff00",
+                                       AES::Encoding::Base64,
+                                       AES::Encoding::Raw);
 
+
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
+    expected = R"({"_t":1503928197,"logger_id":"default","access_code":"default"})";
     output = AES::decrypt("12D62BE49168FFB92A616C68A0CBD4D8327EBA936150C0E28BD5FA2041D8C6F50D5D2546937E086A44F91FB19BCB32F9FC920C3004022E7514F36E11237CA681",
                                        "CBD437FA37772C66051A47D72367B38E",
                                        "a14c54563269e9e368f56b325f04ff00",
                                        AES::Encoding::Base16,
                                        AES::Encoding::Raw);
-    //ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
 }

@@ -56,6 +56,13 @@ void displayUsage()
     std::cout << std::endl;
 }
 
+
+std::string normalizeBase16(std::string enc)
+{
+    enc.erase(std::remove_if(enc.begin(), enc.end(), iswspace), enc.end());
+    return enc;
+}
+
 void displayVersion()
 {
     std::cout << "Mine - Minimal cryptography library" << std::endl << "Version: " << MINE_VERSION << std::endl << "https://muflihun.com" << std::endl;

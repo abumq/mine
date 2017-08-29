@@ -624,7 +624,7 @@ std::string AES::resolveOutputMode(const ByteArray& input, Encoding outputMode)
 
 // public
 
-ByteArray AES::encrypt(const ByteArray& input, const Key* key)
+ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding)
 {
 
     std::size_t keySize = key->size();
@@ -643,9 +643,15 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key)
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
         ByteArray inputBlock(kBlockSize, 0);
 
+        std::size_t j = 0;
         // don't use copy_n as we are setting the values
-        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+        for (; j < kBlockSize && inputSize > j + i; ++j) {
             inputBlock[j] = input[j + i];
+        }
+
+        if (pkcs5Padding && j != kBlockSize) {
+            // PKCS#5 padding
+            std::fill(inputBlock.begin() + j, inputBlock.end(), j);
         }
 
         ByteArray outputBlock = encryptSingleBlock(inputBlock.begin() + i, key, &keySchedule);
@@ -677,7 +683,6 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key)
         for (; j < kBlockSize && inputSize > j + i; ++j) {
             inputBlock[j] = input[j + i];
         }
-
         ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
@@ -685,7 +690,7 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key)
     return result;
 }
 
-ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv)
+ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bool pkcs5Padding)
 {
 
     std::size_t keySize = key->size();
@@ -696,7 +701,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv)
     }
 
     if (!iv.empty() && iv.size() != 16) {
-        throw std::invalid_argument("Invalid IV, it should be 128-bit");
+        throw std::invalid_argument("Invalid IV, it should be same as block size");
     } else if (iv.empty()) {
         // generate IV
         iv = generateRandomBytes(16);
@@ -717,9 +722,14 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv)
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
         ByteArray inputBlock(kBlockSize, 0);
 
+        std::size_t j = 0;
         // don't use copy_n as we are setting the values
-        for (std::size_t j = 0; j < kBlockSize && inputSize > j + i; ++j) {
+        for (; j < kBlockSize && inputSize > j + i; ++j) {
             inputBlock[j] = input[j + i];
+        }
+        if (pkcs5Padding && j != kBlockSize) {
+            // PKCS#5 padding
+            std::fill(inputBlock.begin() + j, inputBlock.end(), j);
         }
         xorWithRange(&inputBlock, nextXorWithBeg, nextXorWithEnd);
 
@@ -745,8 +755,13 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
         throw std::invalid_argument("Invalid AES key size");
     }
 
-    KeySchedule keySchedule = keyExpansion(key);
     const std::size_t inputSize = input.size();
+
+    if (inputSize % kBlockSize != 0) {
+        throw std::invalid_argument("Ciphertext length is not a multiple of block size");
+    }
+
+    KeySchedule keySchedule = keyExpansion(key);
     ByteArray result;
 
     ByteArray::const_iterator nextXorWithBeg = iv.begin();
@@ -768,8 +783,27 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
 
         xorWithRange(&outputBlock, nextXorWithBeg, nextXorWithEnd);
 
-        nextXorWithBeg = input.begin() + i;
-        nextXorWithEnd = input.begin() + i + kBlockSize;
+        if (i + kBlockSize == inputSize) {
+            // check padding
+            char lastChar = outputBlock[kBlockSize - 1];
+            int c = lastChar & 0xff;
+            if (c > 0 && c < kBlockSize - 1) {
+                bool validPadding = true;
+                for (int chkIdx = c; chkIdx < kBlockSize - 2; ++chkIdx) {
+                    if ((outputBlock[chkIdx] & 0xff) != c) {
+                        // with openssl we found padding
+                        validPadding = false;
+                        break;
+                    }
+                }
+                if (validPadding) {
+                    j = c;
+                }
+            }
+        } else {
+            nextXorWithBeg = input.begin() + i;
+            nextXorWithEnd = input.begin() + i + kBlockSize;
+        }
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
@@ -779,27 +813,21 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
     return result;
 }
 
-static std::string normalizeBase16(std::string enc)
+std::string AES::encrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
 {
-    enc.erase(std::remove_if(enc.begin(), enc.end(), iswspace), enc.end());
-    return enc;
-}
-
-std::string AES::encrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
-{
-    Key keyArr = Base16::fromString(normalizeBase16(key));
+    Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    ByteArray result = encrypt(inp, &keyArr);
+    ByteArray result = encrypt(inp, &keyArr, pkcs5Padding);
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
 {
-    Key keyArr = Base16::fromString(normalizeBase16(key));
+    Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    ByteArray ivec = Base16::fromString(normalizeBase16(iv));
+    ByteArray ivec = Base16::fromString(iv);
     bool ivecGenerated = iv.empty();
-    ByteArray result = encrypt(inp, &keyArr, ivec);
+    ByteArray result = encrypt(inp, &keyArr, ivec, pkcs5Padding);
     if (ivecGenerated) {
         iv = Base16::encode(ivec.begin(), ivec.end());
     }
@@ -808,7 +836,7 @@ std::string AES::encrypt(const std::string& input, const std::string& key, std::
 
 std::string AES::decrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
 {
-    Key keyArr = Base16::fromString(normalizeBase16(key));
+    Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray result = decrypt(inp, &keyArr);
     return resolveOutputMode(result, outputEncoding);
@@ -816,7 +844,7 @@ std::string AES::decrypt(const std::string& input, const std::string& key, Encod
 
 std::string AES::decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
 {
-    Key keyArr = Base16::fromString(normalizeBase16(key));
+    Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
     ByteArray ivec = Base16::fromString(iv);
     ByteArray result = decrypt(inp, &keyArr, ivec);
