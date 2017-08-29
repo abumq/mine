@@ -168,9 +168,11 @@ public:
     ///
     static std::string decode(const std::string& e)
     {
-        if (e.size() % 4 != 0) {
-            throw std::invalid_argument("Invalid base64 encoding. Padding is required");
-        }
+        //if (e.size() % 4 != 0) {
+            // we disable it for 76 character line-break format
+            // https://tools.ietf.org/html/rfc4648#section-3.1
+            // throw std::invalid_argument("Invalid base64 encoding. Padding is required");
+        //}
         return decode(e.begin(), e.end());
     }
 
@@ -190,16 +192,31 @@ public:
         // result indices     24        22       9        35
         //
 
-        const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
+        const int kPadding = 64; // kDecodeMap.at(static_cast<int>(kPaddingChar));
         std::stringstream ss;
         for (auto it = begin; it < end; it += 4) {
             try {
+                while (iswspace(*it) && it < end) {
+                    ++it;
+                }
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
                 if (b0 == kPadding/* || b0 == '\0'*/) {
                     throw std::invalid_argument("No data available");
                 }
+
+                while (iswspace(*(it + 1)) && it < end) {
+                    ++it;
+                }
                 int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
+
+                while (iswspace(*(it + 2)) && it < end) {
+                    ++it;
+                }
                 int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
+
+                while (iswspace(*(it + 3)) && it < end) {
+                    ++it;
+                }
                 int b3 = kDecodeMap.at(static_cast<int>(*(it + 3) & 0xff));
 
                 ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000

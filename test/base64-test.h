@@ -32,6 +32,10 @@ static TestData<std::string, std::string> Base64TestData = {
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };
 
+static TestData<std::string, std::string> Base64OnlyDecodingTestData = {
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIF\nFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
+};
+
 static TestData<std::string, std::wstring> Base64WStringTestData = {
     // examples from https://en.wikipedia.org/wiki/Base64#Output_padding
     TestCase("YWJjZA==", L"abcd"),
@@ -54,10 +58,10 @@ static TestData<std::string, std::wstring> Base64WStringTestData = {
 };
 
 static TestData<std::string> InvalidBase64EncodingData = {
-/*    TestCase("YWJj,ZA=="),
+    TestCase("YWJj,ZA=="),
     TestCase("YWJj,A=="),
     TestCase(",,,,"),
-    TestCase("===="),*/
+    TestCase("===="),
 };
 
 static TestData<std::string, bool> IsBase64Data = {
@@ -79,6 +83,15 @@ TEST(Base64Test, Encode)
     for (const auto& item : Base64TestData) {
         std::string encoded = Base64::encode(PARAM(1));
         ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+    }
+}
+
+
+TEST(Base64Test, OnlyDecoding)
+{
+    for (const auto& item : Base64OnlyDecodingTestData) {
+        std::string decoded = Base64::decode(PARAM(0));
+        ASSERT_STREQ(PARAM(1).c_str(), decoded.c_str());
     }
 }
 
