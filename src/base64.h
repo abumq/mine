@@ -31,6 +31,7 @@
 #   include <locale>
 #   include <codecvt>
 #endif
+#include <iostream>
 
 namespace mine {
 
@@ -194,7 +195,8 @@ public:
 
         const int kPadding = 64; // kDecodeMap.at(static_cast<int>(kPaddingChar));
         std::stringstream ss;
-        for (auto it = begin; it < end; it += 4) {
+        int pos = 0;
+        for (auto it = begin; it < end; it += 4, pos+=4) {
             try {
                 while (iswspace(*it) && it < end) {
                     ++it;
@@ -247,7 +249,13 @@ public:
                     }
                 }
             } catch (const std::exception& e) {
-                throw std::invalid_argument(std::string("Invalid base64 encoding: " + std::string(e.what())));
+                std::string ewhat(e.what());
+                if (ewhat.find_first_of("unordered_map::at: key not found") == std::string::npos) {
+                    throw std::invalid_argument(std::string("Invalid base64 encoding: " + ewhat));
+                } else {
+                    ++it;
+                    continue;
+                }
             }
         }
         return ss.str();
