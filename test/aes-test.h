@@ -784,7 +784,7 @@ TEST(AESTest, CbcDecipher)
 
 TEST(AESTest, RealDataIssuesTest)
 {
-    std::string expected = "WQ73OMIum+OHKGHnAhQKJc/uwM2APneVOH9mBq15bOk=";
+    std::string expected = "WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=";
     std::string iv = "a14c54563269e9e368f56b325f04ff00";
     std::string output = AES::encrypt("test this test this",
                           "CBD437FA37772C66051A47D72367B38E",
@@ -793,6 +793,17 @@ TEST(AESTest, RealDataIssuesTest)
                           AES::Encoding::Base64);
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
+    expected = "EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==";
+
+    output = AES::encrypt(R"({"_t":1503928197,"logger_id":"default","access_code":"default"})",
+                          "CBD437FA37772C66051A47D72367B38E",
+                          iv,
+                          AES::Encoding::Raw,
+                          AES::Encoding::Base64);
+
+    ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+
 
     // this is real data from residue logging server (development)
     //

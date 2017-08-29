@@ -651,7 +651,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding
 
         if (pkcs5Padding && j != kBlockSize) {
             // PKCS#5 padding
-            std::fill(inputBlock.begin() + j, inputBlock.end(), j);
+            std::fill(inputBlock.begin() + j, inputBlock.end(), kBlockSize - (j % kBlockSize));
         }
 
         ByteArray outputBlock = encryptSingleBlock(inputBlock.begin() + i, key, &keySchedule);
@@ -729,7 +729,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bo
         }
         if (pkcs5Padding && j != kBlockSize) {
             // PKCS#5 padding
-            std::fill(inputBlock.begin() + j, inputBlock.end(), j);
+            std::fill(inputBlock.begin() + j, inputBlock.end(), kBlockSize - (j % kBlockSize));
         }
         xorWithRange(&inputBlock, nextXorWithBeg, nextXorWithEnd);
 
