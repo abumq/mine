@@ -302,7 +302,12 @@ private:
     ///
     /// \brief Exclusive XOR with arr
     ///
-    static ByteArray* xorWith(ByteArray* input, const ByteArray* arr);
+    static ByteArray* xorWith(ByteArray* input, const ByteArray*);
+
+    ///
+    /// \brief Exclusive XOR with iter of range size as input
+    ///
+    static ByteArray* xorWithIter(ByteArray* input, const ByteArray::const_iterator& beg, const ByteArray::const_iterator& end);
 
     ///
     /// \brief Raw encryption function - not for public use
@@ -314,7 +319,7 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
-    static ByteArray rawCipher(const ByteArray& input, const Key* key);
+    static ByteArray rawCipher(const ByteArray& input, const Key* key, const KeySchedule* keySchedule);
 
     ///
     /// \brief Raw decryption function - not for public use
@@ -325,7 +330,7 @@ private:
     /// \param key Byte array of key
     /// \return 128-bit plain text
     ///
-    static ByteArray rawDecipher(const ByteArray& input, const Key* key);
+    static ByteArray rawDecipher(const ByteArray& input, const Key* key, const KeySchedule* keySchedule);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array

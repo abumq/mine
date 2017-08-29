@@ -30,6 +30,12 @@
 #include "src/base64.h"
 #include "src/aes.h"
 
+#define MINE_PROFILING 1
+#if MINE_PROFILING
+#   include <chrono>
+#   include <iostream>
+#endif
+
 using namespace mine;
 
 const byte AES::kSBox[256] = {
@@ -433,6 +439,10 @@ void AES::initState(State* state, ByteArray input)
 
 ByteArray AES::stateToByteArray(const State *state)
 {
+
+#if MINE_PROFILING
+    auto start = std::chrono::steady_clock::now();
+#endif
     ByteArray result(kBlockSize);
     int k = 0;
     for (std::size_t i = 0; i < kNb; ++i) {
@@ -440,6 +450,11 @@ ByteArray AES::stateToByteArray(const State *state)
             result[k++] = state->at(i)[j];
         }
     }
+#if MINE_PROFILING
+    auto end = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << (diff.count()) << " ms for stateToByteArray" << std::endl;
+#endif
 
     return result;
 }
@@ -464,67 +479,88 @@ ByteArray* AES::xorWith(ByteArray* input, const ByteArray* arr)
     return input;
 }
 
-ByteArray AES::rawCipher(const ByteArray& input, const Key* key)
+ByteArray* AES::xorWithIter(ByteArray* input, const ByteArray::const_iterator& beg, const ByteArray::const_iterator& end)
 {
+    int i = 0;
+    for (auto iter = beg; iter < end; ++iter, ++i) {
+        input->at(i) ^= *iter;
+    }
+    return input;
+}
+
+ByteArray AES::rawCipher(const ByteArray& input, const Key* key, const KeySchedule* keySchedule)
+{
+
+    if (key == nullptr || keySchedule == nullptr) {
+        throw std::invalid_argument("AES raw encryption requires key");
+    }
 
     State state;
     initState(&state, input);
 
     uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
 
-    // Create linear subkeys (key schedule)
-    KeySchedule keySchedule = keyExpansion(key);
-
     int round = 0;
 
+#if MINE_PROFILING
+    auto start = std::chrono::steady_clock::now();
+#endif
+
     // initial round
-    addRoundKey(&state, &keySchedule, round++);
+    addRoundKey(&state, keySchedule, round++);
 
     // intermediate round
     while (round < kTotalRounds) {
         subBytes(&state);
         shiftRows(&state);
         mixColumns(&state);
-        addRoundKey(&state, &keySchedule, round++);
+        addRoundKey(&state, keySchedule, round++);
     }
 
     // final round
     subBytes(&state);
     shiftRows(&state);
-    addRoundKey(&state, &keySchedule, round++);
+    addRoundKey(&state, keySchedule, round++);
+
+#if MINE_PROFILING
+    auto end = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << (diff.count()) << " ms for encryption" << std::endl;
+#endif
 
     return stateToByteArray(&state);
 
 }
 
-ByteArray AES::rawDecipher(const ByteArray& input, const Key* key)
+ByteArray AES::rawDecipher(const ByteArray& input, const Key* key, const KeySchedule* keySchedule)
 {
+
+    if (key == nullptr || keySchedule == nullptr) {
+        throw std::invalid_argument("AES raw decryption requires key");
+    }
 
     State state;
     initState(&state, input);
 
     uint8_t kTotalRounds = kKeyParams.at(key->size())[1];
 
-    // Create linear subkeys (key schedule)
-    KeySchedule keySchedule = keyExpansion(key);
-
     int round = kTotalRounds;
 
     // initial round
-    addRoundKey(&state, &keySchedule, round--);
+    addRoundKey(&state, keySchedule, round--);
 
     // intermediate round
     while (round > 0) {
         invShiftRows(&state);
         invSubBytes(&state);
-        addRoundKey(&state, &keySchedule, round--);
+        addRoundKey(&state, keySchedule, round--);
         invMixColumns(&state);
     }
 
     // final round
     invShiftRows(&state);
     invSubBytes(&state);
-    addRoundKey(&state, &keySchedule, round);
+    addRoundKey(&state, keySchedule, round);
 
     return stateToByteArray(&state);
 }
@@ -565,6 +601,8 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
 
     const std::size_t inputSize = input.size();
 
+    KeySchedule keySchedule = keyExpansion(key);
+
     ByteArray result;
 
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
@@ -575,7 +613,7 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key)
             inputBlock.at(j) = input.at(j + i);
         }
 
-        ByteArray outputBlock = rawCipher(inputBlock, key);
+        ByteArray outputBlock = rawCipher(inputBlock, key, &keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
     }
     return result;
@@ -591,6 +629,8 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
         throw std::invalid_argument("Invalid AES key size");
     }
 
+    KeySchedule keySchedule = keyExpansion(key);
+
     const std::size_t inputSize = input.size();
     ByteArray result;
 
@@ -603,7 +643,7 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key)
             inputBlock.at(j) = input.at(j + i);
         }
 
-        ByteArray outputBlock = rawDecipher(inputBlock, key);
+        ByteArray outputBlock = rawDecipher(inputBlock, key, &keySchedule);
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
     }
@@ -627,11 +667,16 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
         iv = generateRandomBytes(16);
     }
 
+    KeySchedule keySchedule = keyExpansion(key);
     const std::size_t inputSize = input.size();
 
     ByteArray result;
-    ByteArray nextXorWith = iv;
+    ByteArray::const_iterator nextXorWithBeg = iv.begin();
+    ByteArray::const_iterator nextXorWithEnd = iv.end();
 
+#if MINE_PROFILING
+    auto start = std::chrono::steady_clock::now();
+#endif
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
         ByteArray inputBlock(kBlockSize, 0);
 
@@ -640,12 +685,19 @@ ByteArray AES::cipher(const ByteArray& input, const Key* key, ByteArray& iv)
             inputBlock.at(j) = input.at(j + i);
         }
 
-        xorWith(&inputBlock, &nextXorWith);
+        xorWithIter(&inputBlock, nextXorWithBeg, nextXorWithEnd);
 
-        ByteArray outputBlock = rawCipher(inputBlock, key);
+        ByteArray outputBlock = rawCipher(inputBlock, key, &keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
-        nextXorWith = outputBlock;
+        nextXorWithBeg = result.end() - kBlockSize;
+        nextXorWithEnd = result.end();
     }
+
+#if MINE_PROFILING
+    auto end = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << (diff.count()) << " ms for block encryption" << std::endl;
+#endif
     return result;
 }
 
@@ -659,10 +711,12 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
         throw std::invalid_argument("Invalid AES key size");
     }
 
+    KeySchedule keySchedule = keyExpansion(key);
     const std::size_t inputSize = input.size();
     ByteArray result;
 
     ByteArray nextXorWith = iv;
+
 
     for (std::size_t i = 0; i < inputSize; i += kBlockSize) {
         ByteArray inputBlock(kBlockSize, 0);
@@ -673,9 +727,10 @@ ByteArray AES::decipher(const ByteArray& input, const Key* key, ByteArray& iv)
             inputBlock.at(j) = input.at(j + i);
         }
 
-        ByteArray outputBlock = rawDecipher(inputBlock, key);
+        ByteArray outputBlock = rawDecipher(inputBlock, key, &keySchedule);
 
         xorWith(&outputBlock, &nextXorWith);
+
         nextXorWith = inputBlock;
 
         std::copy_n(outputBlock.begin(), j, std::back_inserter(result));
