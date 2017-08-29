@@ -14,7 +14,7 @@ namespace mine {
 
 static TestData<std::string, std::string> Base64TestData = {
     // examples from https://en.wikipedia.org/wiki/Base64#Output_padding
-/*    TestCase("YWJjZA==", "abcd"),
+    TestCase("YWJjZA==", "abcd"),
     TestCase("YW55IGNhcm5hbCBwbGVhc3VyZS4=", "any carnal pleasure."),
     TestCase("YW55IGNhcm5hbCBwbGVhc3VyZQ==", "any carnal pleasure"),
     TestCase("YW55IGNhcm5hbCBwbGVhc3Vy", "any carnal pleasur"),
@@ -29,12 +29,12 @@ static TestData<std::string, std::string> Base64TestData = {
     TestCase("4oKsNTA=", "€50"),
     TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", "this is rocket 🚀 and i love it"),
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRw==", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG"),
-    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),*/
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };
 
 static TestData<std::string, std::wstring> Base64WStringTestData = {
     // examples from https://en.wikipedia.org/wiki/Base64#Output_padding
-/*    TestCase("YWJjZA==", L"abcd"),
+    TestCase("YWJjZA==", L"abcd"),
     TestCase("YW55IGNhcm5hbCBwbGVhc3VyZS4=", L"any carnal pleasure."),
     TestCase("YW55IGNhcm5hbCBwbGVhc3VyZQ==", L"any carnal pleasure"),
     TestCase("YW55IGNhcm5hbCBwbGVhc3Vy", L"any carnal pleasur"),
@@ -50,7 +50,7 @@ static TestData<std::string, std::wstring> Base64WStringTestData = {
     // Commenting and leaving it here on purpose, see note on decodeAsWString
     // TestCase("dGhpcyBpcyByb2NrZXQg8J+agCBhbmQgaSBsb3ZlIGl0", L"this is rocket 🚀 and i love it"),
     TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRw==", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG"),
-    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),*/
+    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIFFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", L"quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
 };
 
 static TestData<std::string> InvalidBase64EncodingData = {
@@ -101,6 +101,7 @@ TEST(Base64Test, Decode)
 }
 
 static TestData<std::string, std::size_t, std::string> Base64RawTestData = {
+    TestCase("dGhpcyBjb250YWlucyA9IHBhZGRpbmc=", 23, "7468697320636F6E7461696E73203D2070616464696E67"), // contains padding char
     TestCase("Z0BiQ8NcwknqzbGrWBjXqw==", 16, "67406243C35CC249EACDB1AB5818D7AB"),
     TestCase("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==", 64, "12D62BE49168FFB92A616C68A0CBD4D8327EBA936150C0E28BD5FA2041D8C6F50D5D2546937E086A44F91FB19BCB32F9FC920C3004022E7514F36E11237CA681")
 };
@@ -111,6 +112,7 @@ TEST(Base64Test, DecodeRawSize)
         std::string decoded = Base64::decode(PARAM(0));
         ASSERT_EQ(PARAM(1), decoded.size());
         std::string b16 = Base16::encode(decoded);
+        std::cout << decoded << std::endl;
         ASSERT_STRCASEEQ(PARAM(2).c_str(), b16.c_str());
     }
 }

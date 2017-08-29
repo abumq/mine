@@ -204,23 +204,22 @@ public:
 
                 ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
                                         b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
+                // std::string s(ss.str());
 
-                if (b1 != kPadding && b1 != '\0') {
-                    if (b2 == kPadding || (b2 == '\0' && b3 == '\0')) {
+                if (b1 != kPadding/* && b1 != '\0'*/) {
+                    if (b2 == kPadding/* || (b2 == '\0' && b3 == '\0')*/) {
                         // second bitset is only 4 bits
 
-                        // note: this line was causing issue when we had plain text length 16
-                        // b64 = uS2qrm5XdzsQZTcDrxJxbw==
-                        // it was adding a nul term char
-                        ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
+                        //ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                     } else {
                         ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
                                                                                         // first we clear the bits at pos 4 and 5
                                                                                         // then we concat with next bit
                                                  b2 >> 2); // 001001 >> 2 ==> 00000010 ==> 01100010 = 98
-                        if (b3 == kPadding || b3 == '\0') {
+                        if (b3 == kPadding/* || b3 == '\0'*/) {
                             // third bitset is only 4 bits
-                            ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
+                            // std::string s(ss.str());
+                            //ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
                                                     // first we clear first 4 bits
                         } else {
                             ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6 |     // 001001 ==> 000001 << 6 ==> 01000000
