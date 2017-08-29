@@ -33,7 +33,8 @@ static TestData<std::string, std::string> Base64TestData = {
 };
 
 static TestData<std::string, std::string> Base64OnlyDecodingTestData = {
-    TestCase("cXVpY2sgYnJvd24gZm94IGp1bXBzIG92ZXIgdGhlIGxhenkgZG9nIF\nFVSUNLIEJST1dOIEZPWCBKVU1QUyBPVkVSIFRIRSBMQVpZIERPRyAxMjM0NTY3ODkw", "quick brown fox jumps over the lazy dog QUICK BROWN FOX JUMPS OVER THE LAZY DOG 1234567890"),
+    //TestCase("\nSGVs\nbG8=", "Hello"),
+    TestCase("SGVsbG8=\n", "Hello"),
 };
 
 static TestData<std::string, std::wstring> Base64WStringTestData = {

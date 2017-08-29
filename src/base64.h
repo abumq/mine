@@ -170,7 +170,7 @@ public:
     static std::string decode(const std::string& e)
     {
         //if (e.size() % 4 != 0) {
-            // we disable it for 76 character line-break format
+            // we disable this check for 76 character line-break format (MIME)
             // https://tools.ietf.org/html/rfc4648#section-3.1
             // throw std::invalid_argument("Invalid base64 encoding. Padding is required");
         //}
@@ -193,37 +193,51 @@ public:
         // result indices     24        22       9        35
         //
 
-        const int kPadding = 64; // kDecodeMap.at(static_cast<int>(kPaddingChar));
+        const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
         std::stringstream ss;
-        int pos = 0;
-        for (auto it = begin; it < end; it += 4, pos+=4) {
+        for (auto it = begin; it < end; it += 4) {
             try {
-                while (iswspace(*it) && it < end) {
+                while (iswspace(*it)) {
                     ++it;
+
+                    if (it >= end) {
+                        goto result;
+                    }
                 }
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
                 if (b0 == kPadding/* || b0 == '\0'*/) {
                     throw std::invalid_argument("No data available");
                 }
 
-                while (iswspace(*(it + 1)) && it < end) {
+                while (iswspace(*(it + 1))) {
                     ++it;
+
+                    if (it >= end) {
+                        goto result;
+                    }
                 }
                 int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
 
-                while (iswspace(*(it + 2)) && it < end) {
+                while (iswspace(*(it + 2))) {
                     ++it;
+
+                    if (it >= end) {
+                        goto result;
+                    }
                 }
                 int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
 
-                while (iswspace(*(it + 3)) && it < end) {
+                while (iswspace(*(it + 3))) {
                     ++it;
+
+                    if (it >= end) {
+                        goto result;
+                    }
                 }
                 int b3 = kDecodeMap.at(static_cast<int>(*(it + 3) & 0xff));
 
                 ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
                                         b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
-                // std::string s(ss.str());
 
                 if (b1 != kPadding/* && b1 != '\0'*/) {
                     if (b2 == kPadding/* || (b2 == '\0' && b3 == '\0')*/) {
@@ -237,7 +251,6 @@ public:
                                                  b2 >> 2); // 001001 >> 2 ==> 00000010 ==> 01100010 = 98
                         if (b3 == kPadding/* || b3 == '\0'*/) {
                             // third bitset is only 4 bits
-                            // std::string s(ss.str());
                             //ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
                                                     // first we clear first 4 bits
                         } else {
@@ -249,15 +262,10 @@ public:
                     }
                 }
             } catch (const std::exception& e) {
-                std::string ewhat(e.what());
-                if (ewhat.find_first_of("unordered_map::at: key not found") == std::string::npos) {
-                    throw std::invalid_argument(std::string("Invalid base64 encoding: " + ewhat));
-                } else {
-                    ++it;
-                    continue;
-                }
+                throw std::invalid_argument(std::string("Invalid base64 encoding: " + std::string(e.what())));
             }
         }
+result:
         return ss.str();
     }
 
