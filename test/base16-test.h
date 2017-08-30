@@ -32,11 +32,23 @@ static TestData<std::string> InvalidBase16EncodingData = {
     TestCase("48656C6C6F20576F726C64F"),
 };
 
+static TestData<std::string> EncodingDecodingData = {
+    TestCase("78DA2B492D2E0100045D01C1"),
+};
+
 TEST(Base16Test, Encode)
 {
     for (const auto& item : Base16TestData) {
         std::string encoded = Base16::encode(PARAM(1));
         ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+    }
+}
+
+TEST(Base16Test, EncodeDecodingTest)
+{
+    for (const auto& item : EncodingDecodingData) {
+        std::string decoded = Base16::decode(PARAM(0));
+        ASSERT_STREQ(PARAM(0).c_str(), Base16::encode(decoded).c_str());
     }
 }
 

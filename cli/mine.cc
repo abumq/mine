@@ -32,18 +32,27 @@ void displayUsage()
     // we want to keep the order so can't use std::map or std::unordered_map
     std::vector<std::pair<std::string, std::string>> options = {
         {"--version", "Display version information"},
+
+        // operations
         {"-e", "Encrypt / encode / inflate the data"},
         {"-d", "Decrypt / decrypt / deflate the data"},
         {"-g", "Generate a random key"},
+
+        // modes
         {"--aes", "AES operations"},
-        {"--key", "Symmetric key for encryption / decryption"},
-        {"--iv", "Initializaion vector for decription"},
+        {"--zlib", "ZLib compression/decompression"},
         {"--base64", "Base64 operations"},
         {"--hex", "Base16 operations"},
+
+        // parameters
+        {"--key", "Symmetric key for encryption / decryption"},
+        {"--iv", "Initializaion vector for decription"},
         {"--length", "Specify key length"},
+        {"--in", "Input data from file (path)"},
+        {"--output", "Output file (path)"},
     };
 
-    std::cout << "mine [-d | -e | -g | -s | -v] [--in <input_file_path>] [--key <key>] [--in-key <file_path>] [--out-public <output_file_path>] [--out-private <output_file_path>] [--iv <init vector>] [--base64] [--length <key_length>] [--aes [<key_length>]] [--hex]" << std::endl;
+    std::cout << "mine [-e | -d | -g] [--aes] [--hex] [--base64] [--zlib] [--in <file>] [--output <file>] [--key <key>] [--iv <init vector>] [--length <key_length>]" << std::endl;
     std::cout << std::endl;
     const std::size_t LONGEST = 20;
     for (auto& option : options) {
@@ -65,7 +74,7 @@ std::string normalizeBase16(std::string enc)
 
 void displayVersion()
 {
-    std::cout << "Mine - Minimal cryptography library" << std::endl << "Version: " << MINE_VERSION << std::endl << "https://muflihun.com" << std::endl;
+    std::cout << "Mine - Minimal cryptography library" << std::endl << "Version: " << MINE_VERSION << std::endl << "https://muflihun.github.io" << std::endl;
 }
 
 #define TRY try {
@@ -125,6 +134,50 @@ void decodeHex(std::string& data)
     CATCH
 }
 
+void compress(std::string& data, bool isBase64, const std::string& outputFile)
+{
+    TRY
+        std::string o = ZLib::compressString(data);
+
+        if (isBase64) {
+            o = Base64::encode(o);
+        } else {
+            o = Base16::encode(o);
+        }
+        if (outputFile.empty()) {
+            std::cout << o;
+        } else {
+            std::ofstream out(outputFile);
+            out << o;
+            out.close();
+        }
+    CATCH
+}
+
+void decompress(std::string& data, bool isBase64, const std::string& outputFile)
+{
+    TRY
+        try {
+            if (isBase64) {
+                data = Base64::decode(data);
+            } else {
+                data = Base16::decode(data);
+            }
+        } catch (const std::exception& e) {
+            //ignore
+            std::cout << "ERROR: " << e.what() << std::endl;
+        }
+        std::string o = ZLib::decompressString(data);
+        if (outputFile.empty()) {
+            std::cout << o;
+        } else {
+            std::ofstream out(outputFile);
+            out << o;
+            out.close();
+        }
+    CATCH
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
@@ -144,7 +197,9 @@ int main(int argc, char* argv[])
     std::string iv;
     int keyLength = 256;
     std::string data;
+    std::string outputFile;
     bool isAES = false;
+    bool isZlib = false;
     bool isBase64 = false;
     bool isHex = false;
     bool fileArgSpecified = false;
@@ -162,8 +217,6 @@ int main(int argc, char* argv[])
             isBase64 = true;
         } else if (arg == "--hex") {
             isHex = true;
-        } else if (arg == "--key" && hasNext) {
-            key = argv[++i];
         } else if (arg == "--aes") {
             isAES = true;
             if (i + 1 < argc) {
@@ -174,6 +227,10 @@ int main(int argc, char* argv[])
                     --i;
                 }
             }
+        } else if (arg == "--zlib") {
+            isZlib = true;
+        } else if (arg == "--key" && hasNext) {
+            key = argv[++i];
         } else if (arg == "--length" && hasNext) {
             keyLength = atoi(argv[++i]);
         } else if (arg == "--iv" && hasNext) {
@@ -186,6 +243,8 @@ int main(int argc, char* argv[])
             data = std::string((std::istreambuf_iterator<char>(fs) ),
                             (std::istreambuf_iterator<char>()));
             fs.close();
+        } else if (arg == "--out" && hasNext) {
+            outputFile = argv[++i];
         }
     }
 
@@ -199,22 +258,26 @@ int main(int argc, char* argv[])
         data.erase(data.size() - 1);
     }
 
-    if (type == 1) { // Decrypt / Decode
+    if (type == 1) { // Decrypt / Decode / Decompress
         if (isBase64 && key.empty() && iv.empty()) {
             // base64 decode
             decodeBase64(data);
         } else if (isHex && key.empty() && iv.empty()) {
             // hex to ascii
             decodeHex(data);
+        } else if (isZlib) {
+            decompress(data, isBase64, outputFile);
         } else {
             // AES decrypt (base64-flexible)
             decryptAES(data, key, iv, isBase64);
         }
-    } else if (type == 2) { // Encrypt / Encode
+    } else if (type == 2) { // Encrypt / Encode / Compress
         if (isBase64 && key.empty() && iv.empty()) {
             encodeBase64(data);
         } else if (isHex && key.empty() && iv.empty()) {
             encodeHex(data);
+        } else if (isZlib) {
+            compress(data, isBase64, outputFile);
         } else {
             encryptAES(data, key, iv, isBase64);
         }

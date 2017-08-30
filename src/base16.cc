@@ -55,7 +55,7 @@ void Base16::decode(char a, char b, std::ostringstream& ss)
     int b1 = b & 0xff;
     try {
         ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
-    } catch (const std::exception&) {
-        throw std::invalid_argument("Invalid base-16 encoding");
+    } catch (const std::exception& e) {
+        throw std::invalid_argument("Invalid base-16 encoding: " + std::string(e.what()));
     }
 }
