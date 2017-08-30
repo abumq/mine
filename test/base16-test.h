@@ -33,6 +33,7 @@ static TestData<std::string> InvalidBase16EncodingData = {
 };
 
 static TestData<std::string> EncodingDecodingData = {
+    TestCase("C1"),
     TestCase("78DA2B492D2E0100045D01C1"),
 };
 
