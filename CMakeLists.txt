@@ -12,8 +12,16 @@ add_definitions (-DMINE_VERSION="${MINE_VERSION}")
 
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
+set(MINE_INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "The directory the headers are installed in")
+
 include_directories (${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR})
+
+install(FILES
+    package/mine.h
+    package/mine.cc
+    DESTINATION "${MINE_INCLUDE_INSTALL_DIR}"
+    COMPONENT dev)
 
 include(FindPackageHandleStandardArgs)
 
