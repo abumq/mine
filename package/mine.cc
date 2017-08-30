@@ -967,7 +967,7 @@ std::string AES::generateRandomKey(const std::size_t len)
 
 
 
-bool ZLib::compressFile(const std::string& gzFilename, const std::string& inputFile) noexcept
+bool ZLib::compressFile(const std::string& gzFilename, const std::string& inputFile)
 {
     gzFile out = gzopen(gzFilename.c_str(), "wb");
     if (!out) {
@@ -1022,9 +1022,7 @@ std::string ZLib::compressString(const std::string& str)
     deflateEnd(&zs);
 
     if (ret != Z_STREAM_END) {
-        std::ostringstream oss;
-        oss << "Exception during zlib compression: (" << ret << ") " << zs.msg;
-        throw std::runtime_error(oss.str());
+        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string(zs.msg));
     }
 
     return outstring;
@@ -1061,9 +1059,7 @@ std::string ZLib::decompressString(const std::string& str)
     inflateEnd(&zs);
 
     if (ret != Z_STREAM_END) {
-        std::ostringstream oss;
-        oss << "Exception during zlib decompression: (" << ret << ") " << zs.msg;
-        throw std::runtime_error(oss.str());
+        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string(zs.msg));
     }
 
     return outstring;

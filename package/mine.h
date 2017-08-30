@@ -1556,7 +1556,7 @@ class ZLib {
 public:
 
     ///
-    /// \brief Size of buffer algorithm should process under
+    /// \brief Size of buffer algorithm should operate under
     ///
     static const int kBufferSize = 32768;
 
@@ -1566,7 +1566,7 @@ public:
     /// \param inputFile Input file path
     /// \return True if successful, otherwise false
     ///
-    static bool compressFile(const std::string& gzFilename, const std::string& inputFile) noexcept;
+    static bool compressFile(const std::string& gzFilename, const std::string& inputFile);
 
     ///
     /// @brief Compresses string using zlib (inflate)
