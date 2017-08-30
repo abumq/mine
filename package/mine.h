@@ -483,6 +483,11 @@ using ByteArray = std::vector<byte>;
 class AES {
 public:
 
+    AES() = default;
+    AES(const AES&) = default;
+    AES& operator=(const AES&) = default;
+    virtual ~AES() = default;
+
     ///
     /// \brief Convert mode for various functions
     ///
@@ -505,7 +510,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    static std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
@@ -516,7 +521,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    static std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers the input with specified hex key
@@ -525,7 +530,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Deciphers the input with specified hex key using CBC mode
@@ -535,7 +540,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
@@ -544,7 +549,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Cipher text byte array
     ///
-    static ByteArray encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding = true);
+    ByteArray encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
@@ -552,7 +557,7 @@ public:
     /// \param key Pointer to a valid AES key
     /// \return Cipher text byte array
     ///
-    static ByteArray decrypt(const ByteArray& input, const Key* key);
+    ByteArray decrypt(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
@@ -562,7 +567,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Cipher text byte array
     ///
-    static ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bool pkcs5Padding = true);
+    ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
@@ -571,12 +576,12 @@ public:
     /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
-    static ByteArray decrypt(const ByteArray& input, const Key* key, ByteArray& iv);
+    ByteArray decrypt(const ByteArray& input, const Key* key, ByteArray& iv);
 
     ///
     /// \brief Generates random key of valid length
     ///
-    static std::string generateRandomKey(const std::size_t len);
+    std::string generateRandomKey(const std::size_t len);
 
 private:
 
@@ -658,7 +663,7 @@ private:
     ///           [a3]  =>  [a4]
     ///           [a4]      [a1]
     ///
-    static void rotateWord(Word* w);
+    void rotateWord(Word* w);
 
     /// this function is also specified in FIPS.197 Sec. 5.2:
     ///      SubWord() is a function that takes a four-byte
@@ -669,107 +674,107 @@ private:
     /// It's a simple substition with kSbox for corresponding byte
     /// index
     ///
-    static void substituteWord(Word* w);
+    void substituteWord(Word* w);
 
     ///
     /// \brief Key expansion function as described in FIPS.197
     ///
-    static KeySchedule keyExpansion(const Key* key);
+    KeySchedule keyExpansion(const Key* key);
 
     ///
     /// \brief Adds round to the state using specified key schedule
     ///
-    static void addRoundKey(State* state, KeySchedule* keySchedule, int round);
+    void addRoundKey(State* state, KeySchedule* keySchedule, int round);
 
     ///
     /// \brief Substitution step for state
     /// \ref Sec. 5.1.1
     ///
-    static void subBytes(State* state);
+    void subBytes(State* state);
 
     ///
     /// \brief Shifting rows step for the state
     /// \ref Sec. 5.1.2
     ///
-    static void shiftRows(State* state);
+    void shiftRows(State* state);
 
     ///
     /// \ref Sec. 4.2.1
     ///
-    static byte xtime(byte x);
+    byte xtime(byte x);
 
     ///
     /// \ref Sec. 4.2.1
     ///
-    static byte multiply(byte x, byte y);
+    byte multiply(byte x, byte y);
 
     ///
     /// \brief Mixing columns for the state
     /// \ref Sec. 5.1.3
     ///
-    static void mixColumns(State* state);
+    void mixColumns(State* state);
 
     ///
     /// \brief Transformation in the Inverse Cipher
     /// that is the reverse of subBytes()
     /// \ref Sec. 5.3.2
     ///
-    static void invSubBytes(State* state);
+    void invSubBytes(State* state);
 
     ///
     /// \brief  Transformation in the Inverse Cipher that is
     /// the reverse of shiftRows()
     /// \ref Sec. 5.3.1
     ///
-    static void invShiftRows(State* state);
+    void invShiftRows(State* state);
 
     ///
     /// \brief Transformation in the Inverse Cipher
     /// that is the reverse of mixColumns()
     /// \ref Sec. 5.3.3
     ///
-    static void invMixColumns(State* state);
+    void invMixColumns(State* state);
 
     ///
     /// \brief Prints bytes in hex format in 4x4 matrix fashion
     ///
-    static void printBytes(const ByteArray& b);
+    void printBytes(const ByteArray& b);
 
     ///
     /// \brief Prints state for debugging
     ///
-    static void printState(const State*);
+    void printState(const State*);
 
     ///
     /// \brief Initializes the state with input. This function
     /// also pads the input if needed (i.e, input is not block of 128-bit)
     ///
-    static void initState(State* state, const ByteArray::const_iterator& begin);
+    void initState(State* state, const ByteArray::const_iterator& begin);
 
     ///
     /// \brief Generates random bytes of length
     ///
-    static ByteArray generateRandomBytes(const std::size_t len);
+    ByteArray generateRandomBytes(const std::size_t len);
 
     ///
     /// \brief Creates byte array from input based on input mode
     ///
-    static ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
+    ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
 
     ///
     /// \brief Creates string from byte array based on convert mode
     ///
-    static std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
+    std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
 
     ///
     /// \brief Exclusive XOR with arr
     ///
-    static ByteArray* xorWith(ByteArray* input, const ByteArray*);
+    ByteArray* xorWith(ByteArray* input, const ByteArray*);
 
     ///
     /// \brief Exclusive XOR with iter of range size as input
     ///
-    static ByteArray* xorWithRange(ByteArray* input, const ByteArray::const_iterator& begin, const ByteArray::const_iterator& end);
+    ByteArray* xorWithRange(ByteArray* input, const ByteArray::const_iterator& begin, const ByteArray::const_iterator& end);
 
     ///
     /// \brief Raw encryption function - not for public use
@@ -781,7 +786,7 @@ private:
     /// \note This does not do any key or input validation
     /// \return 128-bit cipher text
     ///
-    static ByteArray encryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
+    ByteArray encryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
 
     ///
     /// \brief Raw decryption function - not for public use
@@ -792,21 +797,17 @@ private:
     /// \param key Byte array of key
     /// \return 128-bit plain text
     ///
-    static ByteArray decryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
+    ByteArray decryptSingleBlock(const ByteArray::const_iterator& range, const Key* key, KeySchedule* keySchedule);
 
     ///
     /// \brief Converts 4x4 byte state matrix in to linear 128-bit byte array
     ///
-    static ByteArray stateToByteArray(const State* state);
+    ByteArray stateToByteArray(const State* state);
 
     ///
     /// \brief Get padding index for stripping the padding (unpadding)
     ///
-    static std::size_t getPaddingIndex(const ByteArray& byteArr);
-
-    AES() = delete;
-    AES(const AES&) = delete;
-    AES& operator=(const AES&) = delete;
+    std::size_t getPaddingIndex(const ByteArray& byteArr);
 
     friend class AESTest_RawCipher_Test;
     friend class AESTest_RawCipherPlain_Test;

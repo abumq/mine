@@ -114,6 +114,53 @@ const std::unordered_map<uint8_t, std::vector<uint8_t>> AES::kKeyParams = {
     { 32, {{ 8, 14 }} }
 };
 
+AES::AES(const std::string& key)
+{
+    setKey(key);
+}
+
+AES::AES(const ByteArray& key) : m_key(key)
+{
+    setKey(key);
+}
+
+AES::AES(const AES& other)
+{
+    if (&other != this) {
+        m_key = other.m_key;
+        m_keySchedule = other.m_keySchedule;
+    }
+}
+
+AES::AES(const AES&& other) :
+    m_key(std::move(other.m_key)),
+    m_keySchedule(std::move(other.m_keySchedule))
+{
+}
+
+AES& AES::operator=(const AES& other)
+{
+    if (&other != this) {
+        m_key = other.m_key;
+        m_keySchedule = other.m_keySchedule;
+    }
+    return *this;
+}
+
+void AES::setKey(const std::string& key)
+{
+    setKey(Base16::fromString(key));
+}
+
+void AES::setKey(const ByteArray& key)
+{
+    if (key.size() != 16 && key.size() != 24 && key.size() != 32) {
+        throw std::invalid_argument("Invalid key size. AES can operate on 128-bit, 192-bit and 256-bit keys");
+    }
+    m_key = key;
+    m_keySchedule = keyExpansion(&m_key);
+}
+
 void AES::printBytes(const ByteArray& b)
 {
     for (std::size_t i = 1; i <= b.size(); ++i) {
@@ -666,7 +713,10 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding
 
     const std::size_t inputSize = input.size();
 
-    KeySchedule keySchedule = keyExpansion(key);
+    if (*key != m_key) {
+        m_keySchedule = keyExpansion(key);
+        m_key = *key;
+    }
 
     ByteArray result;
 
@@ -684,7 +734,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding
             std::fill(inputBlock.begin() + j, inputBlock.end(), kBlockSize - (j % kBlockSize));
         }
 
-        ByteArray outputBlock = encryptSingleBlock(inputBlock.begin() + i, key, &keySchedule);
+        ByteArray outputBlock = encryptSingleBlock(inputBlock.begin() + i, key, &m_keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
     }
     return result;
@@ -700,7 +750,10 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key)
         throw std::invalid_argument("Invalid AES key size");
     }
 
-    KeySchedule keySchedule = keyExpansion(key);
+    if (*key != m_key) {
+        m_keySchedule = keyExpansion(key);
+        m_key = *key;
+    }
 
     const std::size_t inputSize = input.size();
     ByteArray result;
@@ -713,7 +766,7 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key)
         for (; j < kBlockSize && inputSize > j + i; ++j) {
             inputBlock[j] = input[j + i];
         }
-        ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
+        ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &m_keySchedule);
 
         if (i + kBlockSize == inputSize) {
             // check padding
@@ -741,9 +794,11 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bo
         iv = generateRandomBytes(16);
     }
 
-    // ByteArray inputCopy = input;
+    if (*key != m_key) {
+        m_keySchedule = keyExpansion(key);
+        m_key = *key;
+    }
 
-    KeySchedule keySchedule = keyExpansion(key);
     const std::size_t inputSize = input.size();
 
     ByteArray result;
@@ -767,7 +822,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bo
         }
         xorWithRange(&inputBlock, nextXorWithBeg, nextXorWithEnd);
 
-        ByteArray outputBlock = encryptSingleBlock(inputBlock.begin(), key, &keySchedule);
+        ByteArray outputBlock = encryptSingleBlock(inputBlock.begin(), key, &m_keySchedule);
         std::copy(outputBlock.begin(), outputBlock.end(), std::back_inserter(result));
         nextXorWithBeg = result.end() - kBlockSize;
         nextXorWithEnd = result.end();
@@ -795,7 +850,11 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
         throw std::invalid_argument("Ciphertext length is not a multiple of block size");
     }
 
-    KeySchedule keySchedule = keyExpansion(key);
+    if (*key != m_key) {
+        m_keySchedule = keyExpansion(key);
+        m_key = *key;
+    }
+
     ByteArray result;
 
     ByteArray::const_iterator nextXorWithBeg = iv.begin();
@@ -813,7 +872,7 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
             inputBlock[j] = input[j + i];
         }
 
-        ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &keySchedule);
+        ByteArray outputBlock = decryptSingleBlock(inputBlock.begin(), key, &m_keySchedule);
 
         xorWithRange(&outputBlock, nextXorWithBeg, nextXorWithEnd);
 
@@ -878,4 +937,71 @@ std::string AES::generateRandomKey(const std::size_t len)
     }
     ByteArray bytes = generateRandomBytes(len / 8);
     return Base16::encode(bytes.begin(), bytes.end());
+}
+
+
+// encryption / decryption with previously provided key
+
+std::string AES::encr(const std::string& input, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return encrypt(input, Base16::encode(Base16::toRawString(m_key)), inputEncoding, outputEncoding, pkcs5Padding);
+}
+
+std::string AES::encr(const std::string& input, std::string& iv, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return encrypt(input, Base16::encode(Base16::toRawString(m_key)), iv, inputEncoding, outputEncoding, pkcs5Padding);
+}
+
+std::string AES::decr(const std::string& input, Encoding inputEncoding, Encoding outputEncoding)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return decrypt(input, Base16::encode(Base16::toRawString(m_key)), inputEncoding, outputEncoding);
+}
+
+std::string AES::decr(const std::string& input, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return decrypt(input, Base16::encode(Base16::toRawString(m_key)), iv, inputEncoding, outputEncoding);
+}
+
+ByteArray AES::encr(const ByteArray& input, bool pkcs5Padding)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return encrypt(input, &m_key, pkcs5Padding);
+}
+
+ByteArray AES::decr(const ByteArray& input)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return decrypt(input, &m_key);
+}
+
+ByteArray AES::encr(const ByteArray& input, ByteArray& iv, bool pkcs5Padding)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return encrypt(input, &m_key, iv, pkcs5Padding);
+}
+
+ByteArray AES::decr(const ByteArray& input, ByteArray& iv)
+{
+    if (m_key.empty()) {
+        throw std::runtime_error("Key not set");
+    }
+    return decrypt(input, &m_key, iv);
 }

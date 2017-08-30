@@ -66,6 +66,22 @@ public:
     ///
     using Key = ByteArray;
 
+    AES() = default;
+    AES(const std::string& key);
+    AES(const ByteArray& key);
+    AES(const AES&);
+    AES(const AES&&);
+    AES& operator=(const AES&);
+    virtual ~AES() = default;
+
+    void setKey(const std::string& key);
+    void setKey(const ByteArray& key);
+
+    ///
+    /// \brief Generates random key of valid length
+    ///
+    static std::string generateRandomKey(const std::size_t len);
+
     ///
     /// \brief Ciphers the input with specified hex key
     /// \param key Hex key
@@ -74,7 +90,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    static std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
@@ -85,7 +101,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    static std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers the input with specified hex key
@@ -94,7 +110,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Deciphers the input with specified hex key using CBC mode
@@ -104,7 +120,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    static std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
 
     ///
     /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
@@ -113,7 +129,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Cipher text byte array
     ///
-    static ByteArray encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding = true);
+    ByteArray encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers with ECB-Mode, the input can be as long as user wants
@@ -121,7 +137,7 @@ public:
     /// \param key Pointer to a valid AES key
     /// \return Cipher text byte array
     ///
-    static ByteArray decrypt(const ByteArray& input, const Key* key);
+    ByteArray decrypt(const ByteArray& input, const Key* key);
 
     ///
     /// \brief Ciphers with CBC-Mode, the input can be as long as user wants
@@ -131,7 +147,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Cipher text byte array
     ///
-    static ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bool pkcs5Padding = true);
+    ByteArray encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers with CBC-Mode, the input can be as long as user wants
@@ -140,12 +156,26 @@ public:
     /// \param iv Initialization vector
     /// \return Cipher text byte array
     ///
-    static ByteArray decrypt(const ByteArray& input, const Key* key, ByteArray& iv);
+    ByteArray decrypt(const ByteArray& input, const Key* key, ByteArray& iv);
 
-    ///
-    /// \brief Generates random key of valid length
-    ///
-    static std::string generateRandomKey(const std::size_t len);
+
+    // cipher / decipher interface without keys
+
+    std::string encr(const std::string& input, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+
+    std::string encr(const std::string& input, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+
+    std::string decr(const std::string& input, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+
+    std::string decr(const std::string& input, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+
+    ByteArray encr(const ByteArray& input, bool pkcs5Padding = true);
+
+    ByteArray decr(const ByteArray& input);
+
+    ByteArray encr(const ByteArray& input, ByteArray& iv, bool pkcs5Padding = true);
+
+    ByteArray decr(const ByteArray& input, ByteArray& iv);
 
 private:
 
@@ -373,10 +403,10 @@ private:
     ///
     static std::size_t getPaddingIndex(const ByteArray& byteArr);
 
-    AES() = delete;
-    AES(const AES&) = delete;
-    AES& operator=(const AES&) = delete;
+    Key m_key; // to keep track of key differences
+    KeySchedule m_keySchedule;
 
+    // for tests
     friend class AESTest_RawCipher_Test;
     friend class AESTest_RawCipherPlain_Test;
     friend class AESTest_RawCipherBase64_Test;
@@ -391,6 +421,7 @@ private:
     friend class AESTest_KeyExpansion_Test;
     friend class AESTest_AddRoundKey_Test;
     friend class AESTest_CbcCipher_Test;
+    friend class AESTest_Copy_Test;
 };
 } // end namespace mine
 

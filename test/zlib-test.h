@@ -15,6 +15,7 @@ namespace mine {
 
 static TestData<std::string, std::string> ZLibData = {
     TestCase("abcd", "eNpLTEpOAQAD2AGL"),
+    TestCase("abcd", "eNpLTEpOAQAD2AGL"),
 };
 
 static TestData<std::string, std::string> ZLibDataHex = {

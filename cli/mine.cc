@@ -80,11 +80,13 @@ void displayVersion()
 #define TRY try {
 #define CATCH }  catch (const std::exception& e) { std::cout << "ERROR: " << e.what() << std::endl; }
 
+static AES aes;
+
 void encryptAES(std::string& data, const std::string& key, std::string& iv, bool isBase64)
 {
     TRY
         bool newIv = iv.empty();
-        std::cout << AES::encrypt(data, key, iv, AES::Encoding::Raw, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
+        std::cout << aes.encrypt(data, key, iv, AES::Encoding::Raw, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
 
         if (newIv) {
             std::cout << std::endl << "IV: " << iv << std::endl;
@@ -95,14 +97,14 @@ void encryptAES(std::string& data, const std::string& key, std::string& iv, bool
 void decryptAES(std::string& data, const std::string& key, std::string& iv, bool isBase64)
 {
     TRY
-        std::cout << AES::decrypt(data, key, iv, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
+        std::cout << aes.decrypt(data, key, iv, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
     CATCH
 }
 
 void generateAESKey(int length)
 {
     TRY
-        std::cout << AES::generateRandomKey(length);
+        std::cout << aes.generateRandomKey(length);
     CATCH
 }
 

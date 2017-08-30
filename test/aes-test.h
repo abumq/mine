@@ -16,6 +16,8 @@ namespace mine {
 // many test data is from NIST special publication
 // http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 
+static AES aes;
+
 TEST(AESTest, KeyExpansion)
 {
     // This key expansion is original key from FIPS.197 example
@@ -209,7 +211,7 @@ TEST(AESTest, KeyExpansion)
 
     for (auto& item : KeyExpansionTestData) {
         LOG(INFO) << "Test: " << PARAM(0);
-        AES::KeySchedule keys = AES::keyExpansion(&PARAM(1));
+        AES::KeySchedule keys = aes.keyExpansion(&PARAM(1));
         AES::KeySchedule expected = PARAM(2);
         ASSERT_EQ(expected, keys);
     }
@@ -236,7 +238,7 @@ TEST(AESTest, SubByte)
     for (auto& item : SubByteTestData) {
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
-        AES::subBytes(&state);
+        aes.subBytes(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -262,7 +264,7 @@ TEST(AESTest, InvSubByte)
     for (auto& item : InvSubByteTestData) {
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
-        AES::invSubBytes(&state);
+        aes.invSubBytes(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -288,7 +290,7 @@ TEST(AESTest, ShiftRows)
     for (auto& item : ShiftRowsTestData) {
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
-        AES::shiftRows(&state);
+        aes.shiftRows(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -314,7 +316,7 @@ TEST(AESTest, InvShiftRows)
     for (auto& item : InvShiftRowsTestData) {
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
-        AES::invShiftRows(&state);
+        aes.invShiftRows(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -340,7 +342,7 @@ TEST(AESTest, MixColumns)
     for (auto& item : MixColumnsTestData) {
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
-        AES::mixColumns(&state);
+        aes.mixColumns(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -366,7 +368,7 @@ TEST(AESTest, InvMixColumns)
     for (auto& item : InvMixColumnsTestData) {
         AES::State state = PARAM(0);
         AES::State expected = PARAM(1);
-        AES::invMixColumns(&state);
+        aes.invMixColumns(&state);
         ASSERT_EQ(expected, state);
     }
 }
@@ -381,7 +383,7 @@ TEST(AESTest, AddRoundKey)
                         0xab, 0xf7, 0x15, 0x88,
                         0x09, 0xcf, 0x4f, 0x3c
                     }};
-    AES::KeySchedule schedule = AES::keyExpansion(&key);
+    AES::KeySchedule schedule = aes.keyExpansion(&key);
     AES::State state = {{
                             {{ 0x04, 0x66, 0x81, 0xe5 }}, // c0
                             {{ 0xe0, 0xcb, 0x19, 0x9a }}, // c1
@@ -400,7 +402,7 @@ TEST(AESTest, AddRoundKey)
                                 {{ 0xe8, 0x64, 0x72, 0xa9 }}, // c2
                                 {{ 0xfd, 0xd2, 0x8b, 0x25 }}, // c3
                             }};
-    AES::addRoundKey(&state, &schedule, 1);
+    aes.addRoundKey(&state, &schedule, 1);
     ASSERT_EQ(expected2, state);
 
     state = {{
@@ -409,7 +411,7 @@ TEST(AESTest, AddRoundKey)
                  {{ 0x33, 0x9d, 0xf4, 0xe8 }}, // c2
                  {{ 0x37, 0xd2, 0x18, 0xd8 }}, // c3
              }};
-    AES::addRoundKey(&state, &schedule, 6);
+    aes.addRoundKey(&state, &schedule, 6);
     ASSERT_EQ(expected7, state);
 }
 
@@ -438,8 +440,8 @@ TEST(AESTest, RawSimpleCipher)
                               0x19, 0x6a, 0x0b, 0x32
                           }};
 
-    AES::KeySchedule keySchedule = AES::keyExpansion(&key);
-    ByteArray output = AES::encryptSingleBlock(input.begin(), &key, &keySchedule);
+    AES::KeySchedule keySchedule = aes.keyExpansion(&key);
+    ByteArray output = aes.encryptSingleBlock(input.begin(), &key, &keySchedule);
     ASSERT_EQ(expected, output);
 }
 
@@ -469,8 +471,8 @@ TEST(AESTest, RawSimpleDecipher)
                               0xe0, 0x37, 0x07, 0x34
                           }};
 
-    AES::KeySchedule keySchedule = AES::keyExpansion(&key);
-    ByteArray output = AES::decryptSingleBlock(input.begin(), &key, &keySchedule);
+    AES::KeySchedule keySchedule = aes.keyExpansion(&key);
+    ByteArray output = aes.decryptSingleBlock(input.begin(), &key, &keySchedule);
     ASSERT_EQ(expected, output);
 }
 
@@ -502,9 +504,9 @@ TEST(AESTest, RawCipher)
         AES::Key key = static_cast<AES::Key>(Base16::fromString(PARAM(1)));
         ByteArray expected = Base16::fromString(PARAM(2));
 
-        AES::KeySchedule keySchedule = AES::keyExpansion(&key);
+        AES::KeySchedule keySchedule = aes.keyExpansion(&key);
 
-        ByteArray output = AES::encryptSingleBlock(input.begin(), &key, &keySchedule);
+        ByteArray output = aes.encryptSingleBlock(input.begin(), &key, &keySchedule);
         ASSERT_EQ(expected, output);
     }
 }
@@ -514,7 +516,7 @@ TEST(AESTest, RawCipherDirect)
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base16);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), AES::Encoding::Base16);
         // case insensitive comparison because hex can be upper or lower case
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
@@ -529,7 +531,7 @@ TEST(AESTest, RawCipherPlain)
 {
     for (auto& item : RawCipherPlainInputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw, AES::Encoding::Base16, false);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw, AES::Encoding::Base16, false);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -543,7 +545,7 @@ TEST(AESTest, RawCipherBase64)
 {
     for (auto& item : RawCipherBase64InputData) {
         std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64, AES::Encoding::Base16, false);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64, AES::Encoding::Base16, false);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -619,10 +621,10 @@ TEST(AESTest, CbcCipher)
     for (auto& item : CbcCipherTestData) {
         ByteArray expected = PARAM(1);
         ByteArray input = Base16::fromString(Base16::encode(PARAM(0)));
-        ByteArray output = AES::encrypt(input, &key, iv, false);
+        ByteArray output = aes.encrypt(input, &key, iv, false);
         ASSERT_EQ(expected, output);
 
-        ByteArray dec = AES::decrypt(output, &key, iv);
+        ByteArray dec = aes.decrypt(output, &key, iv);
         int f = 0;
         for (auto i = input.begin(); i < input.end(); ++i, ++f) {
             ASSERT_EQ(*i, dec[f]);
@@ -635,7 +637,7 @@ TEST(AESTest, CbcCipher)
         std::string input = PARAM(0);
         std::string k = Base16::encode(Base16::toRawString(key));
         std::string initVec = Base16::encode(Base16::toRawString(iv));
-        std::string output = AES::encrypt(input, k, initVec,
+        std::string output = aes.encrypt(input, k, initVec,
                                          AES::Encoding::Raw,
                                          AES::Encoding::Base16, false);
         ASSERT_STREQ(expected.c_str(), output.c_str());
@@ -666,7 +668,7 @@ TEST(AESTest, HexStringDecipher)
 {
     for (auto& item : RawDecipherData) {
         std::string expected = PARAM(0);
-        std::string output = AES::decrypt(PARAM(2), PARAM(1), AES::Encoding::Base16, AES::Encoding::Base16);
+        std::string output = aes.decrypt(PARAM(2), PARAM(1), AES::Encoding::Base16, AES::Encoding::Base16);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -676,7 +678,7 @@ TEST(AESTest, Base64StringDecipher)
     // input mode = base16,
     // output mode = base64
     std::string expected = "dGhpcyBpcyB0ZXN0Li4uLg=="; // base64("this is test....")
-    std::string output = AES::decrypt("b92daaae6e57773b10653703af12716f",
+    std::string output = aes.decrypt("b92daaae6e57773b10653703af12716f",
                                        "000102030405060708090a0b0c0d0e0f",
                                        AES::Encoding::Base16,
                                        AES::Encoding::Base64);
@@ -686,7 +688,7 @@ TEST(AESTest, Base64StringDecipher)
 TEST(AESTest, Base64StringInputDecipher)
 {
     std::string expected = "this is test..";
-    std::string output = AES::decrypt("Z0BiQ8NcwknqzbGrWBjXqw==",
+    std::string output = aes.decrypt("Z0BiQ8NcwknqzbGrWBjXqw==",
                                        "000102030405060708090a0b0c0d0e0f",
                                        AES::Encoding::Base64,
                                        AES::Encoding::Raw);
@@ -700,12 +702,12 @@ TEST(AESTest, CbcCipherPadding)
 
     std::string cipherB64 = "OcTPoBeDqlA/igjnNcl5yw==";
     std::string expected = "o1223456789012";
-    std::string output = AES::decrypt(cipherB64, key, iv, AES::Encoding::Base64);
+    std::string output = aes.decrypt(cipherB64, key, iv, AES::Encoding::Base64);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
     cipherB64 = "NNH44Ybac3AhcP4+sTq8j4miT04jHtoaj7a/Wv0/TQ8=";
     expected = "sho4123456789014";
-    output = AES::decrypt(cipherB64, key, iv, AES::Encoding::Base64);
+    output = aes.decrypt(cipherB64, key, iv, AES::Encoding::Base64);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -714,7 +716,7 @@ TEST(AESTest, EcbDecipher)
     const std::string key = "F1EF6477CC39E65DE106C33BB0EC651386CD0932A9DE491CF960BC3EB79EBE78";
     const std::string cipherHex = "b939427f4231593f5cbf73449439a847726b1898b03db028a6f0824108678f78";
     const std::string expected = "this is slightly longer";
-    std::string output = AES::decrypt(cipherHex, key);
+    std::string output = aes.decrypt(cipherHex, key);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -792,7 +794,7 @@ TEST(AESTest, CbcDecipher)
         std::string input = Base16::toRawString(PARAM(1));
         std::string k = Base16::encode(Base16::toRawString(key));
         std::string initVec = Base16::encode(Base16::toRawString(iv));
-        std::string output = AES::decrypt(input, k, initVec,
+        std::string output = aes.decrypt(input, k, initVec,
                                          AES::Encoding::Raw,
                                          AES::Encoding::Raw);
         ASSERT_STREQ(expected.c_str(), output.c_str());
@@ -808,7 +810,7 @@ TEST(AESTest, CrossAppsDataTest)
 
     // genearted using online tool
     std::string expected = "WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=";
-    std::string output = AES::encrypt("test this test this",
+    std::string output = aes.encrypt("test this test this",
                           "CBD437FA37772C66051A47D72367B38E",
                           iv,
                           AES::Encoding::Raw,
@@ -817,7 +819,7 @@ TEST(AESTest, CrossAppsDataTest)
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
     std::string nextexp = "test this test this";
-    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
+    output = aes.decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
                           key,
                           iv,
                           AES::Encoding::Base64,
@@ -827,7 +829,7 @@ TEST(AESTest, CrossAppsDataTest)
 
     expected = "EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==";
 
-    output = AES::encrypt(R"({"_t":1503928197,"logger_id":"default","access_code":"default"})",
+    output = aes.encrypt(R"({"_t":1503928197,"logger_id":"default","access_code":"default"})",
                           key,
                           iv,
                           AES::Encoding::Raw,
@@ -839,7 +841,7 @@ TEST(AESTest, CrossAppsDataTest)
     // this is real data from residue logging server (development)
     //
     expected = R"({"_t":1503928197,"logger_id":"default","access_code":"default"})";
-    output = AES::decrypt("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
+    output = aes.decrypt("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
                                        key,
                                        iv,
                                        AES::Encoding::Base64,
@@ -850,7 +852,7 @@ TEST(AESTest, CrossAppsDataTest)
     // generated with ripe
     // echo test this test this | ripe -e --aes --key CBD437FA37772C66051A47D72367B38E --iv a14c54563269e9e368f56b325f04ff00
     expected = "test this test this";
-    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
+    output = aes.decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
                                        key,
                                        iv,
                                        AES::Encoding::Base64,
@@ -862,7 +864,7 @@ TEST(AESTest, CrossAppsDataTest)
      // generated with openssl
     // echo test this test this | openssl enc -aes-128-cbc -K CBD437FA37772C66051A47D72367B38E -iv a14c54563269e9e368f56b325f04ff00 -base64
     expected = "test this test this\n"; // openssl adds newline char
-    output = AES::decrypt("WQ73OMIum+OHKGHnAhQKJdSsXR5NwysOnq+cuf5C6cs=",
+    output = aes.decrypt("WQ73OMIum+OHKGHnAhQKJdSsXR5NwysOnq+cuf5C6cs=",
                                        key,
                                        iv,
                                        AES::Encoding::Base64,
@@ -874,7 +876,7 @@ TEST(AESTest, CrossAppsDataTest)
     // generated with openssl
     // echo test this test this | openssl enc -aes-256-cbc -K 163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF -iv a14c54563269e9e368f56b325f04ff00 -base64
     expected = "test this test this\n"; // openssl adds newline char
-    output = AES::decrypt("vVMWB9aLpcfRgfai7OnCCLI5aAK+kK3Yem/E03uEM+w=",
+    output = aes.decrypt("vVMWB9aLpcfRgfai7OnCCLI5aAK+kK3Yem/E03uEM+w=",
                                        keyBig,
                                        iv,
                                        AES::Encoding::Base64,
@@ -882,6 +884,195 @@ TEST(AESTest, CrossAppsDataTest)
 
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+}
+
+TEST(AESTest, Copy)
+{
+    AES::Key key = {{
+            0x60, 0x3d, 0xeb, 0x10,
+            0x15, 0xca, 0x71, 0xbe,
+            0x2b, 0x73, 0xae, 0xf0,
+            0x85, 0x7d, 0x77, 0x81,
+            0x1f, 0x35, 0x2c, 0x07,
+            0x3b, 0x61, 0x08, 0xd7,
+            0x2d, 0x98, 0x10, 0xa3,
+            0x09, 0x14, 0xdf, 0xf4
+        }};
+    AES::KeySchedule expectedKeySchedule = {{
+                                                {0, {{ 0x60, 0x3D, 0xEB, 0x10 }}},
+                                                {1, {{ 0x15, 0xCA, 0x71, 0xBE }}},
+                                                {2, {{ 0x2B, 0x73, 0xAE, 0xF0 }}},
+                                                {3, {{ 0x85, 0x7D, 0x77, 0x81 }}},
+                                                {4, {{ 0x1F, 0x35, 0x2C, 0x7 }}},
+                                                {5, {{ 0x3B, 0x61, 0x8, 0xD7 }}},
+                                                {6, {{ 0x2D, 0x98, 0x10, 0xA3 }}},
+                                                {7, {{ 0x9, 0x14, 0xDF, 0xF4 }}},
+                                                {8, {{ 0x9B, 0xA3, 0x54, 0x11 }}},
+                                                {9, {{ 0x8E, 0x69, 0x25, 0xAF }}},
+                                                {10, {{ 0xA5, 0x1A, 0x8B, 0x5F }}},
+                                                {11, {{ 0x20, 0x67, 0xFC, 0xDE }}},
+                                                {12, {{ 0xA8, 0xB0, 0x9C, 0x1A }}},
+                                                {13, {{ 0x93, 0xD1, 0x94, 0xCD }}},
+                                                {14, {{ 0xBE, 0x49, 0x84, 0x6E }}},
+                                                {15, {{ 0xB7, 0x5D, 0x5B, 0x9A }}},
+                                                {16, {{ 0xD5, 0x9A, 0xEC, 0xB8 }}},
+                                                {17, {{ 0x5B, 0xF3, 0xC9, 0x17 }}},
+                                                {18, {{ 0xFE, 0xE9, 0x42, 0x48 }}},
+                                                {19, {{ 0xDE, 0x8E, 0xBE, 0x96 }}},
+                                                {20, {{ 0xB5, 0xA9, 0x32, 0x8A }}},
+                                                {21, {{ 0x26, 0x78, 0xA6, 0x47 }}},
+                                                {22, {{ 0x98, 0x31, 0x22, 0x29 }}},
+                                                {23, {{ 0x2F, 0x6C, 0x79, 0xB3 }}},
+                                                {24, {{ 0x81, 0x2C, 0x81, 0xAD }}},
+                                                {25, {{ 0xDA, 0xDF, 0x48, 0xBA }}},
+                                                {26, {{ 0x24, 0x36, 0xA, 0xF2 }}},
+                                                {27, {{ 0xFA, 0xB8, 0xB4, 0x64 }}},
+                                                {28, {{ 0x98, 0xC5, 0xBF, 0xC9 }}},
+                                                {29, {{ 0xBE, 0xBD, 0x19, 0x8E }}},
+                                                {30, {{ 0x26, 0x8C, 0x3B, 0xA7 }}},
+                                                {31, {{ 0x9, 0xE0, 0x42, 0x14 }}},
+                                                {32, {{ 0x68, 0x0, 0x7B, 0xAC }}},
+                                                {33, {{ 0xB2, 0xDF, 0x33, 0x16 }}},
+                                                {34, {{ 0x96, 0xE9, 0x39, 0xE4 }}},
+                                                {35, {{ 0x6C, 0x51, 0x8D, 0x80 }}},
+                                                {36, {{ 0xC8, 0x14, 0xE2, 0x4 }}},
+                                                {37, {{ 0x76, 0xA9, 0xFB, 0x8A }}},
+                                                {38, {{ 0x50, 0x25, 0xC0, 0x2D }}},
+                                                {39, {{ 0x59, 0xC5, 0x82, 0x39 }}},
+                                                {40, {{ 0xDE, 0x13, 0x69, 0x67 }}},
+                                                {41, {{ 0x6C, 0xCC, 0x5A, 0x71 }}},
+                                                {42, {{ 0xFA, 0x25, 0x63, 0x95 }}},
+                                                {43, {{ 0x96, 0x74, 0xEE, 0x15 }}},
+                                                {44, {{ 0x58, 0x86, 0xCA, 0x5D }}},
+                                                {45, {{ 0x2E, 0x2F, 0x31, 0xD7 }}},
+                                                {46, {{ 0x7E, 0xA, 0xF1, 0xFA }}},
+                                                {47, {{ 0x27, 0xCF, 0x73, 0xC3 }}},
+                                                {48, {{ 0x74, 0x9C, 0x47, 0xAB }}},
+                                                {49, {{ 0x18, 0x50, 0x1D, 0xDA }}},
+                                                {50, {{ 0xE2, 0x75, 0x7E, 0x4F }}},
+                                                {51, {{ 0x74, 0x1, 0x90, 0x5A }}},
+                                                {52, {{ 0xCA, 0xFA, 0xAA, 0xE3 }}},
+                                                {53, {{ 0xE4, 0xD5, 0x9B, 0x34 }}},
+                                                {54, {{ 0x9A, 0xDF, 0x6A, 0xCE }}},
+                                                {55, {{ 0xBD, 0x10, 0x19, 0xD }}},
+                                                {56, {{ 0xFE, 0x48, 0x90, 0xD1 }}},
+                                                {57, {{ 0xE6, 0x18, 0x8D, 0xB }}},
+                                                {58, {{ 0x4, 0x6D, 0xF3, 0x44 }}},
+                                                {59, {{ 0x70, 0x6C, 0x63, 0x1E }}},
+                                            }};
+    AES aesSimple(key);
+    ASSERT_EQ(aesSimple.m_key, key);
+    ASSERT_EQ(aesSimple.m_keySchedule, expectedKeySchedule);
+
+    AES aesSimple2 = aesSimple; // eq operator
+    ASSERT_EQ(aesSimple2.m_key, key);
+    ASSERT_EQ(aesSimple2.m_keySchedule, expectedKeySchedule);
+    // make sure original values didn't change
+    ASSERT_EQ(aesSimple.m_key, key);
+    ASSERT_EQ(aesSimple.m_keySchedule, expectedKeySchedule);
+
+
+    AES aesSimple3(aesSimple); // copy constructor
+    ASSERT_EQ(aesSimple3.m_key, key);
+    ASSERT_EQ(aesSimple3.m_keySchedule, expectedKeySchedule);
+    // make sure original values didn't change
+    ASSERT_EQ(aesSimple.m_key, key);
+    ASSERT_EQ(aesSimple.m_keySchedule, expectedKeySchedule);
+
+    AES::Key key2 = AES::Key {{
+            0x8e, 0x73, 0xb0, 0xf7,
+            0xda, 0x0e, 0x64, 0x52,
+            0xc8, 0x10, 0xf3, 0x2b,
+            0x80, 0x90, 0x79, 0xe5,
+            0x62, 0xf8, 0xea, 0xd2,
+            0x52, 0x2c, 0x6b, 0x7b
+        }};
+
+    AES::KeySchedule expectedKeySchedule2 =
+            AES::KeySchedule{{
+                {0, {{ 0x8E, 0x73, 0xB0, 0xF7 }}},
+                {1, {{ 0xDA, 0xE, 0x64, 0x52 }}},
+                {2, {{ 0xC8, 0x10, 0xF3, 0x2B }}},
+                {3, {{ 0x80, 0x90, 0x79, 0xE5 }}},
+                {4, {{ 0x62, 0xF8, 0xEA, 0xD2 }}},
+                {5, {{ 0x52, 0x2C, 0x6B, 0x7B }}},
+                {6, {{ 0xFE, 0xC, 0x91, 0xF7 }}},
+                {7, {{ 0x24, 0x2, 0xF5, 0xA5 }}},
+                {8, {{ 0xEC, 0x12, 0x6, 0x8E }}},
+                {9, {{ 0x6C, 0x82, 0x7F, 0x6B }}},
+                {10, {{ 0xE, 0x7A, 0x95, 0xB9 }}},
+                {11, {{ 0x5C, 0x56, 0xFE, 0xC2 }}},
+                {12, {{ 0x4D, 0xB7, 0xB4, 0xBD }}},
+                {13, {{ 0x69, 0xB5, 0x41, 0x18 }}},
+                {14, {{ 0x85, 0xA7, 0x47, 0x96 }}},
+                {15, {{ 0xE9, 0x25, 0x38, 0xFD }}},
+                {16, {{ 0xE7, 0x5F, 0xAD, 0x44 }}},
+                {17, {{ 0xBB, 0x9, 0x53, 0x86 }}},
+                {18, {{ 0x48, 0x5A, 0xF0, 0x57 }}},
+                {19, {{ 0x21, 0xEF, 0xB1, 0x4F }}},
+                {20, {{ 0xA4, 0x48, 0xF6, 0xD9 }}},
+                {21, {{ 0x4D, 0x6D, 0xCE, 0x24 }}},
+                {22, {{ 0xAA, 0x32, 0x63, 0x60 }}},
+                {23, {{ 0x11, 0x3B, 0x30, 0xE6 }}},
+                {24, {{ 0xA2, 0x5E, 0x7E, 0xD5 }}},
+                {25, {{ 0x83, 0xB1, 0xCF, 0x9A }}},
+                {26, {{ 0x27, 0xF9, 0x39, 0x43 }}},
+                {27, {{ 0x6A, 0x94, 0xF7, 0x67 }}},
+                {28, {{ 0xC0, 0xA6, 0x94, 0x7 }}},
+                {29, {{ 0xD1, 0x9D, 0xA4, 0xE1 }}},
+                {30, {{ 0xEC, 0x17, 0x86, 0xEB }}},
+                {31, {{ 0x6F, 0xA6, 0x49, 0x71 }}},
+                {32, {{ 0x48, 0x5F, 0x70, 0x32 }}},
+                {33, {{ 0x22, 0xCB, 0x87, 0x55 }}},
+                {34, {{ 0xE2, 0x6D, 0x13, 0x52 }}},
+                {35, {{ 0x33, 0xF0, 0xB7, 0xB3 }}},
+                {36, {{ 0x40, 0xBE, 0xEB, 0x28 }}},
+                {37, {{ 0x2F, 0x18, 0xA2, 0x59 }}},
+                {38, {{ 0x67, 0x47, 0xD2, 0x6B }}},
+                {39, {{ 0x45, 0x8C, 0x55, 0x3E }}},
+                {40, {{ 0xA7, 0xE1, 0x46, 0x6C }}},
+                {41, {{ 0x94, 0x11, 0xF1, 0xDF }}},
+                {42, {{ 0x82, 0x1F, 0x75, 0xA }}},
+                {43, {{ 0xAD, 0x7, 0xD7, 0x53 }}},
+                {44, {{ 0xCA, 0x40, 0x5, 0x38 }}},
+                {45, {{ 0x8F, 0xCC, 0x50, 0x6 }}},
+                {46, {{ 0x28, 0x2D, 0x16, 0x6A }}},
+                {47, {{ 0xBC, 0x3C, 0xE7, 0xB5 }}},
+                {48, {{ 0xE9, 0x8B, 0xA0, 0x6F }}},
+                {49, {{ 0x44, 0x8C, 0x77, 0x3C }}},
+                {50, {{ 0x8E, 0xCC, 0x72, 0x4 }}},
+                {51, {{ 0x1, 0x0, 0x22, 0x2 }}},
+
+            }};
+
+    aesSimple.setKey(key2);
+    ASSERT_NE(aesSimple.m_keySchedule, expectedKeySchedule);
+    ASSERT_EQ(aesSimple.m_keySchedule, expectedKeySchedule2);
+    ASSERT_EQ(aesSimple.m_key, key2);
+    ASSERT_EQ(aesSimple3.m_key, key);
+
+    std::string output = aesSimple.encr("Test");
+    ASSERT_STRCASEEQ("Test", aesSimple.decr(output).c_str());
+
+    std::string iv = "a14c54563269e9e368f56b325f04ff00";
+    output = aesSimple.encr("Test", iv);
+    ASSERT_STRCASEEQ("Test", aesSimple.decr(output, iv).c_str());
+
+    ByteArray ivBA = Base16::fromString(iv);
+
+    ByteArray input = {{
+                           0x39, 0x25, 0x84, 0x1d,
+                           0x02, 0xdc, 0x09, 0xfb,
+                           0xdc, 0x11, 0x85, 0x97,
+                       }};
+
+    ByteArray outBA = aesSimple.encr(input, ivBA);
+    ByteArray result = aesSimple.decr(outBA, ivBA);
+    ASSERT_EQ(input, result);
+
+    outBA = aesSimple.encr(input);
+    result = aesSimple.decr(outBA);
+    ASSERT_EQ(input, result);
 }
 
 }
