@@ -413,78 +413,6 @@ TEST(AESTest, AddRoundKey)
     ASSERT_EQ(expected7, state);
 }
 
-// from FIPS.197 p.35 onwards
-//              input           key         expected
-static TestData<std::string, std::string, std::string> RawCipherData = {
-    // 128-bit key
-    TestCase("00112233445566778899aabbccddeeff",
-    "000102030405060708090a0b0c0d0e0f",
-    "69c4e0d86a7b0430d8cdb78070b4c55a"),
-
-    // 192-bit key
-    TestCase("00112233445566778899aabbccddeeff",
-    "000102030405060708090a0b0c0d0e0f1011121314151617",
-    "dda97ca4864cdfe06eaf70a0ec0d7191"),
-
-    // 256-bit key
-    TestCase("00112233445566778899aabbccddeeff",
-    "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-    "8ea2b7ca516745bfeafc49904b496089"),
-};
-
-TEST(AESTest, RawCipher)
-{
-    for (auto& item : RawCipherData) {
-        ByteArray input = Base16::fromString(PARAM(0));
-        AES::Key key = static_cast<AES::Key>(Base16::fromString(PARAM(1)));
-        ByteArray expected = Base16::fromString(PARAM(2));
-
-        AES::KeySchedule keySchedule = AES::keyExpansion(&key);
-
-        ByteArray output = AES::encryptSingleBlock(input.begin(), &key, &keySchedule);
-        ASSERT_EQ(expected, output);
-    }
-}
-
-TEST(AESTest, RawCipherDirect)
-{
-
-    for (auto& item : RawCipherData) {
-        std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base16);
-        // case insensitive comparison because hex can be upper or lower case
-        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
-    }
-}
-
-//              input           key         expected
-static TestData<std::string, std::string, std::string> RawCipherPlainInputData = {
-    TestCase("this is test...", "000102030405060708090a0b0c0d0e0f", "da14fb09b2378948c5b4966414a6779f"),
-};
-
-TEST(AESTest, RawCipherPlain)
-{
-    for (auto& item : RawCipherPlainInputData) {
-        std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw, AES::Encoding::Base16, false);
-        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
-    }
-}
-
-//              input           key         expected
-static TestData<std::string, std::string, std::string> RawCipherBase64InputData = {
-    TestCase("dGhpcyBpcyB0ZXN0Li4u", "000102030405060708090a0b0c0d0e0f", "da14fb09b2378948c5b4966414a6779f"),
-};
-
-TEST(AESTest, RawCipherBase64)
-{
-    for (auto& item : RawCipherBase64InputData) {
-        std::string expected = PARAM(2);
-        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64, AES::Encoding::Base16, false);
-        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
-    }
-}
-
 TEST(AESTest, RawSimpleCipher)
 {
 
@@ -544,6 +472,80 @@ TEST(AESTest, RawSimpleDecipher)
     AES::KeySchedule keySchedule = AES::keyExpansion(&key);
     ByteArray output = AES::decryptSingleBlock(input.begin(), &key, &keySchedule);
     ASSERT_EQ(expected, output);
+}
+
+// from FIPS.197 p.35 onwards
+//              input           key         expected
+static TestData<std::string, std::string, std::string> RawCipherData = {
+    // 128-bit key
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f",
+    "69c4e0d86a7b0430d8cdb78070b4c55a"),
+
+    // 192-bit key
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f1011121314151617",
+    "dda97ca4864cdfe06eaf70a0ec0d7191"),
+
+    // 256-bit key
+    TestCase("00112233445566778899aabbccddeeff",
+    "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "8ea2b7ca516745bfeafc49904b496089"),
+};
+
+TEST(AESTest, RawCipher)
+{
+    for (auto& item : RawCipherData) {
+        //ByteArray b = item<0>;
+
+        ByteArray input = Base16::fromString(PARAM(0));
+        AES::Key key = static_cast<AES::Key>(Base16::fromString(PARAM(1)));
+        ByteArray expected = Base16::fromString(PARAM(2));
+
+        AES::KeySchedule keySchedule = AES::keyExpansion(&key);
+
+        ByteArray output = AES::encryptSingleBlock(input.begin(), &key, &keySchedule);
+        ASSERT_EQ(expected, output);
+    }
+}
+
+TEST(AESTest, RawCipherDirect)
+{
+
+    for (auto& item : RawCipherData) {
+        std::string expected = PARAM(2);
+        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base16);
+        // case insensitive comparison because hex can be upper or lower case
+        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    }
+}
+
+//              input           key         expected
+static TestData<std::string, std::string, std::string> RawCipherPlainInputData = {
+    TestCase("this is test...", "000102030405060708090a0b0c0d0e0f", "da14fb09b2378948c5b4966414a6779f"),
+};
+
+TEST(AESTest, RawCipherPlain)
+{
+    for (auto& item : RawCipherPlainInputData) {
+        std::string expected = PARAM(2);
+        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw, AES::Encoding::Base16, false);
+        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    }
+}
+
+//              input           key         expected
+static TestData<std::string, std::string, std::string> RawCipherBase64InputData = {
+    TestCase("dGhpcyBpcyB0ZXN0Li4u", "000102030405060708090a0b0c0d0e0f", "da14fb09b2378948c5b4966414a6779f"),
+};
+
+TEST(AESTest, RawCipherBase64)
+{
+    for (auto& item : RawCipherBase64InputData) {
+        std::string expected = PARAM(2);
+        std::string output = AES::encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64, AES::Encoding::Base16, false);
+        ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
+    }
 }
 
 TEST(AESTest, CbcCipher)

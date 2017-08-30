@@ -1,20 +1,12 @@
-#ifndef TEST_HELPERS_H_
-#define TEST_HELPERS_H_
-
-#include <vector>
-#include <tuple>
+#ifndef SIMPLE_TEST_X_H
+#define SIMPLE_TEST_X_H
 
 #include <easylogging++.h>
 #include <gtest/gtest.h>
-
-template <typename... T>
-using TestData = const std::vector<std::tuple<T...>>;
-
-template <typename... T>
-std::tuple<T...> TestCase(T... f) {
-    return std::make_tuple(f...);
-}
+#include "testx.h"
 
 #define PARAM(v) std::get<v>(item)
 
-#endif
+using namespace muflihun::testx;
+
+#endif // SIMPLE_TEST_X_H
