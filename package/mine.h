@@ -212,27 +212,7 @@ public:
     ///
     /// \brief Padding is must in mine implementation of base64
     ///
-    static const char kPaddingChar = '=';
-
-    ///
-    /// \brief Replacement for better d.size() that consider unicode bytes too
-    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
-    ///
-    static std::size_t countChars(const std::string& d) noexcept;
-
-#ifdef MINE_BASE64_WSTRING_CONVERSION
-    ///
-    /// \brief Converts it to std::string and calls countChars on it
-    ///
-    /// \note You need to include <locale> and <codecvt> headers before mine.h
-    ///
-    static std::size_t countChars(const std::wstring& raw) noexcept
-    {
-        std::string converted = std::wstring_convert
-                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
-        return countChars(converted);
-    }
-#endif
+    static const int kPadding = 64;
 
     ///
     /// \brief Encodes input of length to base64 encoding
@@ -283,31 +263,15 @@ public:
                     ss << static_cast<char>(kValidChars[c3 & 0x3f]); // all the remaing bits
                 } else {
                     ss << static_cast<char>(kValidChars[(c2 << 2) & 0x3f]); // we have 4 bits left from last byte need space for two 0-bits
-                    ss << kPaddingChar;
+                    ss << "=";
                 }
             } else {
                 ss << static_cast<char>(kValidChars[(c << 4) & 0x3f]); // remaining 2 bits from single byte
-                ss << kPaddingChar << kPaddingChar;
+                ss << "==";
             }
         }
         return ss.str() + padding;
     }
-
-#ifdef MINE_BASE64_WSTRING_CONVERSION
-    ///
-    /// \brief Converts wstring to corresponding string and returns
-    /// encoding
-    /// \see encode(const std::string&)
-    ///
-    /// \note You need to include <locale> and <codecvt> headers before mine.h
-    ///
-    static std::string encode(const std::wstring& raw) noexcept
-    {
-        std::string converted = std::wstring_convert
-                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
-        return encode(converted);
-    }
-#endif
 
     ///
     /// \brief Decodes encoded base64
@@ -315,11 +279,9 @@ public:
     ///
     static std::string decode(const std::string& e)
     {
-        //if (e.size() % 4 != 0) {
-            // we disable this check for 76 character line-break format (MIME)
-            // https://tools.ietf.org/html/rfc4648#section-3.1
-            // throw std::invalid_argument("Invalid base64 encoding. Padding is required");
-        //}
+        // don't check for e's length to be multiple of 4
+        // because of 76 character line-break format (MIME)
+        // https://tools.ietf.org/html/rfc4648#section-3.1
         return decode(e.begin(), e.end());
     }
 
@@ -339,7 +301,6 @@ public:
         // result indices     24        22       9        35
         //
 
-        const int kPadding = kDecodeMap.at(static_cast<int>(kPaddingChar));
         std::stringstream ss;
         for (auto it = begin; it < end; it += 4) {
             try {
@@ -351,7 +312,7 @@ public:
                     }
                 }
                 int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
-                if (b0 == kPadding/* || b0 == '\0'*/) {
+                if (b0 == kPadding) {
                     throw std::invalid_argument("No data available");
                 }
 
@@ -385,20 +346,16 @@ public:
                 ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
                                         b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
 
-                if (b1 != kPadding/* && b1 != '\0'*/) {
-                    if (b2 == kPadding/* || (b2 == '\0' && b3 == '\0')*/) {
+                if (b1 != kPadding) {
+                    if (b2 == kPadding) {
                         // second bitset is only 4 bits
-
-                        //ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4);
                     } else {
                         ss << static_cast<byte>((b1 & ~(1 << 5) & ~(1 << 4)) << 4 |     // 010110 ==> 000110 << 4 ==> 1100000
                                                                                         // first we clear the bits at pos 4 and 5
                                                                                         // then we concat with next bit
                                                  b2 >> 2); // 001001 >> 2 ==> 00000010 ==> 01100010 = 98
-                        if (b3 == kPadding/* || b3 == '\0'*/) {
+                        if (b3 == kPadding) {
                             // third bitset is only 4 bits
-                            //ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6);
-                                                    // first we clear first 4 bits
                         } else {
                             ss << static_cast<byte>((b2 & ~(1 << 5) & ~(1 << 4) & ~(1 << 3) & ~(1 << 2)) << 6 |     // 001001 ==> 000001 << 6 ==> 01000000
                                                     // first we clear first 4 bits
@@ -415,7 +372,22 @@ result:
         return ss.str();
     }
 
+
 #ifdef MINE_BASE64_WSTRING_CONVERSION
+    ///
+    /// \brief Converts wstring to corresponding string and returns
+    /// encoding
+    /// \see encode(const std::string&)
+    ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
+    ///
+    static std::string encode(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return encode(converted);
+    }
+
     ///
     /// \brief Helper method to decode base64 encoding as wstring (basic_string<wchar_t>)
     /// \see decode(const std::string&)
@@ -433,7 +405,25 @@ result:
                 <std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(result);
         return converted;
     }
+
+    ///
+    /// \brief Converts it to std::string and calls countChars on it
+    ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
+    ///
+    static std::size_t countChars(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return countChars(converted);
+    }
 #endif
+
+    ///
+    /// \brief Replacement for better d.size() that consider unicode bytes too
+    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
+    ///
+    static std::size_t countChars(const std::string& d) noexcept;
 
     ///
     /// \brief expectedBase64Length Returns expected base64 length
@@ -1399,6 +1389,23 @@ public:
         return true;
     }
 
+    ///
+    /// \brief Maximum size of RSA block with specified key size
+    /// \param keySize 2048, 1024, ...
+    ///
+    inline static unsigned int maxRSABlockSize(std::size_t keySize)
+    {
+        return (keySize / 8) - 11;
+    }
+
+    ///
+    /// \brief Minimum size of RSA key to encrypt data of dataSize size
+    ///
+    inline static unsigned int minRSAKeySize(std::size_t dataSize)
+    {
+        return (dataSize + 11) * 8;
+    }
+
 private:
     Helper m_helper;
 
@@ -1548,6 +1555,32 @@ private:
 class ZLib {
 public:
 
+    ///
+    /// \brief Size of buffer algorithm should process under
+    ///
+    static const int kBufferSize = 32768;
+
+    ///
+    /// \brief Compress input file (path) and create new file
+    /// \param gzFilename Output file path
+    /// \param inputFile Input file path
+    /// \return True if successful, otherwise false
+    ///
+    static bool compressFile(const std::string& gzFilename, const std::string& inputFile) noexcept;
+
+    ///
+    /// @brief Compresses string using zlib (inflate)
+    /// @param str Input plain text
+    /// @return Raw output (binary)
+    ///
+    static std::string compressString(const std::string& str);
+
+    ///
+    /// @brief Decompresses string using zlib (deflate)
+    /// @param str Raw input
+    /// @return Plain output
+    ///
+    static std::string decompressString(const std::string& str);
 private:
     ZLib() = delete;
     ZLib(const ZLib&) = delete;

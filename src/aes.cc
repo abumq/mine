@@ -238,7 +238,15 @@ void AES::addRoundKey(State* state, KeySchedule* keySchedule, int round)
     for (std::size_t i = 0; i < kNb; ++i) {
         std::size_t iR2 = iR + i;
         for (std::size_t j = 0; j < kNb; ++j) {
+#if MINE_PROFILING
+    auto started2 = std::chrono::steady_clock::now();
+    std::cout << ((*state)[i][j] & 0xff) << " ^= " << ((*keySchedule)[iR2][j] & 0xff);
+#endif
             (*state)[i][j] ^= (*keySchedule)[iR2][j];
+#if MINE_PROFILING
+    std::cout << " = " << ((*state)[i][j] & 0xff) << std::endl;
+    endProfiling(started2, "add single round");
+#endif
         }
     }
 #if MINE_PROFILING

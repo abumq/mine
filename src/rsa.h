@@ -596,6 +596,23 @@ public:
         return true;
     }
 
+    ///
+    /// \brief Maximum size of RSA block with specified key size
+    /// \param keySize 2048, 1024, ...
+    ///
+    inline static unsigned int maxRSABlockSize(std::size_t keySize)
+    {
+        return (keySize / 8) - 11;
+    }
+
+    ///
+    /// \brief Minimum size of RSA key to encrypt data of dataSize size
+    ///
+    inline static unsigned int minRSAKeySize(std::size_t dataSize)
+    {
+        return (dataSize + 11) * 8;
+    }
+
 private:
     Helper m_helper;
 

@@ -53,7 +53,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -g ")
 
 require_cpp11()
 
@@ -83,15 +83,25 @@ set (CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET_SAVE})
 file (GLOB_RECURSE all_headers ${CMAKE_SOURCE_DIR}/*.h)
 add_custom_target (all_placeholder SOURCES ${all_headers})
 
+find_package(ZLIB REQUIRED)
+if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+endif(ZLIB_FOUND)
+
 ##########################################   CLI Tool  ###################################
 
-add_executable (mine-bin cli/mine.cc package/mine.cc)
+add_executable (mine-cli cli/mine.cc package/mine.cc)
 
-set_target_properties (mine-bin PROPERTIES
+set_target_properties (mine-cli PROPERTIES
     OUTPUT_NAME "mine"
     VERSION ${MINE_VERSION}
 )
-install (TARGETS mine-bin DESTINATION bin)
+
+target_link_libraries(mine-cli
+    ${ZLIB_LIBRARIES}
+)
+
+install (TARGETS mine-cli DESTINATION bin)
 
 ########################################## Unit Testing ###################################
 
@@ -126,6 +136,10 @@ else()
         ${EASYLOGGINGPP_INCLUDE_DIR}/easylogging++.cc
     )
 endif()
+
+target_link_libraries(mine-unit-tests
+    ${ZLIB_LIBRARIES}
+)
 
 if (test_wstring_conversions)
     target_compile_definitions (mine-unit-tests PUBLIC
