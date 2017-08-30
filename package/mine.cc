@@ -60,12 +60,10 @@ std::string Base16::toRawString(const ByteArray& input)
 
 void Base16::decode(char a, char b, std::ostringstream& ss)
 {
-    int b0 = a & 0xff;
-    int b1 = b & 0xff;
     try {
-        ss << static_cast<byte>((b0 << 4) | kDecodeMap.at(b1));
-    } catch (const std::exception&) {
-        throw std::invalid_argument("Invalid base-16 encoding");
+        ss << static_cast<byte>((kDecodeMap.at(a & 0xff) << 4) | kDecodeMap.at(b & 0xff));
+    } catch (const std::exception& e) {
+        throw std::invalid_argument("Invalid base-16 encoding: " + std::string(e.what()));
     }
 }
 
