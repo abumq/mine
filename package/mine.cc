@@ -22,6 +22,8 @@
 #include <unordered_set>
 #include <iterator>
 #include <random>
+#include <cerrno>
+#include <cstring>
 #include <zlib.h>
 
 #include "mine.h"

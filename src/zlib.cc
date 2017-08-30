@@ -14,6 +14,8 @@
 //  https://github.com/muflihun/mine
 //
 
+#include <cerrno>
+#include <cstring>
 #include <sstream>
 #include <zlib.h>
 #include "src/zlib.h"
