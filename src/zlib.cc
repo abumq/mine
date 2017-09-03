@@ -17,6 +17,7 @@
 #include <cerrno>
 #include <cstring>
 #include <sstream>
+#include <stdexcept>
 #include <zlib.h>
 #include "src/zlib.h"
 
