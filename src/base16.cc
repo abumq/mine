@@ -14,6 +14,7 @@
 //  https://github.com/muflihun/mine
 //
 
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include "src/base16.h"

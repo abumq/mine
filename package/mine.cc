@@ -13,6 +13,7 @@
 //  https://muflihun.github.io/mine
 //  https://muflihun.com
 //
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
@@ -20,7 +21,6 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <iterator>
 #include <random>
 #include <cerrno>
 #include <cstring>
