@@ -17,6 +17,14 @@ set(MINE_INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "The d
 include_directories (${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR})
 
+install(FILES
+    package/mine.h
+    package/mine.cc
+    DESTINATION "${MINE_INCLUDE_INSTALL_DIR}"
+    COMPONENT dev
+)
+
+
 include(FindPackageHandleStandardArgs)
 
 # We need C++11
