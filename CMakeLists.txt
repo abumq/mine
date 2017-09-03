@@ -17,12 +17,6 @@ set(MINE_INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "The d
 include_directories (${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR})
 
-install(FILES
-    package/mine.h
-    package/mine.cc
-    DESTINATION "${MINE_INCLUDE_INSTALL_DIR}"
-    COMPONENT dev)
-
 include(FindPackageHandleStandardArgs)
 
 # We need C++11
@@ -61,7 +55,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -O3 ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused ")
 
 require_cpp11()
 
@@ -91,6 +85,11 @@ set (CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET_SAVE})
 file (GLOB_RECURSE all_headers ${CMAKE_SOURCE_DIR}/*.h)
 add_custom_target (all_placeholder SOURCES ${all_headers})
 
+#find_package(OPENSSL REQUIRED)
+#if (OPENSSL_FOUND)
+#    include_directories(${OPENSSL_INCLUDE_DIR})
+#endif(OPENSSL_FOUND)
+
 find_package(ZLIB REQUIRED)
 if (ZLIB_FOUND)
     include_directories(${ZLIB_INCLUDE_DIRS})
@@ -98,7 +97,11 @@ endif(ZLIB_FOUND)
 
 ##########################################   CLI Tool  ###################################
 
-add_executable (mine-cli cli/mine.cc package/mine.cc)
+add_executable (mine-cli cli/mine.cc
+     src/base64.cc
+     src/base16.cc
+     src/aes.cc
+     src/zlib.cc)
 
 set_target_properties (mine-cli PROPERTIES
     OUTPUT_NAME "mine"
@@ -107,6 +110,7 @@ set_target_properties (mine-cli PROPERTIES
 
 target_link_libraries(mine-cli
     ${ZLIB_LIBRARIES}
+    #${OPENSSL_CRYPTO_LIBRARY}
 )
 
 install (TARGETS mine-cli DESTINATION bin)

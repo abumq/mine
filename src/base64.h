@@ -22,6 +22,7 @@
 #define Base64_H
 
 #include <string>
+#include <sstream>
 #include <unordered_map>
 
 // codecvt is not part of standard
@@ -45,22 +46,16 @@ using byte = unsigned char;
 ///
 /// This also handles 16-bit, 24-bit and 32-bit characters
 ///
+///
+///
 class Base64 {
 public:
 
     ///
     /// \brief List of valid base64 encoding characters
     ///
-    static const std::string kValidChars;
+    static const char kValidChars[];
 
-    ///
-    /// \brief Map for fast lookup corresponding character
-    /// std::unordered_map is O(1) for best case and linear in worst case
-    /// which is better than kValidChars find_first_of() which is linear-pos
-    /// in general
-    /// \ref http://www.cplusplus.com/reference/unordered_map/unordered_map/at/
-    /// \ref  http://www.cplusplus.com/reference/string/string/find_first_of/
-    ///
     static const std::unordered_map<byte, byte> kDecodeMap;
 
     ///
@@ -155,6 +150,14 @@ public:
         // result indices     24        22       9        35
         //
 
+        auto findPosOf = [](char c) -> int {
+            try {
+                return kDecodeMap.at(static_cast<int>(c & 0xff));
+            } catch (const std::exception& e) {
+                throw e;
+            }
+        };
+
         std::stringstream ss;
         for (auto it = begin; it < end; it += 4) {
             try {
@@ -165,9 +168,12 @@ public:
                         goto result;
                     }
                 }
-                int b0 = kDecodeMap.at(static_cast<int>(*it & 0xff));
+                int b0 = findPosOf(*it);
                 if (b0 == kPadding) {
                     throw std::invalid_argument("No data available");
+                }
+                if (b0 == -1) {
+                    throw std::invalid_argument("Invalid base64 encoding");
                 }
 
                 while (iswspace(*(it + 1))) {
@@ -177,7 +183,10 @@ public:
                         goto result;
                     }
                 }
-                int b1 = kDecodeMap.at(static_cast<int>(*(it + 1) & 0xff));
+                int b1 = findPosOf(*(it + 1));
+                if (b1 == -1) {
+                    throw std::invalid_argument("Invalid base64 encoding");
+                }
 
                 while (iswspace(*(it + 2))) {
                     ++it;
@@ -186,7 +195,10 @@ public:
                         goto result;
                     }
                 }
-                int b2 = kDecodeMap.at(static_cast<int>(*(it + 2) & 0xff));
+                int b2 = findPosOf(*(it + 2));
+                if (b2 == -1) {
+                    throw std::invalid_argument("Invalid base64 encoding");
+                }
 
                 while (iswspace(*(it + 3))) {
                     ++it;
@@ -195,7 +207,10 @@ public:
                         goto result;
                     }
                 }
-                int b3 = kDecodeMap.at(static_cast<int>(*(it + 3) & 0xff));
+                int b3 = findPosOf(*(it + 3));
+                if (b3 == -1) {
+                    throw std::invalid_argument("Invalid base64 encoding");
+                }
 
                 ss << static_cast<byte>(b0 << 2 |     // 011000 << 2 ==> 01100000
                                         b1 >> 4); // 000001 >> 4 ==> 01100001 ==> 11000001 = 97
@@ -296,16 +311,6 @@ result:
     inline static std::size_t expectedLength(const T& str) noexcept
     {
         return expectedLength(countChars(str));
-    }
-
-    ///
-    /// \brief Finds whether data is base64 encoded. This is done
-    /// by finding non-base64 character. So it is not necessary
-    /// a valid base64 encoding.
-    ///
-    inline static bool isBase64(const std::string& data) noexcept
-    {
-        return data.find_first_not_of(kValidChars) == std::string::npos;
     }
 
 private:

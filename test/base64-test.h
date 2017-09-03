@@ -175,15 +175,6 @@ TEST(Base64Test, ExpectedSize)
     }
 }
 
-TEST(Base64Test, IsBase64)
-{
-    for (const auto& item : IsBase64Data) {
-        auto first = PARAM(0);
-        auto second = PARAM(1);
-        ASSERT_EQ(Base64::isBase64(first), second);
-    }
-}
-
 }
 
 #endif // BASE64_TEST_H

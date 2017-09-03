@@ -23,7 +23,10 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "package/mine.h"
+#include "src/base16.h"
+#include "src/base64.h"
+#include "src/aes.h"
+#include "src/zlib.h"
 
 using namespace mine;
 

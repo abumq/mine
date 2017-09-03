@@ -11,6 +11,7 @@
 
 #include <type_traits>
 #include <cryptopp/integer.h>
+//#include <openssl/ossl_typ.h>
 
 namespace mine {
 
@@ -22,6 +23,12 @@ public:
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
         return static_cast<byte>(b.ConvertToLong());
+    }
+
+    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+                                        BigInteger* quotient, BigInteger* remainder) const override
+    {
+        BigInteger::Divide(*remainder, *quotient, divisor, divident);
     }
 
     virtual std::string bigIntegerToHex(BigInteger b) const override
