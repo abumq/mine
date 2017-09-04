@@ -13,11 +13,11 @@
 //  https://muflihun.github.io/mine
 //  https://muflihun.com
 //
+#include <algorithm>
 #include <random>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
-#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <unordered_map>

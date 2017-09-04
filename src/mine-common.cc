@@ -14,6 +14,7 @@
 //  https://github.com/muflihun/mine
 //
 
+#include <algorithm>
 #include <random>
 #include "src/mine-common.h"
 
