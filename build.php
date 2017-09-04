@@ -56,6 +56,9 @@ $source_template = <<<EOT
 #include "mine.h"
 
 using namespace mine;
+#ifndef MINE_VERSION
+#define MINE_VERSION "{{version}}"
+#endif
 {{code}}
 EOT;
 

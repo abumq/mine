@@ -29,6 +29,9 @@
 #include "mine.h"
 
 using namespace mine;
+#ifndef MINE_VERSION
+#define MINE_VERSION "Unreleased"
+#endif
 
 
 const byte MineCommon::kRandomBytesList[256] = {
