@@ -77,7 +77,12 @@ public:
     ///
     /// \brief Generates random bytes of length
     ///
-    static ByteArray generateRandomBytes(const std::size_t len);
+    static ByteArray generateRandomBytes(const std::size_t len) noexcept;
+
+    ///
+    /// \brief Version of mine
+    ///
+    static std::string version() noexcept;
 private:
     MineCommon() = delete;
     MineCommon(const MineCommon&) = delete;

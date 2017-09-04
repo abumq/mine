@@ -74,7 +74,7 @@ std::size_t MineCommon::countChars(const std::string& str) noexcept
     return result;
 }
 
-ByteArray MineCommon::generateRandomBytes(const std::size_t len)
+ByteArray MineCommon::generateRandomBytes(const std::size_t len) noexcept
 {
     ByteArray result(len, 'x');
     std::random_device rd;
@@ -84,6 +84,11 @@ ByteArray MineCommon::generateRandomBytes(const std::size_t len)
         return kRandomBytesList[uni(rng)];
     });
     return result;
+}
+
+std::string MineCommon::version() noexcept
+{
+    return MINE_VERSION;
 }
 
 
