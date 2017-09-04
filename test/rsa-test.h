@@ -11,7 +11,7 @@
 
 #include <type_traits>
 #include <cryptopp/integer.h>
-#include <cryptopp/pem-com.h>
+#include <cryptopp/pem-com.h> // for readPem func
 //#include <openssl/ossl_typ.h>
 
 namespace mine {
@@ -52,27 +52,27 @@ public:
 };
 
 class RSA : public GenericRSA<BigInteger, Helper> {};
-class PublicKey : public GenericPublicKey<BigInteger, Helper> {};
-class PrivateKey : public GenericPrivateKey<BigInteger, Helper> {};
+class PublicKey : public GenericPublicKey<BigInteger, Helper> {}; // you can choose to not add this line
+class PrivateKey : public GenericPrivateKey<BigInteger, Helper> {}; // you can choose to not add this line
 class KeyPair : public GenericKeyPair<BigInteger, Helper> {
     using GenericKeyPair::GenericKeyPair;
-};
+public:
 
-KeyPair readPem(const std::string& contents, const std::string& secret)
-{
-    CryptoPP::RSA::PrivateKey keyOut;
+    void loadFromPem(const std::string& contents, const std::string& secret)
     {
-        using namespace CryptoPP;
-        StringSource source(contents, true);
-        if (secret.empty()) {
-            PEM_Load(source, keyOut);
-        } else {
-            PEM_Load(source, keyOut, secret.data(), secret.size());
+        CryptoPP::RSA::PrivateKey keyOut;
+        {
+            using namespace CryptoPP;
+            StringSource source(contents, true);
+            if (secret.empty()) {
+                PEM_Load(source, keyOut);
+            } else {
+                PEM_Load(source, keyOut, secret.data(), secret.size());
+            }
         }
+        init(keyOut.GetPrime1(), keyOut.GetPrime2(), static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
     }
-    return KeyPair(keyOut.GetPrime1(), keyOut.GetPrime2(),
-                      static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
-}
+};
 
 static RSA rsaManager;
 static Helper rsaHelper;
@@ -296,7 +296,8 @@ TEST(RSATest, KeyRead)
                     "YWHcxTUpycFR4RElIWjV0eHVJdUlnZDdSN0tsenB2CnNFWDc0QUYyTjFlNVZsNkV3WHRqcHFoeGlRVnVEWmVqQzcvMEU5dGR5YjRWdk9wOVNoRm85cXNHekxKb1J"
                     "IQVgKZmlsWmxZcGdtbXlpNlNnY1ExSERuRWZYZkpMbWROY0tUVEVqNWo3MkhXN0RpQ1Eza3BpN1lhZzRsQlE1MGZ4QwotLS0tLUVORCBSU0EgUFJJVkFURSBLRVk"
                     "tLS0tLQo=");
-    KeyPair k = readPem(Base64::decode(pem), "asdf");
+    KeyPair k;
+    k.loadFromPem(Base64::decode(pem), "asdf");
 
     std::cout << "Run: echo " << rsaManager.encrypt(k.publicKey(), std::string("Testing this long secret"))
               << " | ripe -d --rsa --in-key private2.pem --secret asdf --hex" << std::endl;

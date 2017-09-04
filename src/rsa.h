@@ -500,6 +500,11 @@ public:
 
     GenericKeyPair(const BigInteger& p, const BigInteger& q, unsigned int exp = kDefaultPublicExponent)
     {
+        init(p, q, exp);
+    }
+
+    void init(const BigInteger& p, const BigInteger& q, unsigned int exp = kDefaultPublicExponent)
+    {
         m_publicKey = GenericPublicKey<BigInteger, Helper>(p * q, exp);
         m_privateKey = GenericPrivateKey<BigInteger, Helper>(p, q, exp);
     }
