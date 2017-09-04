@@ -11,6 +11,7 @@
 
 #include <type_traits>
 #include <cryptopp/integer.h>
+#include <cryptopp/pem-com.h>
 //#include <openssl/ossl_typ.h>
 
 namespace mine {
@@ -56,6 +57,22 @@ class PrivateKey : public GenericPrivateKey<BigInteger, Helper> {};
 class KeyPair : public GenericKeyPair<BigInteger, Helper> {
     using GenericKeyPair::GenericKeyPair;
 };
+
+KeyPair readPem(const std::string& contents, const std::string& secret)
+{
+    CryptoPP::RSA::PrivateKey keyOut;
+    {
+        using namespace CryptoPP;
+        StringSource source(contents, true);
+        if (secret.empty()) {
+            PEM_Load(source, keyOut);
+        } else {
+            PEM_Load(source, keyOut, secret.data(), secret.size());
+        }
+    }
+    return KeyPair(keyOut.GetPrime1(), keyOut.GetPrime2(),
+                      static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
+}
 
 static RSA rsaManager;
 static Helper rsaHelper;
@@ -253,6 +270,36 @@ TEST(RSATest, ManualTest)
     //      echo 'Test' | openssl rsautl -encrypt -pubin -inkey public.pem | ripe -e --hex
     std::string sopenssl = rsaManager.decrypt<std::string>(k.privateKey(), std::string("57E56205E3D0135E7A2E7C5062D5453E"));
     ASSERT_STREQ(sopenssl.c_str(), "Test\n");
+}
+
+TEST(RSATest, KeyRead)
+{
+    // 2048-bit long encrypted key
+    // encryption secret asdf
+    std::string pem("LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpQcm9jLVR5cGU6IDQsRU5DUllQVEVECkRFSy1JbmZvOiBBRVMtMjU2LUNCQywyQjRDNDFBMDQwQjI1MDA"
+                    "5MUE1MTU4RjNCRTE2MkM0MgoKTU5uMW9QdUZHWi9yK2U3cHVqTDRiREgrSmN6a3BBdUNBMit5THIyL1BOSmcwUUltK25SWEptd0dBZDh4dVYvNgpvZ3h4RWVhQ1"
+                    "NJQlVJbW82Um1xWWtiSmVNN05FMHB2OW1EZlBHQWZKTVNjOXh0azFIVldCZFV0UkhkSHpLTXkyCnprSjg5dURJWlhBMEtQblNsa3JqSGluUjQvUEpKSXNha2VsO"
+                    "WxWUGFBNTZ5SDdwVWxPVzBOWW5BY0NNYlh1MDcKTy9WYWdMUU1FUE0yaWhTOFFWSlFabVhJMTI5dDYzYk85RWpTeGJ6aWsvc1NGaVlPdDNMK0tqZHJvbjNMVjFa"
+                    "NwpUZ29UZXZVZjJidERMMkh4U3BJWFNxNDhEeTJtQytyWUc2eDZ5aTBYMU5kWUFqamw1VGJtSUJreWJSTG5mK3FMCmtzRUt3L0RkTXI3N1hPamtCOTg3dTU2N0x"
+                    "jelpCY0k0ZUFvNDdTRHpqWHQ3eE81VCtUV21UOVZmRHlGa3MwdDcKbi9iQ1RVbUw5UE5JL2ZSZzFubnkrRVFodm1tZ1BvL2RMMWt6aVhGMHMzdTNYQ00ycnhiWi"
+                    "9EUVM1bTJlRjJuVQp4ajZDZUg5bzhtUU5vdDc0blpobkxxQ1Y0WTFhYnd1S3paUUJzSU0vVVBkMGV4ekZLK3k3T0l5aGxxNGVmeVMzCkltRWpvbG53RHFNbjdoc"
+                    "FYxZUljTDA5aHMzUDhvcUtDTzE5bGFVc2NxMWpKdGVOMXNPQVFkSVo3b282ZTZTUm4KOUY5ZnFFZDZzM0piN28rMU5IdFZadlVVRjg2a2NWb0QwaHRmYTc4bmZm"
+                    "VFpIejNITlZZRHVYREdldS9pQmRiYQphNjJNMUpIZHR0cVk3cVdFcVBxM2hVaVpnSndNVm1Od3hWQXplM2tvcTFpa0Q0eGJubEFUYnl1ZTIrME44S01ZCjZUaUZ"
+                    "IdVY2RGUvUENYOGxibklaOTYyY3R0ZkpFZG9jWWdjdUZ1TDBNTjU2aU9EUzBmanlqRjdkSklJV21POVkKbW56NTFKaC85OFEwZ2R2V09SQ0FBOHY2OWRIL1RabUY"
+                    "3eWNIZkd4YUhRbThKRXNFVEdBU3RJaTF6QzVIMW5TaQppT1RDdjduMmJKeTB2eVp2Umo3NXlib09iNmRzQTlYQnkyaEtqa1BDd2lrd05UWEdHS2NGQjJJVXJlL1R"
+                    "tYzdvCi9UQWxvN09CVkQ0U3p3WCtNL1dWVlF2ZzdZS3A0cUIvcmR5ZlBZcTJFclQ1WkdnbzJoUjdkRWR0VGZPNzZQU2YKQkhJdXVnOGpYZzlrZnkySWpJU0p1Znl"
+                    "MYm9vWmE2YVFnUmMwN2FlRzlKcmhwajB4V2g5YWR5cXVkUFo0WjJiRwpxbnhETFNvc2xpSEY0TEFuK2dIaDR0dFptbFlpRGhJTUdTYnpRcGwrcG91UEJFQWplNTV"
+                    "4WVhNbUVRRmNLRjdECkJMeDF1ZzYvVVdJbWdObHdBbERnR1NmZlBKMGkyQkM5SmRUaThoY284QnlRWHN2ZURIemJUOGFMTlE0RzhKTzYKQUlvUCtvNERLRHBHZSs"
+                    "yMGFGR1d3L0hEK1pnSUtLaEQvSlBtZUNlek50bUZXazNQdDBJN0NnM0EzU3Q1M1NZQQplelEwV28wRmFIS2hPbWJPcmZ5OTkzVTZQN3dCOXpmR2hkRzZyTWRocXo"
+                    "xYVhibyt3ZERJZituNkxRdDBCQUVEClVqbUdsVVFPYnZjbDlkWlVjclV6cjJCRWZ3MkRTbWg0NUozSEsxOFc2RkZ6d0lTbDBSR1JZVWZQNmg2Tyt0bmoKbEs1SXU"
+                    "xcUE5eG5FS2lmN3E4K2k1cGo2MlBROUhKNTk0MytyWXFGWSt3TUdyaEl3TGxrNENnMjhhZGFsRDEvSQpIU3g2SDNMRitwSUpiQzc4ZDNDTTBDcTNzQTZkdFBqczV"
+                    "YWHcxTUpycFR4RElIWjV0eHVJdUlnZDdSN0tsenB2CnNFWDc0QUYyTjFlNVZsNkV3WHRqcHFoeGlRVnVEWmVqQzcvMEU5dGR5YjRWdk9wOVNoRm85cXNHekxKb1J"
+                    "IQVgKZmlsWmxZcGdtbXlpNlNnY1ExSERuRWZYZkpMbWROY0tUVEVqNWo3MkhXN0RpQ1Eza3BpN1lhZzRsQlE1MGZ4QwotLS0tLUVORCBSU0EgUFJJVkFURSBLRVk"
+                    "tLS0tLQo=");
+    KeyPair k = readPem(Base64::decode(pem), "asdf");
+
+    std::cout << "Run: echo " << rsaManager.encrypt(k.publicKey(), std::string("Testing this long secret"))
+              << " | ripe -d --rsa --in-key private2.pem --secret asdf --hex" << std::endl;
 }
 
 TEST(RSATest, Signature)
