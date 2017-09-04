@@ -540,7 +540,7 @@ public:
     template <class T>
     std::string encrypt(const PublicKey* publicKey, const T& m)
     {
-        BigInteger paddedMsg = pkcs1pad2<T>(m, (m_helper.countBits(publicKey->n()) + 7) >> 3);
+        BigInteger paddedMsg = addPadding<T>(m, (m_helper.countBits(publicKey->n()) + 7) >> 3);
         BigInteger cipher = m_helper.powerMod(paddedMsg, publicKey->e(), publicKey->n());
         return m_helper.bigIntegerToHex(cipher);
     }
@@ -581,7 +581,7 @@ public:
         }
         BigInteger decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());
         RawString rawStr = m_helper.integerToRaw(decr, xlen);
-        return pkcs1unpad2<TResult>(rawStr);
+        return removePadding<TResult>(rawStr);
     }
 
     ///
@@ -622,7 +622,7 @@ private:
     /// \return corresponding nonnegative integer
     ///
     template <class T = std::wstring>
-    BigInteger pkcs1pad2(const T& s, std::size_t n) {
+    BigInteger addPadding(const T& s, std::size_t n) {
         if (n < s.size() + 11) {
             throw std::runtime_error("Message too long");
         }
@@ -678,7 +678,7 @@ private:
     /// \return corresponding octet string of length n
     ///
     template <class T = std::wstring>
-    T pkcs1unpad2(const RawString& ba)
+    T removePadding(const RawString& ba)
     {
         std::size_t baLen = ba.size();
         if (baLen <= 2 || ba[0] != 0 || ba[1] != 2) {
