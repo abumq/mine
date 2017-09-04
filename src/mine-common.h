@@ -45,6 +45,15 @@ class MineCommon {
 public:
 
     ///
+    /// \brief Convert mode for various functions
+    ///
+    enum class Encoding {
+        Raw,
+        Base16,
+        Base64
+    };
+
+    ///
     /// \brief Total items in random bytes list
     ///
     static const int kRandomBytesCount = 256;

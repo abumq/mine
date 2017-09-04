@@ -516,7 +516,7 @@ TEST(AESTest, RawCipherDirect)
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
-        std::string output = aes.encrypt(PARAM(0), PARAM(1), AES::Encoding::Base16);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), MineCommon::Encoding::Base16);
         // case insensitive comparison because hex can be upper or lower case
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
@@ -531,7 +531,7 @@ TEST(AESTest, RawCipherPlain)
 {
     for (auto& item : RawCipherPlainInputData) {
         std::string expected = PARAM(2);
-        std::string output = aes.encrypt(PARAM(0), PARAM(1), AES::Encoding::Raw, AES::Encoding::Base16, false);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), MineCommon::Encoding::Raw, MineCommon::Encoding::Base16, false);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -545,7 +545,7 @@ TEST(AESTest, RawCipherBase64)
 {
     for (auto& item : RawCipherBase64InputData) {
         std::string expected = PARAM(2);
-        std::string output = aes.encrypt(PARAM(0), PARAM(1), AES::Encoding::Base64, AES::Encoding::Base16, false);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), MineCommon::Encoding::Base64, MineCommon::Encoding::Base16, false);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -638,8 +638,8 @@ TEST(AESTest, CbcCipher)
         std::string k = Base16::encode(Base16::toRawString(key));
         std::string initVec = Base16::encode(Base16::toRawString(iv));
         std::string output = aes.encrypt(input, k, initVec,
-                                         AES::Encoding::Raw,
-                                         AES::Encoding::Base16, false);
+                                         MineCommon::Encoding::Raw,
+                                         MineCommon::Encoding::Base16, false);
         ASSERT_STREQ(expected.c_str(), output.c_str());
 
     }
@@ -668,7 +668,7 @@ TEST(AESTest, HexStringDecipher)
 {
     for (auto& item : RawDecipherData) {
         std::string expected = PARAM(0);
-        std::string output = aes.decrypt(PARAM(2), PARAM(1), AES::Encoding::Base16, AES::Encoding::Base16);
+        std::string output = aes.decrypt(PARAM(2), PARAM(1), MineCommon::Encoding::Base16, MineCommon::Encoding::Base16);
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
 }
@@ -680,8 +680,8 @@ TEST(AESTest, Base64StringDecipher)
     std::string expected = "dGhpcyBpcyB0ZXN0Li4uLg=="; // base64("this is test....")
     std::string output = aes.decrypt("b92daaae6e57773b10653703af12716f",
                                        "000102030405060708090a0b0c0d0e0f",
-                                       AES::Encoding::Base16,
-                                       AES::Encoding::Base64);
+                                       MineCommon::Encoding::Base16,
+                                       MineCommon::Encoding::Base64);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -690,8 +690,8 @@ TEST(AESTest, Base64StringInputDecipher)
     std::string expected = "this is test..";
     std::string output = aes.decrypt("Z0BiQ8NcwknqzbGrWBjXqw==",
                                        "000102030405060708090a0b0c0d0e0f",
-                                       AES::Encoding::Base64,
-                                       AES::Encoding::Raw);
+                                       MineCommon::Encoding::Base64,
+                                       MineCommon::Encoding::Raw);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -702,12 +702,12 @@ TEST(AESTest, CbcCipherPadding)
 
     std::string cipherB64 = "OcTPoBeDqlA/igjnNcl5yw==";
     std::string expected = "o1223456789012";
-    std::string output = aes.decrypt(cipherB64, key, iv, AES::Encoding::Base64);
+    std::string output = aes.decrypt(cipherB64, key, iv, MineCommon::Encoding::Base64);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
     cipherB64 = "NNH44Ybac3AhcP4+sTq8j4miT04jHtoaj7a/Wv0/TQ8=";
     expected = "sho4123456789014";
-    output = aes.decrypt(cipherB64, key, iv, AES::Encoding::Base64);
+    output = aes.decrypt(cipherB64, key, iv, MineCommon::Encoding::Base64);
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 }
 
@@ -795,8 +795,8 @@ TEST(AESTest, CbcDecipher)
         std::string k = Base16::encode(Base16::toRawString(key));
         std::string initVec = Base16::encode(Base16::toRawString(iv));
         std::string output = aes.decrypt(input, k, initVec,
-                                         AES::Encoding::Raw,
-                                         AES::Encoding::Raw);
+                                         MineCommon::Encoding::Raw,
+                                         MineCommon::Encoding::Raw);
         ASSERT_STREQ(expected.c_str(), output.c_str());
 
     }
@@ -813,8 +813,8 @@ TEST(AESTest, CrossAppsDataTest)
     std::string output = aes.encrypt("test this test this",
                           "CBD437FA37772C66051A47D72367B38E",
                           iv,
-                          AES::Encoding::Raw,
-                          AES::Encoding::Base64);
+                          MineCommon::Encoding::Raw,
+                          MineCommon::Encoding::Base64);
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
@@ -822,8 +822,8 @@ TEST(AESTest, CrossAppsDataTest)
     output = aes.decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
                           key,
                           iv,
-                          AES::Encoding::Base64,
-                          AES::Encoding::Raw);
+                          MineCommon::Encoding::Base64,
+                          MineCommon::Encoding::Raw);
 
     ASSERT_STRCASEEQ(nextexp.c_str(), output.c_str());
 
@@ -832,8 +832,8 @@ TEST(AESTest, CrossAppsDataTest)
     output = aes.encrypt(R"({"_t":1503928197,"logger_id":"default","access_code":"default"})",
                           key,
                           iv,
-                          AES::Encoding::Raw,
-                          AES::Encoding::Base64);
+                          MineCommon::Encoding::Raw,
+                          MineCommon::Encoding::Base64);
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
@@ -844,8 +844,8 @@ TEST(AESTest, CrossAppsDataTest)
     output = aes.decrypt("EtYr5JFo/7kqYWxooMvU2DJ+upNhUMDii9X6IEHYxvUNXSVGk34IakT5H7GbyzL5/JIMMAQCLnUU824RI3ymgQ==",
                                        key,
                                        iv,
-                                       AES::Encoding::Base64,
-                                       AES::Encoding::Raw);
+                                       MineCommon::Encoding::Base64,
+                                       MineCommon::Encoding::Raw);
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
 
@@ -855,8 +855,8 @@ TEST(AESTest, CrossAppsDataTest)
     output = aes.decrypt("WQ73OMIum+OHKGHnAhQKJX1tByfBq4BhSpw2X+SgtjY=",
                                        key,
                                        iv,
-                                       AES::Encoding::Base64,
-                                       AES::Encoding::Raw);
+                                       MineCommon::Encoding::Base64,
+                                       MineCommon::Encoding::Raw);
 
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
@@ -867,8 +867,8 @@ TEST(AESTest, CrossAppsDataTest)
     output = aes.decrypt("WQ73OMIum+OHKGHnAhQKJdSsXR5NwysOnq+cuf5C6cs=",
                                        key,
                                        iv,
-                                       AES::Encoding::Base64,
-                                       AES::Encoding::Raw);
+                                       MineCommon::Encoding::Base64,
+                                       MineCommon::Encoding::Raw);
 
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
@@ -879,8 +879,8 @@ TEST(AESTest, CrossAppsDataTest)
     output = aes.decrypt("vVMWB9aLpcfRgfai7OnCCLI5aAK+kK3Yem/E03uEM+w=",
                                        keyBig,
                                        iv,
-                                       AES::Encoding::Base64,
-                                       AES::Encoding::Raw);
+                                       MineCommon::Encoding::Base64,
+                                       MineCommon::Encoding::Raw);
 
 
     ASSERT_STRCASEEQ(expected.c_str(), output.c_str());

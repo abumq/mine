@@ -47,15 +47,6 @@ class AES {
 public:
 
     ///
-    /// \brief Convert mode for various functions
-    ///
-    enum class Encoding {
-        Raw,
-        Base16,
-        Base64
-    };
-
-    ///
     /// \brief A key is a byte array
     ///
     using Key = ByteArray;
@@ -84,7 +75,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    std::string encrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encrypt(const std::string& input, const std::string& key, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Raw, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Ciphers the input with specified hex key using CBC mode
@@ -95,7 +86,7 @@ public:
     /// \param pkcs5Padding Defaults to true, if false non-standard zero-padding is used
     /// \return Base16 encoded cipher
     ///
-    std::string encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encrypt(const std::string& input, const std::string& key, std::string& iv, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Raw, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Base16, bool pkcs5Padding = true);
 
     ///
     /// \brief Deciphers the input with specified hex key
@@ -104,7 +95,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    std::string decrypt(const std::string& input, const std::string& key, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decrypt(const std::string& input, const std::string& key, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Base16, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Raw);
 
     ///
     /// \brief Deciphers the input with specified hex key using CBC mode
@@ -114,7 +105,7 @@ public:
     /// \param outputEncoding Type of encoding for result
     /// \return Base16 encoded cipher
     ///
-    std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decrypt(const std::string& input, const std::string& key, const std::string& iv, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Base16, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Raw);
 
     ///
     /// \brief Ciphers with ECB-Mode, the input can be as long as user wants
@@ -155,13 +146,13 @@ public:
 
     // cipher / decipher interface without keys
 
-    std::string encr(const std::string& input, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encr(const std::string& input, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Raw, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Base16, bool pkcs5Padding = true);
 
-    std::string encr(const std::string& input, std::string& iv, Encoding inputEncoding = Encoding::Raw, Encoding outputEncoding = Encoding::Base16, bool pkcs5Padding = true);
+    std::string encr(const std::string& input, std::string& iv, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Raw, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Base16, bool pkcs5Padding = true);
 
-    std::string decr(const std::string& input, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decr(const std::string& input, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Base16, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Raw);
 
-    std::string decr(const std::string& input, const std::string& iv, Encoding inputEncoding = Encoding::Base16, Encoding outputEncoding = Encoding::Raw);
+    std::string decr(const std::string& input, const std::string& iv, MineCommon::Encoding inputEncoding = MineCommon::Encoding::Base16, MineCommon::Encoding outputEncoding = MineCommon::Encoding::Raw);
 
     ByteArray encr(const ByteArray& input, bool pkcs5Padding = true);
 
@@ -332,12 +323,12 @@ private:
     ///
     /// \brief Creates byte array from input based on input mode
     ///
-    static ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
+    static ByteArray resolveInputMode(const std::string& input, MineCommon::Encoding inputMode);
 
     ///
     /// \brief Creates string from byte array based on convert mode
     ///
-    static std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
+    static std::string resolveOutputMode(const ByteArray& input, MineCommon::Encoding outputMode);
 
     ///
     /// \brief Exclusive XOR with iter of range size as input

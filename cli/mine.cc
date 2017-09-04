@@ -89,7 +89,7 @@ void encryptAES(std::string& data, const std::string& key, std::string& iv, bool
 {
     TRY
         bool newIv = iv.empty();
-        std::cout << aes.encrypt(data, key, iv, AES::Encoding::Raw, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
+        std::cout << aes.encrypt(data, key, iv, MineCommon::Encoding::Raw, isBase64 ? MineCommon::Encoding::Base64 : MineCommon::Encoding::Base16);
 
         if (newIv) {
             std::cout << std::endl << "IV: " << iv << std::endl;
@@ -100,7 +100,7 @@ void encryptAES(std::string& data, const std::string& key, std::string& iv, bool
 void decryptAES(std::string& data, const std::string& key, std::string& iv, bool isBase64)
 {
     TRY
-        std::cout << aes.decrypt(data, key, iv, isBase64 ? AES::Encoding::Base64 : AES::Encoding::Base16);
+        std::cout << aes.decrypt(data, key, iv, isBase64 ? MineCommon::Encoding::Base64 : MineCommon::Encoding::Base16);
     CATCH
 }
 

@@ -744,22 +744,22 @@ ByteArray AES::decryptSingleBlock(const ByteArray::const_iterator& range, const 
     return stateToByteArray(&state);
 }
 
-ByteArray AES::resolveInputMode(const std::string& input, Encoding inputMode)
+ByteArray AES::resolveInputMode(const std::string& input, MineCommon::Encoding inputMode)
 {
-    if (inputMode == Encoding::Raw) {
+    if (inputMode == MineCommon::Encoding::Raw) {
         return Base16::fromString(Base16::encode(input));
-    } else if (inputMode == Encoding::Base16) {
+    } else if (inputMode == MineCommon::Encoding::Base16) {
         return Base16::fromString(input);
     }
     // base64
     return Base16::fromString(Base16::encode(Base64::decode(input)));
 }
 
-std::string AES::resolveOutputMode(const ByteArray& input, Encoding outputMode)
+std::string AES::resolveOutputMode(const ByteArray& input, MineCommon::Encoding outputMode)
 {
-    if (outputMode == Encoding::Raw) {
+    if (outputMode == MineCommon::Encoding::Raw) {
         return Base16::toRawString(input);
-    } else if (outputMode == Encoding::Base16) {
+    } else if (outputMode == MineCommon::Encoding::Base16) {
         return Base16::encode(input.begin(), input.end());
     }
     // base64
@@ -981,7 +981,7 @@ ByteArray AES::decrypt(const ByteArray& input, const Key* key, ByteArray& iv)
     return result;
 }
 
-std::string AES::encrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
+std::string AES::encrypt(const std::string& input, const std::string& key, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding, bool pkcs5Padding)
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
@@ -989,7 +989,7 @@ std::string AES::encrypt(const std::string& input, const std::string& key, Encod
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::encrypt(const std::string& input, const std::string& key, std::string& iv, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
+std::string AES::encrypt(const std::string& input, const std::string& key, std::string& iv, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding, bool pkcs5Padding)
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
@@ -1002,7 +1002,7 @@ std::string AES::encrypt(const std::string& input, const std::string& key, std::
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::decrypt(const std::string& input, const std::string& key, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::decrypt(const std::string& input, const std::string& key, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
@@ -1010,7 +1010,7 @@ std::string AES::decrypt(const std::string& input, const std::string& key, Encod
     return resolveOutputMode(result, outputEncoding);
 }
 
-std::string AES::decrypt(const std::string& input, const std::string& key, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::decrypt(const std::string& input, const std::string& key, const std::string& iv, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding)
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
@@ -1031,7 +1031,7 @@ std::string AES::generateRandomKey(const std::size_t len)
 
 // encryption / decryption with previously provided key
 
-std::string AES::encr(const std::string& input, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
+std::string AES::encr(const std::string& input, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding, bool pkcs5Padding)
 {
     if (m_key.empty()) {
         throw std::runtime_error("Key not set");
@@ -1039,7 +1039,7 @@ std::string AES::encr(const std::string& input, Encoding inputEncoding, Encoding
     return encrypt(input, Base16::encode(Base16::toRawString(m_key)), inputEncoding, outputEncoding, pkcs5Padding);
 }
 
-std::string AES::encr(const std::string& input, std::string& iv, Encoding inputEncoding, Encoding outputEncoding, bool pkcs5Padding)
+std::string AES::encr(const std::string& input, std::string& iv, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding, bool pkcs5Padding)
 {
     if (m_key.empty()) {
         throw std::runtime_error("Key not set");
@@ -1047,7 +1047,7 @@ std::string AES::encr(const std::string& input, std::string& iv, Encoding inputE
     return encrypt(input, Base16::encode(Base16::toRawString(m_key)), iv, inputEncoding, outputEncoding, pkcs5Padding);
 }
 
-std::string AES::decr(const std::string& input, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::decr(const std::string& input, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding)
 {
     if (m_key.empty()) {
         throw std::runtime_error("Key not set");
@@ -1055,7 +1055,7 @@ std::string AES::decr(const std::string& input, Encoding inputEncoding, Encoding
     return decrypt(input, Base16::encode(Base16::toRawString(m_key)), inputEncoding, outputEncoding);
 }
 
-std::string AES::decr(const std::string& input, const std::string& iv, Encoding inputEncoding, Encoding outputEncoding)
+std::string AES::decr(const std::string& input, const std::string& iv, MineCommon::Encoding inputEncoding, MineCommon::Encoding outputEncoding)
 {
     if (m_key.empty()) {
         throw std::runtime_error("Key not set");
