@@ -1160,10 +1160,15 @@ public:
         return *this;
     }
 
-    GenericPublicKey(BigInteger n, int e) :
-        m_n(n),
-        m_e(e)
+    GenericPublicKey(BigInteger n, int e)
     {
+        init(n, e);
+    }
+
+    void init(const BigInteger& n, int e = kDefaultPublicExponent)
+    {
+        m_n = n;
+        m_e = e;
         m_k = m_helper.countBytes(m_n);
         if (m_k < 11) {
             throw std::invalid_argument("Invalid prime. Length error.");
@@ -1221,15 +1226,20 @@ public:
         return *this;
     }
 
-    GenericPrivateKey(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent) :
-          m_p(p),
-          m_q(q),
-          m_e(e)
+    GenericPrivateKey(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent)
 
+    {
+        init(p, q, e);
+    }
+
+    void init(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent)
     {
         if (p == q || p == 0 || q == 0) {
             throw std::invalid_argument("p and q must be prime numbers unique to each other");
         }
+        m_p = p;
+        m_q = q;
+        m_e = e;
 
         const BigInteger pMinus1 = m_p - 1;
         const BigInteger qMinus1 = m_q - 1;
