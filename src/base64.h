@@ -28,15 +28,14 @@
 // codecvt is not part of standard
 // hence we leave it to user to enable/disable
 // it depending on their
-#ifdef MINE_BASE64_WSTRING_CONVERSION
+#ifdef MINE_WSTRING_CONVERSION
 #   include <locale>
 #   include <codecvt>
 #endif
 #include <iostream>
+#include "src/mine-common.h"
 
 namespace mine {
-
-using byte = unsigned char;
 
 ///
 /// \brief Provides base64 encoding / decoding implementation
@@ -242,7 +241,7 @@ result:
     }
 
 
-#ifdef MINE_BASE64_WSTRING_CONVERSION
+#ifdef MINE_WSTRING_CONVERSION
     ///
     /// \brief Converts wstring to corresponding string and returns
     /// encoding
@@ -274,25 +273,7 @@ result:
                 <std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(result);
         return converted;
     }
-
-    ///
-    /// \brief Converts it to std::string and calls countChars on it
-    ///
-    /// \note You need to include <locale> and <codecvt> headers before mine.h
-    ///
-    static std::size_t countChars(const std::wstring& raw) noexcept
-    {
-        std::string converted = std::wstring_convert
-                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
-        return countChars(converted);
-    }
 #endif
-
-    ///
-    /// \brief Replacement for better d.size() that consider unicode bytes too
-    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
-    ///
-    static std::size_t countChars(const std::string& d) noexcept;
 
     ///
     /// \brief expectedBase64Length Returns expected base64 length
@@ -310,7 +291,7 @@ result:
     template <typename T = std::string>
     inline static std::size_t expectedLength(const T& str) noexcept
     {
-        return expectedLength(countChars(str));
+        return expectedLength(MineCommon::countChars(str));
     }
 
 private:

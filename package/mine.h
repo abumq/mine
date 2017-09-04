@@ -17,12 +17,12 @@
 #ifndef MINE_CRYPTO_H
 #define MINE_CRYPTO_H
 
+#include <vector>
+#include <string>
 #include <cstdlib>
 #include <algorithm>
-#include <string>
 #include <sstream>
 #include <unordered_map>
-#include <vector>
 #include <iostream>
 #include <array>
 #include <map>
@@ -32,7 +32,57 @@
 namespace mine {
 
 using byte = unsigned char;
+
+///
+/// \brief Handy safe byte array
+///
 using ByteArray = std::vector<byte>;
+
+///
+/// \brief Contains common functions used across the lib
+///
+class MineCommon {
+public:
+
+    ///
+    /// \brief Total items in random bytes list
+    ///
+    static const int kRandomBytesCount = 256;
+
+    ///
+    /// \brief List to choose random byte from
+    ///
+    static const byte kRandomBytesList[];
+
+#ifdef MINE_WSTRING_CONVERSION
+    ///
+    /// \brief Converts it to std::string and calls countChars on it
+    ///
+    /// \note You need to include <locale> and <codecvt> headers before mine.h
+    ///
+    static std::size_t countChars(const std::wstring& raw) noexcept
+    {
+        std::string converted = std::wstring_convert
+                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
+        return countChars(converted);
+    }
+#endif
+
+    ///
+    /// \brief Replacement for better d.size() that consider unicode bytes too
+    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
+    ///
+    static std::size_t countChars(const std::string& d) noexcept;
+
+    ///
+    /// \brief Generates random bytes of length
+    ///
+    static ByteArray generateRandomBytes(const std::size_t len);
+private:
+    MineCommon() = delete;
+    MineCommon(const MineCommon&) = delete;
+    MineCommon& operator=(const MineCommon&) = delete;
+};
 
 ///
 /// \brief Provides base16 encoding / decoding
@@ -180,8 +230,6 @@ private:
     ///
     static void decode(char a, char b, std::ostringstream& ss);
 };
-
-using byte = unsigned char;
 
 ///
 /// \brief Provides base64 encoding / decoding implementation
@@ -387,7 +435,7 @@ result:
     }
 
 
-#ifdef MINE_BASE64_WSTRING_CONVERSION
+#ifdef MINE_WSTRING_CONVERSION
     ///
     /// \brief Converts wstring to corresponding string and returns
     /// encoding
@@ -419,25 +467,7 @@ result:
                 <std::codecvt_utf8_utf16<wchar_t>>{}.from_bytes(result);
         return converted;
     }
-
-    ///
-    /// \brief Converts it to std::string and calls countChars on it
-    ///
-    /// \note You need to include <locale> and <codecvt> headers before mine.h
-    ///
-    static std::size_t countChars(const std::wstring& raw) noexcept
-    {
-        std::string converted = std::wstring_convert
-                <std::codecvt_utf8<wchar_t>, wchar_t>{}.to_bytes(raw);
-        return countChars(converted);
-    }
 #endif
-
-    ///
-    /// \brief Replacement for better d.size() that consider unicode bytes too
-    /// \see https://en.wikipedia.org/wiki/UTF-8#Description
-    ///
-    static std::size_t countChars(const std::string& d) noexcept;
 
     ///
     /// \brief expectedBase64Length Returns expected base64 length
@@ -455,7 +485,7 @@ result:
     template <typename T = std::string>
     inline static std::size_t expectedLength(const T& str) noexcept
     {
-        return expectedLength(countChars(str));
+        return expectedLength(MineCommon::countChars(str));
     }
 
 private:
@@ -463,13 +493,6 @@ private:
     Base64(const Base64&) = delete;
     Base64& operator=(const Base64&) = delete;
 };
-
-using byte = unsigned char;
-
-///
-/// \brief Handy safe byte array
-///
-using ByteArray = std::vector<byte>;
 
 ///
 /// \brief Provides AES crypto functionalities
@@ -641,16 +664,6 @@ private:
     static const std::unordered_map<uint8_t, std::vector<uint8_t>> kKeyParams;
 
     ///
-    /// \brief Total items in random bytes list
-    ///
-    static const int kRandomBytesCount = 256;
-
-    ///
-    /// \brief List to choose random byte from
-    ///
-    static const byte kRandomBytesList[];
-
-    ///
     /// \brief As defined in FIPS. 197 Sec. 5.1.1
     ///
     static const byte kSBox[];
@@ -781,11 +794,6 @@ private:
     static void initState(State* state, const ByteArray::const_iterator& begin);
 
     ///
-    /// \brief Generates random bytes of length
-    ///
-    static ByteArray generateRandomBytes(const std::size_t len);
-
-    ///
     /// \brief Creates byte array from input based on input mode
     ///
     static ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
@@ -794,11 +802,6 @@ private:
     /// \brief Creates string from byte array based on convert mode
     ///
     static std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
-
-    ///
-    /// \brief Exclusive XOR with arr
-    ///
-    static ByteArray* xorWith(ByteArray* input, const ByteArray*);
 
     ///
     /// \brief Exclusive XOR with iter of range size as input

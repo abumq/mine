@@ -106,6 +106,7 @@ endif(ZLIB_FOUND)
 ##########################################   CLI Tool  ###################################
 
 add_executable (mine-cli cli/mine.cc
+     src/mine-common.cc
      src/base64.cc
      src/base16.cc
      src/aes.cc
@@ -148,6 +149,7 @@ if (test_main_header)
 else()
     add_executable(mine-unit-tests
         test/main.cc
+        src/mine-common.cc
         src/rsa.cc
         src/aes.cc
         src/base16.cc
@@ -163,7 +165,7 @@ target_link_libraries(mine-unit-tests
 
 if (test_wstring_conversions)
     target_compile_definitions (mine-unit-tests PUBLIC
-        MINE_BASE64_WSTRING_CONVERSION
+        MINE_WSTRING_CONVERSION
     )
 endif()
 

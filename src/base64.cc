@@ -44,27 +44,3 @@ const std::unordered_map<byte, byte> Base64::kDecodeMap = {
    {0x38, 0x3C}, {0x39, 0x3D}, {0x2B, 0x3E}, {0x2F, 0x3F},
    {0x3D, 0x40}
 };
-
-std::size_t Base64::countChars(const std::string& str) noexcept
-{
-    std::size_t result = 0UL;
-    for (auto it = str.begin(); it <= str.end();) {
-        int c = *it & 0xff;
-        int charCount = 0;
-        if (c == 0x0) {
-            // \0
-            ++it; // we increment iter manually
-        } else if (c <= 0x7f) {
-            charCount = 1;
-        } else if (c <= 0x7ff) {
-            charCount = 2;
-        } else if (c <= 0xffff) {
-            charCount = 3;
-        } else {
-            charCount = 4;
-        }
-        result += charCount;
-        it += charCount;
-    }
-    return result;
-}

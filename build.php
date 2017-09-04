@@ -79,6 +79,7 @@ function resolveTemplate($template, $includes, $lines, $lib_version, $filename) 
 }
 
 $headers_list = array(
+    "src/mine-common.h",
     "src/base16.h",
     "src/base64.h",
     "src/aes.h",
@@ -120,6 +121,7 @@ resolveTemplate($header_template, $includes, $lines, $lib_version, "package/mine
 // source file
 
 $source_list = array(
+    "src/mine-common.cc",
     "src/base16.cc",
     "src/base64.cc",
     "src/aes.cc",

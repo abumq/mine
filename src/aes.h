@@ -26,15 +26,9 @@
 #include <unordered_map>
 #include <vector>
 #include <map>
+#include "src/mine-common.h"
 
 namespace mine {
-
-using byte = unsigned char;
-
-///
-/// \brief Handy safe byte array
-///
-using ByteArray = std::vector<byte>;
 
 ///
 /// \brief Provides AES crypto functionalities
@@ -206,16 +200,6 @@ private:
     static const std::unordered_map<uint8_t, std::vector<uint8_t>> kKeyParams;
 
     ///
-    /// \brief Total items in random bytes list
-    ///
-    static const int kRandomBytesCount = 256;
-
-    ///
-    /// \brief List to choose random byte from
-    ///
-    static const byte kRandomBytesList[];
-
-    ///
     /// \brief As defined in FIPS. 197 Sec. 5.1.1
     ///
     static const byte kSBox[];
@@ -346,11 +330,6 @@ private:
     static void initState(State* state, const ByteArray::const_iterator& begin);
 
     ///
-    /// \brief Generates random bytes of length
-    ///
-    static ByteArray generateRandomBytes(const std::size_t len);
-
-    ///
     /// \brief Creates byte array from input based on input mode
     ///
     static ByteArray resolveInputMode(const std::string& input, Encoding inputMode);
@@ -359,11 +338,6 @@ private:
     /// \brief Creates string from byte array based on convert mode
     ///
     static std::string resolveOutputMode(const ByteArray& input, Encoding outputMode);
-
-    ///
-    /// \brief Exclusive XOR with arr
-    ///
-    static ByteArray* xorWith(ByteArray* input, const ByteArray*);
 
     ///
     /// \brief Exclusive XOR with iter of range size as input

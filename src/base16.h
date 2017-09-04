@@ -27,11 +27,9 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
+#include "src/mine-common.h"
 
 namespace mine {
-
-using byte = unsigned char;
-using ByteArray = std::vector<byte>;
 
 ///
 /// \brief Provides base16 encoding / decoding
