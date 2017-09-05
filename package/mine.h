@@ -1,7 +1,7 @@
 //
 //  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Mine (Unreleased)
+//  Mine (1.0.0)
 //  Single header minimal cryptography library
 //
 //  Copyright (c) 2017 Muflihun Labs
