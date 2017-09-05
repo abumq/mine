@@ -2,7 +2,7 @@
 
 ![banner]
 
-Mine is single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
+Mine is fast, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
 [![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
