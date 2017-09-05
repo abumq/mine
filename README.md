@@ -32,49 +32,47 @@ Mine supports following features:
  
 This is what we are aiming for _minimal_ crypto library.
 
-# Quick Reference
-Everything is in `mine` namespace
-
-## Base16
-
- * `mine::Base16::encode(str);`
- * `mine::Base16::encode(str.begin(), str.end());`
- * `mine::Base16::decode(encoding);`
-
-## Base64
-
- * `mine::Base64::encode(str);`
- * `mine::Base64::encode(str.begin(), str.end());`
- * `mine::Base64::decode(encoding);`
- * `mine::Base64::decode(encoding.begin(), encoding.end());`
- 
- * `mine::Base64::expectedLength(n);`
- 
-## AES
-
- ```c++
- std::string random256BitKey = mine::AES::generateRandomKey(256);
- 
- mine::AES aesManager;
- aesManager.encrypt(b16Input, hexKey, mine::MineCommon::Base16, mine::MineCommon::Base64); // takes base16, encrypts and returns base64 
- 
- aesManager.setKey(random256BitKey); // now use this key
- aesManager.encr(b16Input, mine::MineCommon::Base16, mine::MineCommon::Base64); // don't need key with requests
- aesManager.decr(b64Input, mine::MineCommon::Base64, mine::MineCommon::Raw); // Returns raw string
- ```
- 
-## ZLib
-
- * `mine::ZLib::compressString(str);`
- * `mine::ZLib::decompressString(str);`
- * `mine::ZLib::decompressFile(outputFile, inputFile);`
-
 # Notes
 
  * It is natively developed on macOS and Linux operating systems
  * It is extremely fast with compiler optimization level 1 (or higher)
  * RSA needs big number implementation, for unit tests we use [Integer from Crypto++](https://www.cryptopp.com/wiki/Integer)
  * RSA currently does not support signing & verification or reading keys from PEM files
+
+# Quick Reference
+
+### Base16
+
+ * `mine::Base16::encode(str);`
+ * `mine::Base16::encode(str.begin(), str.end());`
+ * `mine::Base16::decode(encoding);`
+
+### Base64
+
+ * `mine::Base64::encode(str);`
+ * `mine::Base64::encode(str.begin(), str.end());`
+ * `mine::Base64::decode(encoding);`
+ * `mine::Base64::decode(encoding.begin(), encoding.end());`
+ * `mine::Base64::expectedLength(n);`
+ 
+### AES
+
+ ```c++
+ std::string random256BitKey = mine::AES::generateRandomKey(256);
+ 
+ mine::AES aesManager;
+ aesManager.encrypt(b16Input, hexKey, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // takes base16, encrypts and returns base64 
+ 
+ aesManager.setKey(random256BitKey); // now use this key
+ aesManager.encr(b16Input, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // don't need key with requests
+ aesManager.decr(b64Input, mine::MineCommon::Encoding::Base64, mine::MineCommon::Encoding::Raw); // Returns raw string
+ ```
+ 
+### ZLib
+
+ * `mine::ZLib::compressString(str);`
+ * `mine::ZLib::decompressString(str);`
+ * `mine::ZLib::decompressFile(outputFile, inputFile);`
 
 # Contribution
 You can contribute to the project by testing on various platforms (e.g, Windows, Android etc)
