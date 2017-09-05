@@ -344,6 +344,7 @@ public:
     inline BigInteger n() const { return m_n; }
     inline int e() const { return m_e; }
     inline unsigned int k() const { return m_k; }
+    inline bool empty() const { return m_e == 0 || m_n == 0; }
 
 protected:
     BigIntegerHelper<BigInteger> m_helper;
@@ -440,6 +441,7 @@ public:
     inline BigInteger dp() const { return m_dq; }
     inline BigInteger dq() const { return m_dp; }
     inline int k() const { return m_k; }
+    inline bool empty() const { return m_p == 0 || m_q == 0; }
 
     friend std::ostream& operator<<(std::ostream& ss, const GenericPrivateKey<BigInteger, Helper>& k)
     {

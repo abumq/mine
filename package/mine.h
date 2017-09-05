@@ -1180,6 +1180,7 @@ public:
     inline BigInteger n() const { return m_n; }
     inline int e() const { return m_e; }
     inline unsigned int k() const { return m_k; }
+    inline bool empty() const { return m_e == 0 || m_n == 0; }
 
 protected:
     BigIntegerHelper<BigInteger> m_helper;
@@ -1276,6 +1277,7 @@ public:
     inline BigInteger dp() const { return m_dq; }
     inline BigInteger dq() const { return m_dp; }
     inline int k() const { return m_k; }
+    inline bool empty() const { return m_p == 0 || m_q == 0; }
 
     friend std::ostream& operator<<(std::ostream& ss, const GenericPrivateKey<BigInteger, Helper>& k)
     {
@@ -1380,23 +1382,6 @@ public:
     GenericRSA& operator=(const GenericRSA&) = delete;
 
     ///
-    /// \brief Encrypts plain bytes using RSA public key
-    /// \param publicKey RSA Public key for encryption
-    /// \param m The message. This can be raw bytes or plain text
-    /// T can of std::string or std::wstring or custom string type that has
-    /// basic_stringstream implementation alongside it
-    /// \note Mine uses pkcs#1 padding scheme
-    /// \return hex of cipher
-    ///
-    template <class T>
-    std::string encrypt(const PublicKey* publicKey, const T& m)
-    {
-        BigInteger paddedMsg = addPadding<T>(m, (m_helper.countBits(publicKey->n()) + 7) >> 3);
-        BigInteger cipher = m_helper.powerMod(paddedMsg, publicKey->e(), publicKey->n());
-        return m_helper.bigIntegerToHex(cipher);
-    }
-
-    ///
     /// \brief Helper method to encrypt wide-string messages using public key.
     /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
     ///
@@ -1417,6 +1402,23 @@ public:
     }
 
     ///
+    /// \brief Encrypts plain bytes using RSA public key
+    /// \param publicKey RSA Public key for encryption
+    /// \param m The message. This can be raw bytes or plain text
+    /// T can of std::string or std::wstring or custom string type that has
+    /// basic_stringstream implementation alongside it
+    /// \note Mine uses pkcs#1 padding scheme
+    /// \return hex of cipher
+    ///
+    template <class T>
+    std::string encrypt(const PublicKey* publicKey, const T& m)
+    {
+        BigInteger paddedMsg = addPadding<T>(m, (m_helper.countBits(publicKey->n()) + 7) >> 3);
+        BigInteger cipher = m_helper.powerMod(paddedMsg, publicKey->e(), publicKey->n());
+        return m_helper.bigIntegerToHex(cipher);
+    }
+
+    ///
     /// \brief Decrypts RSA hex message using RSA private key
     /// \param privateKey RSA private key
     /// \param c Cipher in hex format (should not start with 0x)
@@ -1427,7 +1429,7 @@ public:
     {
         BigInteger msg = m_helper.hexToBigInteger(c);
         int xlen = (m_helper.countBits(privateKey->n()) + 7) >> 3;
-        if (msg >= m_helper.power(BigInteger(256), BigInteger(xlen))) {
+        if (msg >= m_helper.power(BigIntegerHelper<BigInteger>::kBigInteger256, BigInteger(xlen))) {
             throw std::runtime_error("Integer too large");
         }
         BigInteger decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());
