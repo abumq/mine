@@ -33,6 +33,7 @@ static TestData<std::string> InvalidBase16EncodingData = {
 };
 
 static TestData<std::string> EncodingDecodingData = {
+    TestCase("ac7322f9ac5ebe9f32703c14f12e908046ed26"), // lower
     TestCase("C1"),
     TestCase("78DA2B492D2E0100045D01C1"),
 };
@@ -41,7 +42,7 @@ TEST(Base16Test, Encode)
 {
     for (const auto& item : Base16TestData) {
         std::string encoded = Base16::encode(PARAM(1));
-        ASSERT_STREQ(PARAM(0).c_str(), encoded.c_str());
+        ASSERT_STRCASEEQ(PARAM(0).c_str(), encoded.c_str());
     }
 }
 
@@ -49,7 +50,7 @@ TEST(Base16Test, EncodeDecodingTest)
 {
     for (const auto& item : EncodingDecodingData) {
         std::string decoded = Base16::decode(PARAM(0));
-        ASSERT_STREQ(PARAM(0).c_str(), Base16::encode(decoded).c_str());
+        ASSERT_STRCASEEQ(PARAM(0).c_str(), Base16::encode(decoded).c_str());
     }
 }
 
@@ -57,7 +58,7 @@ TEST(Base16Test, EncodeByteArray)
 {
     for (const auto& item : Base16ByteArrayEncodingTestData) {
         std::string encoded = Base16::encode(PARAM(0).begin(), PARAM(0).end());
-        ASSERT_STREQ(PARAM(1).c_str(), encoded.c_str());
+        ASSERT_STRCASEEQ(PARAM(1).c_str(), encoded.c_str());
     }
 }
 
