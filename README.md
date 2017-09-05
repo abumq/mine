@@ -4,7 +4,9 @@
 
 Mine is fast, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
+[![Build Status](https://img.shields.io/travis/muflihun/mine/master.svg)](https://travis-ci.org/muflihun/mine)
 [![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
+[![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/muflihun/mine/releases/latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/MuflihunDotCom/25)
 
