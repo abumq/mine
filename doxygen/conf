@@ -1,0 +1,7 @@
+PROJECT_NAME=Mine
+PROJECT_BRIEF="Fast, minimal and single-header cryptography library"
+OUTPUT_DIRECTORY=build/doc
+INPUT=doxygen/README_DOXYGEN.md package/mine.h package/mine.cc
+USE_MDFILE_AS_MAINPAGE=doxygen/README_DOXYGEN.md
+HTML_EXTRA_STYLESHEET=doxygen/customdoxygen.css
+LAYOUT_FILE=doxygen/DoxygenLayout.xml
