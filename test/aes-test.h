@@ -633,10 +633,10 @@ TEST(AESTest, CbcCipher)
 
     // specifies modes of input and output
     for (auto& item : CbcCipherTestData) {
-        std::string expected = Base16::encode(Base16::toRawString(PARAM(1)));
+        std::string expected = Base16::encode(MineCommon::byteArrayToRawString(PARAM(1)));
         std::string input = PARAM(0);
-        std::string k = Base16::encode(Base16::toRawString(key));
-        std::string initVec = Base16::encode(Base16::toRawString(iv));
+        std::string k = Base16::encode(MineCommon::byteArrayToRawString(key));
+        std::string initVec = Base16::encode(MineCommon::byteArrayToRawString(iv));
         std::string output = aes.encrypt(input, k, initVec,
                                          MineCommon::Encoding::Raw,
                                          MineCommon::Encoding::Base16, false);
@@ -791,9 +791,9 @@ TEST(AESTest, CbcDecipher)
 
     for (auto& item : CbcDecipherTestData) {
         std::string expected = PARAM(0);
-        std::string input = Base16::toRawString(PARAM(1));
-        std::string k = Base16::encode(Base16::toRawString(key));
-        std::string initVec = Base16::encode(Base16::toRawString(iv));
+        std::string input = MineCommon::byteArrayToRawString(PARAM(1));
+        std::string k = Base16::encode(MineCommon::byteArrayToRawString(key));
+        std::string initVec = Base16::encode(MineCommon::byteArrayToRawString(iv));
         std::string output = aes.decrypt(input, k, initVec,
                                          MineCommon::Encoding::Raw,
                                          MineCommon::Encoding::Raw);

@@ -90,12 +90,6 @@ public:
     static ByteArray fromString(const std::string& hex);
 
     ///
-    /// \brief Converts byte array to raw string.
-    /// This does not necessarily has to be base16 array
-    ///
-    static std::string toRawString(const ByteArray& byteArr);
-
-    ///
     /// \brief Encodes integer to hex
     ///
     template <typename T>

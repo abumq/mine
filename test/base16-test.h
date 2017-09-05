@@ -79,7 +79,7 @@ TEST(Base16Test, ConvertToByteArray)
 TEST(Base16Test, ConvertToRaw)
 {
     for (const auto& item : Base16FromStringData) {
-        std::string result = Base16::toRawString(PARAM(1));
+        std::string result = MineCommon::byteArrayToRawString(PARAM(1));
         ASSERT_EQ(PARAM(2), result);
     }
 }

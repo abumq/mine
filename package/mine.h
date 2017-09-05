@@ -89,6 +89,16 @@ public:
     static ByteArray generateRandomBytes(const std::size_t len) noexcept;
 
     ///
+    /// \brief Converts byte array to linear string
+    ///
+    static std::string byteArrayToRawString(const ByteArray& input) noexcept;
+
+    ///
+    /// \brief Converts string to byte array
+    ///
+    static ByteArray rawStringToByteArray(const std::string& str) noexcept;
+
+    ///
     /// \brief Version of mine
     ///
     static std::string version() noexcept;
@@ -155,12 +165,6 @@ public:
     /// \throws invalid_argument if hex is not valid
     ///
     static ByteArray fromString(const std::string& hex);
-
-    ///
-    /// \brief Converts byte array to raw string.
-    /// This does not necessarily has to be base16 array
-    ///
-    static std::string toRawString(const ByteArray& byteArr);
 
     ///
     /// \brief Encodes integer to hex
