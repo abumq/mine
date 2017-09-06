@@ -14,9 +14,9 @@
 //  https://muflihun.com
 //
 #include <algorithm>
+#include <iterator>
 #include <random>
 #include <sstream>
-#include <iterator>
 #include <stdexcept>
 #include <iostream>
 #include <vector>

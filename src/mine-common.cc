@@ -15,6 +15,7 @@
 //
 
 #include <algorithm>
+#include <iterator>
 #include <random>
 #include <sstream>
 #include "src/mine-common.h"
