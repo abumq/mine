@@ -90,6 +90,7 @@ public:
     // string
 
     std::string str() const;
+    long long toLong() const;
 
     friend inline std::ostream& operator<<(std::ostream& os, const BigInteger& b)
     {

@@ -30,6 +30,8 @@ TEST(BigIntegerTest, Construct)
     b = 123;
     ASSERT_EQ(b.str(), "123");
 
+    ASSERT_EQ(b.toLong(), (long long) 123);
+
     BigInteger b4(b3);
     ASSERT_EQ(b4, b3);
     ASSERT_NE(b4, b2);
@@ -103,7 +105,11 @@ TEST(BigIntegerTest, Addition)
 
 static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
     //TestCase(2, 4, 8),
+    TestCase(63, 67, 4221),
+    TestCase(6, 67, 402),
+    TestCase(3, 6701, 20103),
     TestCase(243, 993, 241299),
+    TestCase(2439, 99, 241461),
 };
 
 TEST(BigIntegerTest, Multiplication)

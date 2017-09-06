@@ -217,6 +217,11 @@ std::string BigInteger::str() const
     return ss.str();
 }
 
+long long BigInteger::toLong() const
+{
+    return std::stol(str());
+}
+
 int BigInteger::compare(const BigInteger& other) const
 {
     if (!m_negative && other.m_negative) {
