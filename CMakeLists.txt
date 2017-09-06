@@ -63,7 +63,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -O3 ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused ")
 
 require_cpp11()
 
@@ -150,6 +150,7 @@ else()
     add_executable(mine-unit-tests
         test/main.cc
         src/mine-common.cc
+        src/big-integer.cc
         src/rsa.cc
         src/aes.cc
         src/base16.cc

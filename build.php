@@ -86,6 +86,7 @@ $headers_list = array(
     "src/base16.h",
     "src/base64.h",
     "src/aes.h",
+    "src/big-integer.h",
     "src/rsa.h",
     "src/zlib.h",
 );
@@ -128,6 +129,7 @@ $source_list = array(
     "src/base16.cc",
     "src/base64.cc",
     "src/aes.cc",
+    "src/big-integer.cc",
     "src/rsa.cc",
     "src/zlib.cc",
 );

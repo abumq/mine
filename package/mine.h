@@ -26,6 +26,7 @@
 #include <iostream>
 #include <array>
 #include <map>
+#include <iosfwd>
 #include <cmath>
 #include <stdexcept>
 
@@ -871,6 +872,78 @@ private:
     friend class AESTest_Copy_Test;
 };
 
+///
+/// \brief Minimal big integer for Mine library.
+///
+/// This operates on base-10
+///
+/// ******************* THIS IS NOT PRODUCTION READY YET!!! **********************
+/// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
+///
+class BigInteger {
+    using Container = std::vector<int>;
+public:
+
+    BigInteger();
+    BigInteger(const BigInteger& other);
+    BigInteger(const Container& d) : m_negative(false), m_data(d) {}
+    BigInteger(BigInteger&& other);
+    BigInteger& operator=(const BigInteger& other);
+    BigInteger(long long);
+    BigInteger(const std::string&);
+    virtual ~BigInteger() = default;
+
+    // construct
+    void init(long long);
+    void init(const std::string&);
+
+    // assign
+    BigInteger& operator=(long long);
+    BigInteger& operator=(const std::string&);
+
+    // maths
+    BigInteger operator+(const BigInteger& other);
+    BigInteger& operator+=(const BigInteger& other);
+    BigInteger& operator++();
+
+    BigInteger operator-(const BigInteger& other);
+
+    // compare
+    bool operator>(const BigInteger& other) const;
+    bool operator>=(const BigInteger& other) const;
+    bool operator<(const BigInteger& other) const;
+    bool operator<=(const BigInteger& other) const;
+    inline bool operator==(const BigInteger& other) const
+    {
+        return m_data == other.m_data && m_negative == other.m_negative;
+    }
+
+    inline bool operator!=(const BigInteger& other) const
+    {
+        return m_data != other.m_data || m_negative != other.m_negative;
+    }
+
+    // properties
+    inline bool isNegative() const { return m_negative; }
+    inline std::size_t digits() const { return m_data.size(); }
+
+    // string
+
+    std::string str() const;
+
+    friend inline std::ostream& operator<<(std::ostream& os, const BigInteger& b)
+    {
+        os << b.str();
+        return os;
+    }
+private:
+    bool m_negative;
+    Container m_data;
+
+    int compare(const BigInteger&) const;
+};
+
+
 /// Here onwards start implementation for RSA - this contains
 /// generic classes (templates).
 /// User will provide their own implementation of big integer
@@ -878,8 +951,6 @@ private:
 ///
 /// Compliant with PKCS#1 (v2.1)
 /// https://tools.ietf.org/html/rfc3447#section-7.2
-///
-/// Mine uses pkcs#1 v1.5 padding scheme
 ///
 /// Big integer must support have following functions implemented
 ///  -  operator-() [subtraction]
@@ -892,8 +963,8 @@ private:
 ///  -  operator>>=() [short-hand right-shift]
 ///
 /// Also you must provide proper implementation to Helper class
-/// which will extend BigIntegerHelper and must implement
-/// <code>BigIntegerHelper<BigInteger>::bigIntegerToByte</code>
+/// which will extend MathHelper and must implement
+/// <code>MathHelper<BigInteger>::bigIntegerToByte</code>
 /// function. The base function returns empty byte.
 ///
 
@@ -912,13 +983,13 @@ using RawString = ByteArray;
 /// \brief Contains helper functions for RSA throughout
 ///
 template <class BigInteger>
-class BigIntegerHelper {
+class MathHelper {
 public:
 
     static const BigInteger kBigInteger256;
 
-    BigIntegerHelper() = default;
-    virtual ~BigIntegerHelper() = default;
+    MathHelper() = default;
+    virtual ~MathHelper() = default;
 
     ///
     /// \brief Implementation for (a ^ -1) mod b
@@ -1123,17 +1194,17 @@ public:
         return msg;
     }
 private:
-    BigIntegerHelper(const BigIntegerHelper&) = delete;
-    BigIntegerHelper& operator=(const BigIntegerHelper&) = delete;
+    MathHelper(const MathHelper&) = delete;
+    MathHelper& operator=(const MathHelper&) = delete;
 };
 
 ///
 /// \brief Big Integer = 256 (static declaration)
 ///
 template <typename BigInteger>
-const BigInteger BigIntegerHelper<BigInteger>::kBigInteger256 = 256;
+const BigInteger MathHelper<BigInteger>::kBigInteger256 = 256;
 
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericBaseKey {
 public:
     GenericBaseKey() = default;
@@ -1164,7 +1235,7 @@ protected:
 ///
 /// \brief Public key object with generic big integer
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericPublicKey : public GenericBaseKey<BigInteger, Helper> {
     using BaseKey = GenericBaseKey<BigInteger, Helper>;
 public:
@@ -1211,7 +1282,7 @@ protected:
 ///
 /// \brief Private key object with generic big integer
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericPrivateKey : public GenericBaseKey<BigInteger, Helper> {
     using BaseKey = GenericBaseKey<BigInteger, Helper>;
 public:
@@ -1343,7 +1414,7 @@ protected:
 ///
 /// \brief Key pair (containing public and private key objects) with generic big integer
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericKeyPair {
 public:
     GenericKeyPair() = default;
@@ -1387,7 +1458,7 @@ protected:
 ///
 /// \brief Provides RSA crypto functionalities
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericRSA {
 public:
 
@@ -1446,7 +1517,7 @@ public:
     {
         BigInteger msg = m_helper.hexToBigInteger(c);
         int xlen = privateKey->emBits();
-        if (msg >= m_helper.power(BigIntegerHelper<BigInteger>::kBigInteger256, BigInteger(xlen))) {
+        if (msg >= m_helper.power(MathHelper<BigInteger>::kBigInteger256, BigInteger(xlen))) {
             throw std::runtime_error("Integer too large");
         }
         BigInteger decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());
