@@ -40,8 +40,6 @@ namespace mine {
 /// Compliant with PKCS#1 (v2.1)
 /// https://tools.ietf.org/html/rfc3447#section-7.2
 ///
-/// Mine uses pkcs#1 v1.5 padding scheme
-///
 /// Big integer must support have following functions implemented
 ///  -  operator-() [subtraction]
 ///  -  operator+() [addition]
@@ -53,8 +51,8 @@ namespace mine {
 ///  -  operator>>=() [short-hand right-shift]
 ///
 /// Also you must provide proper implementation to Helper class
-/// which will extend BigIntegerHelper and must implement
-/// <code>BigIntegerHelper<BigInteger>::bigIntegerToByte</code>
+/// which will extend MathHelper and must implement
+/// <code>MathHelper<BigInteger>::bigIntegerToByte</code>
 /// function. The base function returns empty byte.
 ///
 
@@ -73,13 +71,13 @@ using RawString = ByteArray;
 /// \brief Contains helper functions for RSA throughout
 ///
 template <class BigInteger>
-class BigIntegerHelper {
+class MathHelper {
 public:
 
     static const BigInteger kBigInteger256;
 
-    BigIntegerHelper() = default;
-    virtual ~BigIntegerHelper() = default;
+    MathHelper() = default;
+    virtual ~MathHelper() = default;
 
     ///
     /// \brief Implementation for (a ^ -1) mod b
@@ -284,17 +282,17 @@ public:
         return msg;
     }
 private:
-    BigIntegerHelper(const BigIntegerHelper&) = delete;
-    BigIntegerHelper& operator=(const BigIntegerHelper&) = delete;
+    MathHelper(const MathHelper&) = delete;
+    MathHelper& operator=(const MathHelper&) = delete;
 };
 
 ///
 /// \brief Big Integer = 256 (static declaration)
 ///
 template <typename BigInteger>
-const BigInteger BigIntegerHelper<BigInteger>::kBigInteger256 = 256;
+const BigInteger MathHelper<BigInteger>::kBigInteger256 = 256;
 
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericBaseKey {
 public:
     GenericBaseKey() = default;
@@ -325,7 +323,7 @@ protected:
 ///
 /// \brief Public key object with generic big integer
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericPublicKey : public GenericBaseKey<BigInteger, Helper> {
     using BaseKey = GenericBaseKey<BigInteger, Helper>;
 public:
@@ -372,7 +370,7 @@ protected:
 ///
 /// \brief Private key object with generic big integer
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericPrivateKey : public GenericBaseKey<BigInteger, Helper> {
     using BaseKey = GenericBaseKey<BigInteger, Helper>;
 public:
@@ -504,7 +502,7 @@ protected:
 ///
 /// \brief Key pair (containing public and private key objects) with generic big integer
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericKeyPair {
 public:
     GenericKeyPair() = default;
@@ -548,7 +546,7 @@ protected:
 ///
 /// \brief Provides RSA crypto functionalities
 ///
-template <class BigInteger, class Helper = BigIntegerHelper<BigInteger>>
+template <class BigInteger, class Helper = MathHelper<BigInteger>>
 class GenericRSA {
 public:
 
@@ -607,7 +605,7 @@ public:
     {
         BigInteger msg = m_helper.hexToBigInteger(c);
         int xlen = privateKey->emBits();
-        if (msg >= m_helper.power(BigIntegerHelper<BigInteger>::kBigInteger256, BigInteger(xlen))) {
+        if (msg >= m_helper.power(MathHelper<BigInteger>::kBigInteger256, BigInteger(xlen))) {
             throw std::runtime_error("Integer too large");
         }
         BigInteger decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());

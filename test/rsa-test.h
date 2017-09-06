@@ -18,7 +18,7 @@ namespace mine {
 
 using BigInteger = CryptoPP::Integer;
 
-class Helper : public BigIntegerHelper<BigInteger>
+class Helper : public MathHelper<BigInteger>
 {
 public:
     virtual byte bigIntegerToByte(const BigInteger& b) const override
