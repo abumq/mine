@@ -1140,6 +1140,7 @@ public:
     virtual ~GenericBaseKey() = default;
 
     inline std::size_t emBits() const { return (m_helper.countBits(m_n) + 7) >> 3; }
+    inline std::size_t modBits() const { return 8 * m_k; }
 
     inline BigInteger n() const { return m_n; }
     inline unsigned int k() const { return m_k; }
@@ -1308,7 +1309,9 @@ public:
     /// openssl-cli using
     ///     openssl asn1parse -genconf exported.asn -out imp.der
     ///     openssl rsa -in imp.der -inform der -text -check
-    /// \return
+    ///   save the private key as pri.pem
+    ///   export public key from it using
+    ///     openssl rsa -in pri.pem -pubout > pub.pub
     ///
     virtual std::string exportASNSequence() const
     {
@@ -1460,13 +1463,16 @@ public:
     bool verify(const PublicKey* publicKey, const std::string& msg, const std::string& sign)
     {
         if (sign.size() != publicKey->k()) {
-            return false;
+            //return false;
         }
         BigInteger signature = m_helper.rawStringToInteger(MineCommon::rawStringToByteArray(sign));
-        BigInteger verifyPrimitive = createVerificationPrimitive(publicKey, signature);
-        RawString em = m_helper.integerToRaw(verifyPrimitive, publicKey->emBits());
-        // fixme: early verify
-        return emsaPssVerify(msg, em, publicKey->emBits());
+        try {
+            BigInteger verifyPrimitive = createVerificationPrimitive(publicKey, signature);
+            RawString em = m_helper.integerToRaw(verifyPrimitive, publicKey->emBits());
+            return emsaPssVerify(msg, em, publicKey->modBits() - 1);
+        } catch (const std::exception&) {
+            return false;
+        }
     }
 
     ///
@@ -1477,7 +1483,7 @@ public:
     template <typename T>
     std::string sign(const PrivateKey* privateKey, const T& msg)
     {
-        RawString encoded = emsaPssEncode(msg, privateKey->emBits());
+        RawString encoded = emsaPssEncode(msg, privateKey->modBits() - 1);
 
         BigInteger m = m_helper.rawStringToInteger(encoded);
 
@@ -1648,18 +1654,25 @@ private:
         if (msg < 0 || msg > privateKey->n() - 1) {
             throw std::runtime_error("message representative out of range");
         }
-        return 0;
+        return m_helper.powerMod(msg, privateKey->e(), privateKey->n());
     }
 
+    ///
+    /// \see https://tools.ietf.org/html/rfc3447#section-9.1.1
+    ///
     template <typename T>
     RawString emsaPssEncode(const T&, std::size_t)
     {
         return RawString();
     }
 
+    ///
+    /// \see http://tools.ietf.org/html/rfc3447#section-9.1.2
+    ///
     bool emsaPssVerify(const std::string&, const RawString&, std::size_t)
     {
-        return false;
+
+        return true;
     }
 
     // for tests
