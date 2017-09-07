@@ -97,6 +97,21 @@ TEST(BigIntegerTest, IsOnerTest)
         ASSERT_EQ(a.is1er(), PARAM(1));
     }
 }
+static TestData<BigInteger, long, BigInteger> PowerData = {
+    TestCase(10, 0, 1),
+    TestCase(10, 1, 10),
+    TestCase(10, 19, BigInteger("10000000000000000000")),
+};
+
+TEST(BigIntegerTest, Power)
+{
+    for (const auto& item : PowerData) {
+        BigInteger a = PARAM(0);
+        long b = PARAM(1);
+        BigInteger exp = PARAM(2);
+        ASSERT_EQ(a ^ b, exp);
+    }
+}
 
 static TestData<BigInteger, BigInteger, BigInteger> AdditionData = {
     TestCase(123, 456, 579),
@@ -147,7 +162,11 @@ static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
     TestCase(3, 6701, 20103),
     TestCase(243, 993, 241299),
     TestCase(2439, 99, 241461),
-    TestCase(BigInteger("24339221"), BigInteger("32212132"), BigInteger("784018199629172")),
+    TestCase(BigInteger("243392213"), BigInteger("32212132"), BigInteger("7840182092928116")),
+    TestCase(BigInteger("243392213323222342"), BigInteger("3221213232223221"), BigInteger("784018218176860754178652358403582")),
+    TestCase(BigInteger("5080873441234413887"), BigInteger("2234638207523081573"), BigInteger("11353913919371701786996400886745004251")),
+    TestCase(BigInteger("43879350166773359647071667116025080873441234413887"), BigInteger("71904842149664289633274572930135618242638207523081573"), BigInteger("3155137747371683847511707019689925546164918051142631554924123181885362208552200375950092400886745004251")),
+    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"), BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"), BigInteger("9873955694194590232514048984970761535584766520827432398848323179877576914413107050563833143580841040071254924123181885362208552200375950092400886745004251")),
     TestCase(2, 0, 0),
     TestCase(0, 0, 0),
     TestCase(2, 4, 8),
@@ -157,8 +176,15 @@ static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
 
 TEST(BigIntegerTest, Multiplication)
 {
+    auto printCalc = [](BigInteger x, BigInteger y, BigInteger exp) {
+        std::cout << "    " << x << "\n x  " << y
+                  << "\n-------------------------------------------------------\n =  "
+                  << exp << std::endl;
+        std::cout << std::endl;
+    };
+
     for (const auto& item : MultiplyData) {
-        std::cout << PARAM(0) << " x " << PARAM(1) << " = " << PARAM(2) << std::endl;
+        printCalc(PARAM(1), PARAM(0), PARAM(2));
         BigInteger result = BigInteger(PARAM(0)) * BigInteger(PARAM(1));
         BigInteger exp = PARAM(2);
         ASSERT_EQ(result, exp);
@@ -166,9 +192,30 @@ TEST(BigIntegerTest, Multiplication)
 
     // one more test ;)
     BigInteger a = 65536;
-    BigInteger exp("340282366920938463463374607431768211456");
+    BigInteger exp2("4294967296");
+    BigInteger exp3("281474976710656");
+    BigInteger exp4("18446744073709551616");
+    BigInteger exp5("1208925819614629174706176");
+    BigInteger exp6("79228162514264337593543950336");
+    BigInteger exp7("5192296858534827628530496329220096");
 
-    ASSERT_EQ(a * a * a * a * a * a * a * a, exp);
+    printCalc(a, a, exp2);
+    ASSERT_EQ(a * a, exp2);
+
+    printCalc(a, exp2, exp3);
+    ASSERT_EQ(exp2 * a, exp3);
+
+    printCalc(a, exp3, exp4);
+    ASSERT_EQ(exp3 * a, exp4);
+
+    printCalc(a, exp4, exp5);
+    ASSERT_EQ(exp4 * a, exp5);
+
+    printCalc(a, exp5, exp6);
+    ASSERT_EQ(exp5 * a, exp6);
+
+    printCalc(a, exp6, exp7);
+    ASSERT_EQ(exp6 * a, exp7);
 
 }
 

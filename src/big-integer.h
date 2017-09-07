@@ -38,14 +38,9 @@ namespace mine {
 class BigInteger {
     using Container = std::vector<int>;
 public:
-
     BigInteger();
     BigInteger(const BigInteger& other);
-    BigInteger(const Container& d) : m_negative(false), m_data(d) {
-        if (m_data.empty()) {
-            m_data.push_back(0);
-        }
-    }
+    BigInteger(const Container& d);
     BigInteger(BigInteger&& other);
     BigInteger& operator=(const BigInteger& other);
     BigInteger(long long);
@@ -55,6 +50,13 @@ public:
     // construct -----------------------------------------------------------
     void init(long long);
     void init(const std::string&);
+    inline void checkAndFixData()
+    {
+        if (m_data.empty()) {
+            m_data.push_back(0);
+            m_negative = false;
+        }
+    }
 
     // assign ---------------------------------------------------------------
     BigInteger& operator=(long long);
@@ -74,12 +76,11 @@ public:
 
     // multiply
     BigInteger operator*(const BigInteger& other);
+    BigInteger& operator*=(const BigInteger& other);
 
     // power
-    template <typename T = long>
-    inline BigInteger operator^(T e) {
-        return e == 0 ? 1 : (*this * ((*this) ^ (e - 1)));
-    }
+    BigInteger operator^(long e);
+    BigInteger& operator^=(long e);
 
     // compare ---------------------------------------------------------------
     bool operator>(const BigInteger& other) const;
@@ -100,7 +101,7 @@ public:
     // properties ---------------------------------------------------------------
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
-    inline bool isZero() const { return m_data.size() == 1 && m_data[0] == 0; }
+    inline bool isZero() const;
 
     ///
     /// \return Whether it's 1, 10, 100, 1000, ...

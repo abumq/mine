@@ -1111,21 +1111,29 @@ ByteArray AES::decr(const ByteArray& input, ByteArray& iv)
 
 BigInteger::BigInteger() : m_negative(false)
 {
-    m_data.push_back(0);
+    checkAndFixData();
+}
+
+BigInteger::BigInteger(const Container &d)
+    : m_negative(false),
+      m_data(d) {
+    checkAndFixData();
 }
 
 BigInteger::BigInteger(const BigInteger& other)
 {
     m_data = other.m_data;
     m_negative = other.m_negative;
+    checkAndFixData();
 }
 
 BigInteger::BigInteger(BigInteger&& other)
 {
     m_data = std::move(other.m_data);
     m_negative = other.m_negative;
-    other.m_data.push_back(0);
     other.m_negative = false;
+    checkAndFixData();
+    other.checkAndFixData();
 }
 
 BigInteger& BigInteger::operator=(const BigInteger& other)
@@ -1133,6 +1141,7 @@ BigInteger& BigInteger::operator=(const BigInteger& other)
     if (this != &other) {
         m_data = other.m_data;
         m_negative = other.m_negative;
+        checkAndFixData();
     }
     return *this;
 }
@@ -1173,6 +1182,7 @@ void BigInteger::init(long long n)
         m_data.insert(m_data.begin(), n % 10);
         n /= 10;
     } while (n);
+    checkAndFixData();
 }
 
 void BigInteger::init(const std::string& n)
@@ -1197,19 +1207,7 @@ void BigInteger::init(const std::string& n)
         firstNonZeroDigitFound = true;
         m_data.push_back(static_cast<int>(c) - '0');
     }
-}
-
-bool BigInteger::is1er() const
-{
-    if (m_data.empty()) {
-        return false;
-    }
-    bool firstIsOne = m_data[0] == 1;
-    auto iter = std::find_if_not(m_data.begin() + 1, m_data.end(), [&](int x) {
-        return x == 0;
-    });
-    bool allRestZero = iter == m_data.end();
-    return firstIsOne && allRestZero;
+    checkAndFixData();
 }
 
 BigInteger BigInteger::operator+(const BigInteger& other)
@@ -1260,20 +1258,6 @@ BigInteger BigInteger::operator+(const BigInteger& other)
     return result;
 }
 
-BigInteger& BigInteger::operator+=(const BigInteger& other)
-{
-    BigInteger b = *this + other;
-    m_data = std::move(b.m_data);
-    m_negative = b.m_negative;
-    return *this;
-}
-
-BigInteger& BigInteger::operator++()
-{
-    *this += BigInteger(1);
-    return *this;
-}
-
 BigInteger BigInteger::operator-(const BigInteger& other)
 {
     if (other.isZero()) {
@@ -1311,19 +1295,6 @@ BigInteger BigInteger::operator-(const BigInteger& other)
     return result;
 }
 
-BigInteger& BigInteger::operator-=(const BigInteger& other)
-{
-    BigInteger b = *this - other;
-    m_data = std::move(b.m_data);
-    m_negative = b.m_negative;
-    return *this;
-}
-
-BigInteger& BigInteger::operator--()
-{
-    *this -= BigInteger(1);
-    return *this;
-}
 /*
 BigInteger BigInteger::operator*(const BigInteger& other)
 {
@@ -1369,16 +1340,14 @@ BigInteger BigInteger::operator*(const BigInteger& other)
         return BigInteger(0);
     }
     std::vector<BigInteger> tmps;
-    const Container* first = m_data.size() >= other.m_data.size() ? &m_data : &other.m_data;
-    const Container* second = m_data.size() >= other.m_data.size() ? &other.m_data : &m_data;
-    for (auto its = second->rbegin(); its < second->rend(); ++its) {
+    for (auto itf = m_data.rbegin(); itf < m_data.rend(); ++itf) {
         Container dataTmp;
         int carry = 0;
-        for (auto itf = first->rbegin(); itf < first->rend(); ++itf) {
+        int y = *itf;
+        for (auto its = other.m_data.rbegin(); its < other.m_data.rend(); ++its) {
             int x = *its;
-            int y = *itf;
             int z = (x * y) + carry;
-            if (z < 10 || itf >= first->rend() - 1) {
+            if (z < 10 || its >= other.m_data.rend() - 1) {
                 carry = 0;
                 while (z > 10) {
                     dataTmp.insert(dataTmp.begin(), z % 10);
@@ -1395,50 +1364,106 @@ BigInteger BigInteger::operator*(const BigInteger& other)
     }
 
     BigInteger result;
-    int i = 0;
+    BigInteger p10(1);
     for (BigInteger b : tmps) {
-        result += b * pow(10, i);
-        i++;
+        BigInteger bp10 = b * p10;
+        result += bp10;
+        p10 = p10 * 10;
     }
-
     result.m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
     return result;
 }
 
-bool BigInteger::operator>(const BigInteger& other) const
-{
-    return compare(other) == 1;
-}
-
-bool BigInteger::operator<(const BigInteger& other) const
-{
-    return compare(other) == -1;
-}
-
-bool BigInteger::operator<=(const BigInteger& other) const
-{
-    return *this == other || compare(other) == -1;
-}
-
-bool BigInteger::operator>=(const BigInteger& other) const
-{
-    return *this == other || compare(other) == 1;
-}
-
-std::string BigInteger::str() const
-{
-    std::ostringstream ss;
-    if (m_negative) {
-        ss << "-";
+BigInteger BigInteger::operator^(long e) {
+    if (e == 0) {
+        return 1;
+    } else if (e == 1) {
+        return *this;
     }
-    std::copy(m_data.begin(), m_data.end(), std::ostream_iterator<int>(ss));
-    return ss.str();
+    BigInteger base = *this;
+    BigInteger result = 1;
+    while (e) {
+        if (e & 1) {
+            result *= base;
+        }
+        e >>= 1;
+        base *= base;
+    }
+
+    return result;
 }
 
-long long BigInteger::toLong() const
+// ------------------------------------ short hand operators ---------------------
+
+BigInteger& BigInteger::operator+=(const BigInteger& other)
 {
-    return std::stol(str()) * (m_negative ? -1 : 1);
+    BigInteger b = *this + other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
 }
+
+BigInteger& BigInteger::operator++()
+{
+    *this += BigInteger(1);
+    return *this;
+}
+
+BigInteger& BigInteger::operator-=(const BigInteger& other)
+{
+    BigInteger b = *this - other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator--()
+{
+    *this -= BigInteger(1);
+    return *this;
+}
+
+BigInteger& BigInteger::operator*=(const BigInteger& other)
+{
+    BigInteger b = *this * other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator^=(long e)
+{
+    BigInteger b = *this ^ e;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+// ----------------------------- properties ----------------------------------------
+
+bool BigInteger::is1er() const
+{
+    if (m_data.empty()) {
+        return false;
+    }
+    auto iter = std::find_if_not(m_data.begin() + 1, m_data.end(), [&](int x) {
+        return x == 0;
+    });
+    return m_data[0] == 1 && iter == m_data.end();
+}
+
+bool BigInteger::isZero() const
+{
+    if (m_data.empty()) {
+        return true;
+    }
+    auto iter = std::find_if_not(m_data.begin(), m_data.end(), [&](int x) {
+        return x == 0;
+    });
+    return iter == m_data.end();
+}
+
+// ----------------------------- comparison ----------------------------------------
 
 int BigInteger::compare(const BigInteger& other) const
 {
@@ -1470,6 +1495,43 @@ int BigInteger::compare(const BigInteger& other) const
     }
 
     return 0;
+}
+
+bool BigInteger::operator>(const BigInteger& other) const
+{
+    return compare(other) == 1;
+}
+
+bool BigInteger::operator<(const BigInteger& other) const
+{
+    return compare(other) == -1;
+}
+
+bool BigInteger::operator<=(const BigInteger& other) const
+{
+    return *this == other || compare(other) == -1;
+}
+
+bool BigInteger::operator>=(const BigInteger& other) const
+{
+    return *this == other || compare(other) == 1;
+}
+
+// ----------------------------- conversion ----------------------------------------
+
+std::string BigInteger::str() const
+{
+    std::ostringstream ss;
+    if (m_negative) {
+        ss << "-";
+    }
+    std::copy(m_data.begin(), m_data.end(), std::ostream_iterator<int>(ss));
+    return ss.str();
+}
+
+long long BigInteger::toLong() const
+{
+    return std::stol(str()) * (m_negative ? -1 : 1);
 }
 
 
