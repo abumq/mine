@@ -41,37 +41,52 @@ public:
 
     BigInteger();
     BigInteger(const BigInteger& other);
-    BigInteger(const Container& d) : m_negative(false), m_data(d) {}
+    BigInteger(const Container& d) : m_negative(false), m_data(d) {
+        if (m_data.empty()) {
+            m_data.push_back(0);
+        }
+    }
     BigInteger(BigInteger&& other);
     BigInteger& operator=(const BigInteger& other);
     BigInteger(long long);
     BigInteger(const std::string&);
     virtual ~BigInteger() = default;
 
-    // construct
+    // construct -----------------------------------------------------------
     void init(long long);
     void init(const std::string&);
 
-    // assign
+    // assign ---------------------------------------------------------------
     BigInteger& operator=(long long);
     BigInteger& operator=(const std::string&);
 
-    // maths
+    // maths ---------------------------------------------------------------
+
+    // addition
     BigInteger operator+(const BigInteger& other);
     BigInteger& operator+=(const BigInteger& other);
     BigInteger& operator++();
 
+    // subtraction
     BigInteger operator-(const BigInteger& other);
     BigInteger& operator-=(const BigInteger& other);
     BigInteger& operator--();
 
+    // multiply
     BigInteger operator*(const BigInteger& other);
 
-    // compare
+    // power
+    template <typename T = long>
+    inline BigInteger operator^(T e) {
+        return e == 0 ? 1 : (*this * ((*this) ^ (e - 1)));
+    }
+
+    // compare ---------------------------------------------------------------
     bool operator>(const BigInteger& other) const;
     bool operator>=(const BigInteger& other) const;
     bool operator<(const BigInteger& other) const;
     bool operator<=(const BigInteger& other) const;
+
     inline bool operator==(const BigInteger& other) const
     {
         return m_data == other.m_data && m_negative == other.m_negative;
@@ -82,12 +97,17 @@ public:
         return m_data != other.m_data || m_negative != other.m_negative;
     }
 
-    // properties
+    // properties ---------------------------------------------------------------
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const { return m_data.size() == 1 && m_data[0] == 0; }
 
-    // string
+    ///
+    /// \return Whether it's 1, 10, 100, 1000, ...
+    ///
+    bool is1er() const;
+
+    // string ---------------------------------------------------------------
 
     std::string str() const;
     long long toLong() const;

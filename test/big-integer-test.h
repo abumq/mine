@@ -43,11 +43,11 @@ TEST(BigIntegerTest, Construct)
 
 
     BigInteger bneg("-23");
-    ASSERT_EQ(bneg.str(), "23");
+    ASSERT_EQ(bneg.str(), "-23");
     ASSERT_TRUE(bneg.isNegative());
 
     BigInteger bnegl(-23);
-    ASSERT_EQ(bnegl.str(), "23");
+    ASSERT_EQ(bnegl.str(), "-23");
     ASSERT_TRUE(bnegl.isNegative());
 }
 
@@ -82,13 +82,30 @@ TEST(BigIntegerTest, BiggerThan)
     }
 }
 
+static TestData<BigInteger, bool> OnerTestData = {
+    TestCase(123, false),
+    TestCase(1, true),
+    TestCase(10, true),
+    TestCase(1000, true),
+    TestCase(21000, false),
+};
+
+TEST(BigIntegerTest, IsOnerTest)
+{
+    for (const auto& item : OnerTestData) {
+        BigInteger a = PARAM(0);
+        ASSERT_EQ(a.is1er(), PARAM(1));
+    }
+}
+
 static TestData<BigInteger, BigInteger, BigInteger> AdditionData = {
     TestCase(123, 456, 579),
     TestCase(1235, 456, 1691),
     TestCase(123, 4560, 4683),
     TestCase(123, 45600, 45723),
     TestCase(BigInteger("023"), 45600, 45623),
-    //TestCase(BigInteger("-23"), 45600, 45577),
+    TestCase(BigInteger("-23"), 45600, -45577),
+    TestCase(BigInteger("23"), -45600, -45577),
 };
 
 TEST(BigIntegerTest, Addition)
@@ -103,23 +120,56 @@ TEST(BigIntegerTest, Addition)
     }
 }
 
+static TestData<BigInteger, BigInteger, BigInteger> SubtractionData = {
+    TestCase(0, 123, -123),
+    TestCase(4560, 123, 4437),
+    TestCase(123, 4560, -4437),
+    TestCase(1, 4560, -4559),
+    TestCase(-500, -1, -501),
+};
+
+TEST(BigIntegerTest, Subtraction)
+{
+    for (const auto& item : SubtractionData) {
+        BigInteger a = PARAM(0);
+        BigInteger b = PARAM(1);
+        BigInteger exp = PARAM(2);
+        ASSERT_EQ(a - b, exp);
+        a -= b;
+        ASSERT_EQ(a, exp);
+    }
+}
+
 static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
-    //TestCase(2, 4, 8),
+    TestCase(123, 27, 3321),
     TestCase(63, 67, 4221),
     TestCase(6, 67, 402),
     TestCase(3, 6701, 20103),
     TestCase(243, 993, 241299),
     TestCase(2439, 99, 241461),
+    TestCase(BigInteger("24339221"), BigInteger("32212132"), BigInteger("784018199629172")),
+    TestCase(2, 0, 0),
+    TestCase(0, 0, 0),
+    TestCase(2, 4, 8),
+    TestCase(2439, -99, -241461),
+    TestCase(-2439, -99, 241461),
 };
 
 TEST(BigIntegerTest, Multiplication)
 {
     for (const auto& item : MultiplyData) {
-        BigInteger a = PARAM(0);
-        BigInteger b = PARAM(1);
+        std::cout << PARAM(0) << " x " << PARAM(1) << " = " << PARAM(2) << std::endl;
+        BigInteger result = BigInteger(PARAM(0)) * BigInteger(PARAM(1));
         BigInteger exp = PARAM(2);
-        ASSERT_EQ(a * b, exp);
+        ASSERT_EQ(result, exp);
     }
+
+    // one more test ;)
+    BigInteger a = 65536;
+    BigInteger exp("340282366920938463463374607431768211456");
+
+    ASSERT_EQ(a * a * a * a * a * a * a * a, exp);
+
 }
 
 }
