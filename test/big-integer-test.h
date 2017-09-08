@@ -121,6 +121,7 @@ static TestData<BigInteger, BigInteger, BigInteger> AdditionData = {
     TestCase(BigInteger("023"), 45600, 45623),
     TestCase(BigInteger("-23"), 45600, -45577),
     TestCase(BigInteger("23"), -45600, -45577),
+    TestCase(BigInteger("240171000090999121"), BigInteger("3221213232223221"), BigInteger("243392213323222342")),
 };
 
 TEST(BigIntegerTest, Addition)
@@ -141,6 +142,8 @@ static TestData<BigInteger, BigInteger, BigInteger> SubtractionData = {
     TestCase(123, 4560, -4437),
     TestCase(1, 4560, -4559),
     TestCase(-500, -1, -501),
+    TestCase(BigInteger("243392213323222342"), BigInteger("3221213232223221"), BigInteger("240171000090999121")),
+    TestCase(BigInteger("243392213323222342"), BigInteger("240171000090999121"), BigInteger("3221213232223221")),
 };
 
 TEST(BigIntegerTest, Subtraction)
@@ -177,10 +180,10 @@ static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
 TEST(BigIntegerTest, Multiplication)
 {
     auto printCalc = [](BigInteger x, BigInteger y, BigInteger exp) {
-        std::cout << "    " << x << "\n x  " << y
+        /*std::cout << "    " << x << "\n x  " << y
                   << "\n-------------------------------------------------------\n =  "
                   << exp << std::endl;
-        std::cout << std::endl;
+        std::cout << std::endl;*/
     };
 
     for (const auto& item : MultiplyData) {
@@ -221,6 +224,10 @@ TEST(BigIntegerTest, Multiplication)
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
     TestCase(4, 2, 2, 0),
+    TestCase(4, 3, 1, 1),
+    TestCase(48, 32, 1, 16),
+    TestCase(487, 32, 15, 7),
+    TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
 };
 
 TEST(BigIntegerTest, Division)

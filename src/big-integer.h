@@ -38,6 +38,11 @@ namespace mine {
 class BigInteger {
     using Container = std::vector<int>;
 public:
+    const static BigInteger kZero;
+    const static BigInteger kOne;
+    const static BigInteger kMinusOne;
+    const static BigInteger kTwoFiftySix;
+
     BigInteger();
     BigInteger(const BigInteger& other);
     BigInteger(const Container& d);
@@ -71,6 +76,7 @@ public:
 
     // subtraction
     BigInteger operator-(const BigInteger& other);
+    BigInteger& operator-();
     BigInteger& operator-=(const BigInteger& other);
     BigInteger& operator--();
 
@@ -82,6 +88,9 @@ public:
     void divide(const BigInteger& other, BigInteger& q, BigInteger& r);
     BigInteger operator/(const BigInteger& other);
     BigInteger& operator/=(const BigInteger& other);
+
+    BigInteger operator%(const BigInteger& other);
+    BigInteger& operator%=(const BigInteger& other);
 
     // power
     BigInteger operator^(long e);

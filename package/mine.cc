@@ -1290,6 +1290,10 @@ BigInteger BigInteger::operator-(const BigInteger& other)
         data.insert(data.begin(), z);
     }
 
+    // remove leading zeros
+    data.erase(data.begin(), std::find_if_not(data.begin(), data.end(), [&](int x) {
+        return x == 0;
+    }));
     BigInteger result(data);
     result.m_negative = neg;
     return result;
@@ -1374,7 +1378,41 @@ BigInteger BigInteger::operator*(const BigInteger& other)
     return result;
 }
 
-BigInteger BigInteger::operator^(long e) {
+void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r)
+{
+    if (d.isZero()) {
+        throw std::invalid_argument("Division by zero");
+    }
+    /*if (d < 0) {
+        BigInteger d2 = d;
+        divide(-d, q, r);
+        return;
+    }*/
+    // todo: handle less than zero case
+    q = 0;
+    r = *this;
+    while (r >= d) {
+        q = q + 1;
+        r -= d;
+    }
+}
+
+BigInteger BigInteger::operator/(const BigInteger& other)
+{
+    BigInteger q, r;
+    divide(other, q, r);
+    return q;
+}
+
+BigInteger BigInteger::operator%(const BigInteger& other)
+{
+    BigInteger q, r;
+    divide(other, q, r);
+    return r;
+}
+
+BigInteger BigInteger::operator^(long e)
+{
     if (e == 0) {
         return 1;
     } else if (e == 1) {
@@ -1395,17 +1433,24 @@ BigInteger BigInteger::operator^(long e) {
 
 // ------------------------------------ short hand operators ---------------------
 
+
+BigInteger& BigInteger::operator++()
+{
+    *this += BigInteger(1);
+    return *this;
+}
+
+BigInteger& BigInteger::operator--()
+{
+    *this -= BigInteger(1);
+    return *this;
+}
+
 BigInteger& BigInteger::operator+=(const BigInteger& other)
 {
     BigInteger b = *this + other;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
-    return *this;
-}
-
-BigInteger& BigInteger::operator++()
-{
-    *this += BigInteger(1);
     return *this;
 }
 
@@ -1417,15 +1462,25 @@ BigInteger& BigInteger::operator-=(const BigInteger& other)
     return *this;
 }
 
-BigInteger& BigInteger::operator--()
-{
-    *this -= BigInteger(1);
-    return *this;
-}
-
 BigInteger& BigInteger::operator*=(const BigInteger& other)
 {
     BigInteger b = *this * other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator/=(const BigInteger& other)
+{
+    BigInteger b = *this / other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator%=(const BigInteger& other)
+{
+    BigInteger b = *this % other;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;

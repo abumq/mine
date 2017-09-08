@@ -20,6 +20,11 @@
 
 using namespace mine;
 
+const BigInteger BigInteger::kZero = BigInteger(0);
+const BigInteger BigInteger::kOne = BigInteger(1);
+const BigInteger BigInteger::kMinusOne = BigInteger(-1);
+const BigInteger BigInteger::kTwoFiftySix = BigInteger(256);
+
 BigInteger::BigInteger() : m_negative(false)
 {
     checkAndFixData();
@@ -201,6 +206,10 @@ BigInteger BigInteger::operator-(const BigInteger& other)
         data.insert(data.begin(), z);
     }
 
+    // remove leading zeros
+    data.erase(data.begin(), std::find_if_not(data.begin(), data.end(), [&](int x) {
+        return x == 0;
+    }));
     BigInteger result(data);
     result.m_negative = neg;
     return result;
@@ -285,10 +294,24 @@ BigInteger BigInteger::operator*(const BigInteger& other)
     return result;
 }
 
-void BigInteger::divide(const BigInteger& other, BigInteger& q, BigInteger& r)
+void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r)
 {
-    q = 2;
-    r = 0;
+    if (d.isZero()) {
+        throw std::invalid_argument("Division by zero");
+    }
+    if (d < 0) {
+        BigInteger d2(d);
+        d2 *= kMinusOne;
+        divide(d2, q, r);
+        return;
+    }
+    // todo: handle less than zero case
+    q = 0;
+    r = *this;
+    while (r >= d) {
+        q = q + 1;
+        r -= d;
+    }
 }
 
 BigInteger BigInteger::operator/(const BigInteger& other)
@@ -296,6 +319,13 @@ BigInteger BigInteger::operator/(const BigInteger& other)
     BigInteger q, r;
     divide(other, q, r);
     return q;
+}
+
+BigInteger BigInteger::operator%(const BigInteger& other)
+{
+    BigInteger q, r;
+    divide(other, q, r);
+    return r;
 }
 
 BigInteger BigInteger::operator^(long e)
@@ -320,6 +350,25 @@ BigInteger BigInteger::operator^(long e)
 
 // ------------------------------------ short hand operators ---------------------
 
+
+BigInteger& BigInteger::operator++()
+{
+    *this += BigInteger(1);
+    return *this;
+}
+
+BigInteger& BigInteger::operator--()
+{
+    *this -= BigInteger(1);
+    return *this;
+}
+
+BigInteger& BigInteger::operator-()
+{
+    *this *= BigInteger(-1);
+    return *this;
+}
+
 BigInteger& BigInteger::operator+=(const BigInteger& other)
 {
     BigInteger b = *this + other;
@@ -328,23 +377,11 @@ BigInteger& BigInteger::operator+=(const BigInteger& other)
     return *this;
 }
 
-BigInteger& BigInteger::operator++()
-{
-    *this += BigInteger(1);
-    return *this;
-}
-
 BigInteger& BigInteger::operator-=(const BigInteger& other)
 {
     BigInteger b = *this - other;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
-    return *this;
-}
-
-BigInteger& BigInteger::operator--()
-{
-    *this -= BigInteger(1);
     return *this;
 }
 
@@ -359,6 +396,14 @@ BigInteger& BigInteger::operator*=(const BigInteger& other)
 BigInteger& BigInteger::operator/=(const BigInteger& other)
 {
     BigInteger b = *this / other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator%=(const BigInteger& other)
+{
+    BigInteger b = *this % other;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;
