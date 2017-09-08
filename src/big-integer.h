@@ -78,6 +78,11 @@ public:
     BigInteger operator*(const BigInteger& other);
     BigInteger& operator*=(const BigInteger& other);
 
+    // divide
+    void divide(const BigInteger& other, BigInteger& q, BigInteger& r);
+    BigInteger operator/(const BigInteger& other);
+    BigInteger& operator/=(const BigInteger& other);
+
     // power
     BigInteger operator^(long e);
     BigInteger& operator^=(long e);

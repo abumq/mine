@@ -285,7 +285,21 @@ BigInteger BigInteger::operator*(const BigInteger& other)
     return result;
 }
 
-BigInteger BigInteger::operator^(long e) {
+void BigInteger::divide(const BigInteger& other, BigInteger& q, BigInteger& r)
+{
+    q = 2;
+    r = 0;
+}
+
+BigInteger BigInteger::operator/(const BigInteger& other)
+{
+    BigInteger q, r;
+    divide(other, q, r);
+    return q;
+}
+
+BigInteger BigInteger::operator^(long e)
+{
     if (e == 0) {
         return 1;
     } else if (e == 1) {
@@ -337,6 +351,14 @@ BigInteger& BigInteger::operator--()
 BigInteger& BigInteger::operator*=(const BigInteger& other)
 {
     BigInteger b = *this * other;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator/=(const BigInteger& other)
+{
+    BigInteger b = *this / other;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;

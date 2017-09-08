@@ -219,6 +219,24 @@ TEST(BigIntegerTest, Multiplication)
 
 }
 
+static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
+    TestCase(4, 2, 2, 0),
+};
+
+TEST(BigIntegerTest, Division)
+{
+    for (const auto& item : DivisionData) {
+        BigInteger a = PARAM(0);
+        BigInteger b = PARAM(1);
+        BigInteger expQ = PARAM(2);
+        BigInteger expR = PARAM(3);
+        BigInteger q, r;
+        a.divide(b, q, r);
+        ASSERT_EQ(q, expQ);
+        ASSERT_EQ(r, expR);
+    }
+}
+
 }
 
 #endif // BIG_INTEGER_TEST_H
