@@ -96,10 +96,11 @@ public:
     static std::string encode(T n) noexcept
     {
         std::stringstream ss;
+        const T t16(16);
         int remainder;
         while (n != 0) {
-            remainder = n % 16;
-            n /= 16;
+            remainder = static_cast<int>(n % t16);
+            n /= t16;
             ss << kValidChars[remainder];
         }
         std::string res(ss.str());

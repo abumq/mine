@@ -48,7 +48,6 @@ namespace mine {
 ///  -  operator/() [divide]
 ///  -  operator%() [mod]
 ///  -  operator>>() [right-shift]
-///  -  operator>>=() [short-hand right-shift]
 ///
 /// Also you must provide proper implementation to Helper class
 /// which will extend MathHelper and must implement
@@ -95,7 +94,7 @@ public:
             b = a % b;
             a = t;
             t = x0;
-            x0 = x1 - q * x0;
+            x0 = (x1 - q) * x0;
             x1 = t;
         }
         if (x1 < 0) {
@@ -147,7 +146,7 @@ public:
         while (e > 0) {
             if (e % 2 == 1) {
                 // we decrement exponent to make it even
-                e--;
+                e = e - 1;
                 // store this multiplication directly to the
                 // result
                 result *= b;
@@ -182,7 +181,7 @@ public:
         unsigned int bits = 0;
         while (b > 0) {
             bits++;
-            b >>= 1;
+            b = b >> 1;
         }
         return bits;
     }

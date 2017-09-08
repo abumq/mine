@@ -30,7 +30,8 @@ namespace mine {
 ///
 /// \brief Minimal big integer for Mine library.
 ///
-/// This operates on base-10
+/// This operates on base-10 atm. Not for other uses as it does not contain
+/// all the operators implemented. only the ones needed for Mine RSA
 ///
 /// ******************* THIS IS NOT PRODUCTION READY YET!!! **********************
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
@@ -70,31 +71,32 @@ public:
     // maths ---------------------------------------------------------------
 
     // addition
-    BigInteger operator+(const BigInteger& other);
+    BigInteger operator+(const BigInteger& other) const;
     BigInteger& operator+=(const BigInteger& other);
-    BigInteger& operator++();
 
     // subtraction
-    BigInteger operator-(const BigInteger& other);
-    BigInteger& operator-();
+    BigInteger operator-(const BigInteger& other) const;
     BigInteger& operator-=(const BigInteger& other);
-    BigInteger& operator--();
 
     // multiply
-    BigInteger operator*(const BigInteger& other);
+    BigInteger operator*(const BigInteger& other) const;
     BigInteger& operator*=(const BigInteger& other);
 
     // divide
-    void divide(const BigInteger& other, BigInteger& q, BigInteger& r);
-    BigInteger operator/(const BigInteger& other);
+    static void divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r);
+    void divide(const BigInteger& divident, BigInteger& q, BigInteger& r) const;
+    BigInteger operator/(const BigInteger& other) const;
     BigInteger& operator/=(const BigInteger& other);
 
-    BigInteger operator%(const BigInteger& other);
+    BigInteger operator%(const BigInteger& other) const;
     BigInteger& operator%=(const BigInteger& other);
 
     // power
-    BigInteger operator^(long e);
+    BigInteger operator^(long e) const;
     BigInteger& operator^=(long e);
+
+    BigInteger operator>>(int e) const;
+    bool operator&(int e) const;
 
     // compare ---------------------------------------------------------------
     bool operator>(const BigInteger& other) const;
@@ -116,16 +118,19 @@ public:
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
+    unsigned long bitCount() const;
 
     ///
     /// \return Whether it's 1, 10, 100, 1000, ...
     ///
     bool is1er() const;
 
-    // string ---------------------------------------------------------------
+    // conversion ---------------------------------------------------------------
 
     std::string str() const;
     long long toLong() const;
+    explicit operator long long() const { return toLong(); }
+    explicit operator int() const { return static_cast<int>(toLong()); }
 
     friend inline std::ostream& operator<<(std::ostream& os, const BigInteger& b)
     {

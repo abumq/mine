@@ -126,7 +126,7 @@ void BigInteger::init(const std::string& n)
     checkAndFixData();
 }
 
-BigInteger BigInteger::operator+(const BigInteger& other)
+BigInteger BigInteger::operator+(const BigInteger& other) const
 {
     if ((m_negative || other.m_negative) && m_negative != other.m_negative) {
         // we have negation instead of addition in reality
@@ -174,7 +174,7 @@ BigInteger BigInteger::operator+(const BigInteger& other)
     return result;
 }
 
-BigInteger BigInteger::operator-(const BigInteger& other)
+BigInteger BigInteger::operator-(const BigInteger& other) const
 {
     if (other.isZero()) {
         return *this;
@@ -216,7 +216,7 @@ BigInteger BigInteger::operator-(const BigInteger& other)
 }
 
 /*
-BigInteger BigInteger::operator*(const BigInteger& other)
+BigInteger BigInteger::operator*(const BigInteger& other) const
 {
     if (*this < 10 && other < 10) {
         if (m_data.empty() || other.m_data.empty()) {
@@ -245,12 +245,13 @@ BigInteger BigInteger::operator*(const BigInteger& other)
 }*/
 
 // we use temp this and then fix the one above (commented one)
-BigInteger BigInteger::operator*(const BigInteger& other)
+BigInteger BigInteger::operator*(const BigInteger& other) const
 {
     if (other.is1er()) {
-        m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
-        m_data.resize(m_data.size() + other.m_data.size() - 1, 0);
-        return *this;
+        BigInteger result(*this);
+        result.m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
+        result.m_data.resize(m_data.size() + other.m_data.size() - 1, 0);
+        return result;
     } else if (*this >= 0 && other >= 0 && *this < 10 && other < 10) {
         if (m_data.empty() || other.m_data.empty()) {
             return BigInteger(0);
@@ -294,45 +295,51 @@ BigInteger BigInteger::operator*(const BigInteger& other)
     return result;
 }
 
-void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r)
+void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r) const
 {
-    if (d.isZero()) {
+    divide(*this, d, q, r);
+}
+
+void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r)
+{
+    if (divident.isZero()) {
         throw std::invalid_argument("Division by zero");
     }
-    if (d < 0) {
-        BigInteger d2(d);
+    if (divident < 0) {
+        BigInteger d2(divident);
         d2 *= kMinusOne;
-        divide(d2, q, r);
+        divide(divisor, d2, q, r);
         return;
     }
     // todo: handle less than zero case
     q = 0;
-    r = *this;
-    while (r >= d) {
+    r = divisor;
+    while (r >= divident) {
         q = q + 1;
-        r -= d;
+        r -= divident;
     }
 }
 
-BigInteger BigInteger::operator/(const BigInteger& other)
+BigInteger BigInteger::operator/(const BigInteger& other) const
 {
     BigInteger q, r;
     divide(other, q, r);
     return q;
 }
 
-BigInteger BigInteger::operator%(const BigInteger& other)
+BigInteger BigInteger::operator%(const BigInteger& other) const
 {
     BigInteger q, r;
     divide(other, q, r);
     return r;
 }
 
-BigInteger BigInteger::operator^(long e)
+BigInteger BigInteger::operator^(long e) const
 {
     if (e == 0) {
         return 1;
-    } else if (e == 1) {
+    }
+    if (e == 1) {
         return *this;
     }
     BigInteger base = *this;
@@ -348,26 +355,24 @@ BigInteger BigInteger::operator^(long e)
     return result;
 }
 
+BigInteger BigInteger::operator>>(int e) const
+{
+    BigInteger result(*this);
+
+    return result;
+}
+
+bool BigInteger::operator&(int e) const
+{
+    for (int d : m_data) {
+        if (d & e) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // ------------------------------------ short hand operators ---------------------
-
-
-BigInteger& BigInteger::operator++()
-{
-    *this += BigInteger(1);
-    return *this;
-}
-
-BigInteger& BigInteger::operator--()
-{
-    *this -= BigInteger(1);
-    return *this;
-}
-
-BigInteger& BigInteger::operator-()
-{
-    *this *= BigInteger(-1);
-    return *this;
-}
 
 BigInteger& BigInteger::operator+=(const BigInteger& other)
 {

@@ -158,6 +158,38 @@ TEST(BigIntegerTest, Subtraction)
     }
 }
 
+static TestData<BigInteger, int, BigInteger> RightShiftData = {
+    TestCase(4, 1, 2), // 100 => 10
+    TestCase(10, 1, 5), // 1010 => 101
+    TestCase(255, 1, 127),
+};
+
+TEST(BigIntegerTest, RightShift)
+{
+    for (const auto& item : RightShiftData) {
+        BigInteger a = PARAM(0);
+        int shiftBy = PARAM(1);
+        BigInteger exp = PARAM(2);
+        ASSERT_EQ(a >> shiftBy, exp);
+    }
+}
+
+static TestData<BigInteger, bool> BitwiseAndData = {
+    TestCase(255, true),
+    TestCase(127, true),
+    TestCase(46, false),
+    TestCase(47, true),
+};
+
+TEST(BigIntegerTest, BitwiseAnd)
+{
+    for (const auto& item : BitwiseAndData) {
+        BigInteger a = PARAM(0);
+        bool exp = PARAM(1);
+        ASSERT_EQ(a & 1, exp);
+    }
+}
+
 static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
     TestCase(123, 27, 3321),
     TestCase(63, 67, 4221),

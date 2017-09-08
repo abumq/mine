@@ -10,26 +10,28 @@
 #endif
 
 #include <type_traits>
-#include <cryptopp/integer.h>
+//#include <cryptopp/integer.h>
 #include <cryptopp/pem-com.h> // for readPem func
 #include "src/base64.h"
 
 namespace mine {
 
-using BigInteger = CryptoPP::Integer;
+//using BigInteger = CryptoPP::Integer;
 
 class Helper : public MathHelper<BigInteger>
 {
 public:
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
-        return static_cast<byte>(b.ConvertToLong());
+        return static_cast<byte>(b.toLong());
+        //return static_cast<byte>(b.ConvertToLong());
     }
 
     virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const override
     {
-        BigInteger::Divide(*remainder, *quotient, divisor, divident);
+        BigInteger::divide(divisor, divident, *quotient, *remainder);
+        //BigInteger::Divide(*remainder, *quotient, divisor, divident);
     }
 
     virtual std::string bigIntegerToHex(BigInteger b) const override
@@ -70,7 +72,13 @@ public:
                 PEM_Load(source, keyOut, secret.data(), secret.size());
             }
         }
-        init(keyOut.GetPrime1(), keyOut.GetPrime2(), static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
+        std::stringstream ss;
+        ss << keyOut.GetPrime1();
+        BigInteger p(ss.str());
+        ss.str("");
+        ss << keyOut.GetPrime2();
+        BigInteger q(ss.str());
+        init(p, q, static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
     }
 };
 
