@@ -13,7 +13,7 @@
 //
 //  https://github.com/muflihun/mine
 //
-
+#include <iostream>
 #include <sstream>
 #include <cmath>
 #include "src/big-integer.h"
@@ -317,12 +317,14 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
     while (r >= divident) {
         q = q + 1;
         r -= divident;
+        std::cout << "New r " << r << std::endl;
     }
 }
 
 BigInteger BigInteger::operator/(const BigInteger& other) const
 {
-    BigInteger q, r;
+    BigInteger q;
+    BigInteger r;
     divide(other, q, r);
     return q;
 }
@@ -357,9 +359,7 @@ BigInteger BigInteger::operator^(long e) const
 
 BigInteger BigInteger::operator>>(int e) const
 {
-    BigInteger result(*this);
-
-    return result;
+    return *this / 2;//(pow(2, e));
 }
 
 bool BigInteger::operator&(int e) const

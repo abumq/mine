@@ -162,6 +162,7 @@ static TestData<BigInteger, int, BigInteger> RightShiftData = {
     TestCase(4, 1, 2), // 100 => 10
     TestCase(10, 1, 5), // 1010 => 101
     TestCase(255, 1, 127),
+    TestCase(BigInteger("34778223424"), 1, BigInteger("17389111712")),
 };
 
 TEST(BigIntegerTest, RightShift)
