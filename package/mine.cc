@@ -1419,29 +1419,44 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
         divide(divisor, d2, q, r);
         return;
     }
+    const std::size_t maxMan = 100;
 
-    if (divident < 10) {
+    auto concat = [&](int x, int y) {
+        return x + (y * 10);
+    };
+
+    if (divident < maxMan) {
         // manual long
-        int d = static_cast<int>(divident.toLong());
+        int d = static_cast<int>(divident);
         int rem = 0;
         int quo = 0;
-        for (auto i = divisor.m_data.begin(); i < divisor.m_data.end(); ++i) {
-            int v = (rem * 10) + *i;
+
+        const int maxLen = divident.m_data.size();
+
+        for (std::size_t i = 0; i < divisor.m_data.size(); i += maxLen) {
+            int v = 0;
+            for (std::size_t j = i; j < i + maxLen; ++j) {
+                int ct = concat(rem, v);
+                if (i < divisor.m_data.size() - 1 && BigInteger(ct) >= divident) {
+                    --i;
+                } else {
+                    if (j < divisor.m_data.size()) {
+                        v = concat(divisor.m_data[j], v);
+                    }
+                }
+            }
+            if (BigInteger(v) < divident) {
+                v = concat(v, rem);
+            }
             quo = v / d;
             rem = v % d;
-            if (i == divisor.m_data.begin()) {
+            if (i == 0) {
                 q = quo;
             } else {
                 q.m_data.push_back(quo);
             }
         }
         r = rem;
-
-        if (!q.m_data.empty() && q.m_data[0] == 0) {
-            q.m_data.erase(std::find_if_not(q.m_data.begin(), q.m_data.end(), [&](int c) -> bool {
-                return c > 0;
-            }));
-        }
     } else {
         // fixme: extremely slow algo!
         // todo: handle less than zero case
@@ -1451,6 +1466,12 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
             q = q + 1;
             r -= divident;
         }
+    }
+
+    while (!q.m_data.empty() && q.m_data[0] == 0) {
+        q.m_data.erase(std::find_if_not(q.m_data.begin(), q.m_data.end(), [&](int c) -> bool {
+            return c > 0;
+        }));
     }
 }
 
