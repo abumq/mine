@@ -22,6 +22,7 @@
 #define RSA_H
 
 #include <cmath>
+#include <iostream>
 #include <stdexcept>
 #include <map>
 #include <string>
@@ -84,8 +85,8 @@ public:
     virtual BigIntegerT modInverse(BigIntegerT a, BigIntegerT m) const
     {
         BigIntegerT x, y;
-        BigIntegerT gcd = gcdExtended(a, m, &x, &y);
-        if (gcd != 1) {
+        BigIntegerT gcdResult = gcdExtended(a, m, &x, &y);
+        if (gcdResult != 1) {
             throw std::invalid_argument("Inverse does not exist");
         }
         return ((x % m) + m) % m;

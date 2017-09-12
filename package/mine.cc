@@ -1112,6 +1112,7 @@ ByteArray AES::decr(const ByteArray& input, ByteArray& iv)
 
 const BigInteger BigInteger::kZero = BigInteger(0);
 const BigInteger BigInteger::kOne = BigInteger(1);
+const BigInteger BigInteger::kTwo = BigInteger(2);
 const BigInteger BigInteger::kMinusOne = BigInteger(-1);
 const BigInteger BigInteger::kTwoFiftySix = BigInteger(256);
 
@@ -1133,11 +1134,11 @@ BigInteger::BigInteger(const BigIntegerBitSet &d)
     BigInteger r;
     for (std::size_t i = 0; i < d.size(); ++i) {
         if (d.test(i)) {
-            r += (static_cast<unsigned long long>(pow(2, i)));
+            r += twoPower(i);
         }
     }
 
-    m_data = r.m_data;
+    m_data = std::move(r.m_data);
 }
 
 BigInteger::BigInteger(const BigInteger& other)
@@ -1266,10 +1267,13 @@ BigInteger BigInteger::operator+(const BigInteger& other) const
     if ((m_negative || other.m_negative) && m_negative != other.m_negative) {
         // we have negation instead of addition in reality
         BigInteger otherCopy(other);
-        if (otherCopy.m_negative) {
-            otherCopy.m_negative = false;
+        otherCopy.m_negative = false;
+        BigInteger thisCopy(*this);
+        thisCopy.m_negative = false;
+        if (other.m_negative) {
+            return thisCopy - otherCopy;
         }
-        return *this - otherCopy;
+        return otherCopy - thisCopy;
     } else if (other.isZero()) {
         return *this;
     } else if (isZero()) {
@@ -1318,9 +1322,24 @@ BigInteger BigInteger::operator-(const BigInteger& other) const
         result.m_negative = true;
         return result;
     }
-    if (m_negative && other.m_negative) {
+    if ((!m_negative && other.m_negative) || (m_negative && !other.m_negative)) {
         // we have addition instead of subtraction in reality
-        return *this + other;
+
+        BigInteger otherCopy(other);
+        otherCopy.m_negative = false;
+        BigInteger thisCopy(*this);
+        thisCopy.m_negative = false;
+
+        return thisCopy + otherCopy;
+    } else if (m_negative && other.m_negative) {
+        BigInteger otherCopy(other);
+        otherCopy.m_negative = false;
+        BigInteger thisCopy(*this);
+        thisCopy.m_negative = false;
+
+        BigInteger result = thisCopy + otherCopy;
+        result.m_negative = true;
+        return result;
     }
     Container data;
     bool neg = *this < other;
@@ -1378,7 +1397,7 @@ BigInteger BigInteger::operator*(const BigInteger& other) const
 
     return (first + second + z0);
 }
-#else
+#elif 1
 
 // we use temp this and then fix the one above (commented one)
 BigInteger BigInteger::operator*(const BigInteger& other) const
@@ -1396,6 +1415,7 @@ BigInteger BigInteger::operator*(const BigInteger& other) const
     } else if (isZero() || other.isZero()) {
         return BigInteger(0);
     }
+    // long multiply
     std::vector<BigInteger> tmps;
     for (auto itf = m_data.rbegin(); itf < m_data.rend(); ++itf) {
         Container dataTmp;
@@ -1430,6 +1450,37 @@ BigInteger BigInteger::operator*(const BigInteger& other) const
     result.m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
     return result;
 }
+#elif 0
+
+// we use temp this and then fix the one above (commented one)
+BigInteger BigInteger::operator*(const BigInteger& other) const
+{
+    if (other.is1er()) {
+        BigInteger result(*this);
+        result.m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
+        result.m_data.resize(m_data.size() + other.m_data.size() - 1, 0);
+        return result;
+    } else if (*this >= 0 && other >= 0 && *this < 10 && other < 10) {
+        if (m_data.empty() || other.m_data.empty()) {
+            return BigInteger(0);
+        }
+        return BigInteger(m_data[0] * other.m_data[0]);
+    } else if (isZero() || other.isZero()) {
+        return BigInteger(0);
+    }
+    BigInteger x = *this;
+    BigInteger y = other;
+    BigInteger result;
+    while (!y.isZero()) {
+        if (!((y & 1).isZero())) {
+            result += x;
+        }
+        x <<= 1;
+        y >>= 1;
+    }
+    result.m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
+    return result;
+}
 #endif
 
 void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r) const
@@ -1437,59 +1488,66 @@ void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r) const
     divide(*this, d, q, r);
 }
 
-void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r)
+BigInteger BigInteger::divide_(const BigInteger& dividend, const BigInteger& divisor, const BigInteger& originalDivisor, BigInteger& r) {
+    BigInteger quotient = 1;
+    bool isNeg = (dividend > 0 && divisor < 0) || (dividend < 0 && divisor > 0);
+
+    BigInteger tdividend(dividend);
+    tdividend.m_negative = false;
+    BigInteger tdivisor(divisor);
+    tdivisor.m_negative = false;
+    if (tdividend == tdivisor) {
+        r = 0;
+        return isNeg ? -1 : 1;
+    } else if (tdividend < tdivisor) {
+        r = tdividend < 0 ? tdividend * -1 : tdividend;
+        return 0;
+    }
+    while (tdivisor << 1 <= tdividend) {
+        tdivisor <<= 1;
+        quotient <<= 1;
+    }
+    BigInteger next = tdividend - tdivisor;
+    next.m_negative = isNeg;
+    quotient.m_negative = isNeg;
+    quotient += divide_(next, originalDivisor, originalDivisor, r);
+    return quotient;
+}
+
+void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r)
 {
-    if (divident.isZero()) {
+    if (d.isZero()) {
         throw std::invalid_argument("Division by zero");
     }
-    if (divident < 0) {
-        BigInteger d2(divident);
+    if (d < 0) {
+        BigInteger d2(d);
         d2 *= kMinusOne;
-        divide(divisor, d2, q, r);
+        divide(n, d2, q, r);
+        q.m_negative = !n.isNegative();
         return;
     }
-    const unsigned long long maxMan = ULONG_LONG_MAX;
-
-    auto extract = [&](std::size_t from, std::size_t to) -> unsigned long long {
-        std::stringstream ss;
-        for (std::size_t i = from; i < std::min(from + to, divisor.m_data.size()); ++i) {
-            ss << divisor.m_data[i];
-        }
-        return std::stoull(ss.str().c_str());
-    };
 
 
-    if (divident < maxMan) {
-        // manual long
-        unsigned long long d = static_cast<unsigned long long>(divident);
-        unsigned long long rem = 0;
-        unsigned long long quo = 0;
-
-        const std::size_t maxLen = divident.m_data.size();
-        unsigned long long v = extract(0, maxLen);
-
-        for (std::size_t i = 0; i < (divisor.m_data.size() - maxLen) + 1; ++i) {
-            quo = v / d;
-            rem = v % d;
-            if (i == 0) {
+    if (d > 0 && d < 10) {
+        int di = static_cast<int>(d.toLong());
+        int rem = 0;
+        int quo = 0;
+        for (auto i = n.m_data.begin(); i < n.m_data.end(); ++i) {
+            int v = (rem * 10) + *i;
+            if (n.isNegative()) {
+                v = -v;
+            }
+            quo = v / di;
+            rem = v % di;
+            if (i == n.m_data.begin()) {
                 q = quo;
             } else {
                 q.m_data.push_back(quo);
             }
-            if (divisor.m_data.size() > i + maxLen) {
-                v = (rem * 10) + (divisor.m_data[i + maxLen]);
-            }
         }
         r = rem;
     } else {
-        // fixme: extremely slow algo!
-        // todo: handle less than zero case
-        q = 0;
-        r = divisor;
-        while (r >= divident) {
-            q = q + 1;
-            r -= divident;
-        }
+        q = divide_(n, d, d, r);
     }
 
     while (!q.m_data.empty() && q.m_data[0] == 0) {
@@ -1499,11 +1557,11 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
     }
 }
 
-BigInteger BigInteger::operator/(const BigInteger& other) const
+BigInteger BigInteger::operator/(const BigInteger& d) const
 {
     BigInteger q;
     BigInteger r;
-    divide(other, q, r);
+    divide(d, q, r);
     return q;
 }
 
@@ -1514,8 +1572,11 @@ BigInteger BigInteger::operator%(const BigInteger& other) const
     return r;
 }
 
-BigInteger BigInteger::operator^(long e) const
+BigInteger BigInteger::power(long long e) const
 {
+    if (*this == 2) {
+        //return twoPower(e);
+    }
     if (e == 0) {
         return 1;
     }
@@ -1535,30 +1596,35 @@ BigInteger BigInteger::operator^(long e) const
     return result;
 }
 
+BigInteger BigInteger::twoPower(long long e)
+{
+    return kTwo.power(e);
+    return kOne << e;
+}
+
 BigInteger BigInteger::operator>>(int e) const
 {
-    return *this / static_cast<int>((pow(2, e)));
+    return BigInteger(bin() >> e);
 }
 
 BigInteger BigInteger::operator<<(int e) const
 {
-    return *this * static_cast<int>((pow(2, e)));
-}
-
-bool BigInteger::operator&(int e) const
-{
-    for (int d : m_data) {
-        if (d & e) {
-            return true;
-        }
-    }
-    return false;
+    return BigInteger(bin() << e);
 }
 
 BigInteger BigInteger::operator|(int e) const
 {
-    BigIntegerBitSet bs2 = bin() | BigIntegerBitSet(e);
-    return BigInteger(bs2);
+    return BigInteger(bin() | BigIntegerBitSet(e));
+}
+
+BigInteger BigInteger::operator&(int e) const
+{
+    return BigInteger(bin() & BigIntegerBitSet(e));
+}
+
+BigInteger BigInteger::operator^(int e) const
+{
+    return BigInteger(bin() ^ BigIntegerBitSet(e));
 }
 
 // ------------------------------------ short hand operators ---------------------
@@ -1587,25 +1653,57 @@ BigInteger& BigInteger::operator*=(const BigInteger& other)
     return *this;
 }
 
-BigInteger& BigInteger::operator/=(const BigInteger& other)
+BigInteger& BigInteger::operator/=(const BigInteger& d)
 {
-    BigInteger b = *this / other;
+    BigInteger b = *this / d;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;
 }
 
-BigInteger& BigInteger::operator%=(const BigInteger& other)
+BigInteger& BigInteger::operator%=(const BigInteger& d)
 {
-    BigInteger b = *this % other;
+    BigInteger b = *this % d;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;
 }
 
-BigInteger& BigInteger::operator^=(long e)
+BigInteger& BigInteger::operator^=(int e)
 {
     BigInteger b = *this ^ e;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator>>=(int e)
+{
+    BigInteger b = *this >> e;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator<<=(int e)
+{
+    BigInteger b = *this << e;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator&=(int e)
+{
+    BigInteger b = *this & e;
+    m_data = std::move(b.m_data);
+    m_negative = b.m_negative;
+    return *this;
+}
+
+BigInteger& BigInteger::operator|=(int e)
+{
+    BigInteger b = *this | e;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;
@@ -1622,18 +1720,6 @@ bool BigInteger::is1er() const
         return x == 0;
     });
     return m_data[0] == 1 && iter == m_data.end();
-}
-
-std::bitset<8096> BigInteger::bin() const
-{
-    std::string binary;
-    BigInteger next(m_data);
-    while (!next.isZero()) {
-        binary += next % 2 == 0 ? '0' : '1';
-        next /= 2;
-    }
-    std::reverse(binary.begin(), binary.end());
-    return std::bitset<8096>(binary);
 }
 
 bool BigInteger::isZero() const
@@ -1721,6 +1807,20 @@ std::string BigInteger::hex() const
         offset++;
     }
     return Base16::encode(s.begin() + offset, s.end());
+}
+
+BigInteger::BigIntegerBitSet BigInteger::bin() const
+{
+    BigIntegerBitSet result;
+    BigInteger next(m_data);
+    BigInteger r, q;
+    std::size_t i = 0;
+    while (!next.isZero()) {
+        next.divide(2, q, r);
+        result[i++] = !r.isZero();
+        next = std::move(q);
+    }
+    return result;
 }
 
 long long BigInteger::toLong() const

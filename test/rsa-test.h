@@ -28,12 +28,12 @@ using BigInteger = CryptoPP::Integer;
 class Helper : public MathHelper<BigInteger>
 {
 public:
-
+/*
     virtual BigInteger modInverse(BigInteger a, BigInteger b) const override
     {
         return a.InverseMod(b);
     }
-
+*/
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
         return static_cast<byte>(b.ConvertToLong());

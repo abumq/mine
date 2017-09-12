@@ -884,11 +884,13 @@ private:
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
 ///
 class BigInteger {
-    using BigIntegerBitSet = std::bitset<8096>;
+    static const std::size_t kMaxSizeInBits = 256; // todo: change to template
+    using BigIntegerBitSet = std::bitset<kMaxSizeInBits>;
     using Container = std::vector<int>;
 public:
     const static BigInteger kZero;
     const static BigInteger kOne;
+    const static BigInteger kTwo;
     const static BigInteger kMinusOne;
     const static BigInteger kTwoFiftySix;
 
@@ -934,22 +936,33 @@ public:
     BigInteger& operator*=(const BigInteger& other);
 
     // divide
-    static void divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r);
-    void divide(const BigInteger& divident, BigInteger& q, BigInteger& r) const;
-    BigInteger operator/(const BigInteger& other) const;
-    BigInteger& operator/=(const BigInteger& other);
+    static void divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r);
+    void divide(const BigInteger& d, BigInteger& q, BigInteger& r) const;
+    BigInteger operator/(const BigInteger& d) const;
+    BigInteger& operator/=(const BigInteger& d);
 
     BigInteger operator%(const BigInteger& other) const;
     BigInteger& operator%=(const BigInteger& other);
 
     // power
-    BigInteger operator^(long e) const;
-    BigInteger& operator^=(long e);
+    BigInteger power(long long e) const;
+    static BigInteger twoPower(long long e);
 
+    // bitwise op
     BigInteger operator>>(int e) const;
+    BigInteger& operator>>=(int e);
+
     BigInteger operator<<(int e) const;
-    bool operator&(int e) const;
+    BigInteger& operator<<=(int e);
+
+    BigInteger operator&(int e) const;
+    BigInteger& operator&=(int e);
+
     BigInteger operator|(int e) const;
+    BigInteger& operator|=(int e);
+
+    BigInteger operator^(int e) const;
+    BigInteger& operator^=(int e);
 
     // compare ---------------------------------------------------------------
     bool operator>(const BigInteger& other) const;
@@ -979,7 +992,6 @@ public:
     bool is1er() const;
 
     // conversion ---------------------------------------------------------------
-
     inline BigIntegerBitSet bin() const;
     inline int base() const { return m_base; }
     std::string str() const;
@@ -1001,6 +1013,8 @@ private:
     int m_base;
 
     int compare(const BigInteger&) const;
+    static BigInteger divide_(const BigInteger& dividend, const BigInteger& divisor, const BigInteger& originalDivisor, BigInteger& r);
+
 };
 
 
@@ -1056,8 +1070,8 @@ public:
     virtual BigIntegerT modInverse(BigIntegerT a, BigIntegerT m) const
     {
         BigIntegerT x, y;
-        BigIntegerT gcd = gcdExtended(a, m, &x, &y);
-        if (gcd != 1) {
+        BigIntegerT gcdResult = gcdExtended(a, m, &x, &y);
+        if (gcdResult != 1) {
             throw std::invalid_argument("Inverse does not exist");
         }
         return ((x % m) + m) % m;
