@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <bitset>
 #include "src/base16.h"
 #include "src/big-integer.h"
 
@@ -423,11 +424,27 @@ bool BigInteger::operator&(int e) const
 
 BigInteger BigInteger::operator|(int e) const
 {
+    // very very dirty for unit tests
     BigInteger result;
 
-    for (int d : m_data) {
-        result = d | e;
+    std::string binary;
+
+    BigInteger next(m_data);
+    while (!next.isZero()) {
+        binary += next % 2 == 0 ? '0' : '1';
+        next /= 2;
     }
+    std::reverse(binary.begin(), binary.end());
+
+    std::bitset<8096> bs2 = std::bitset<8096>(binary) | std::bitset<8096>(e);
+
+    for (std::size_t i = 0; i < bs2.size(); ++i) {
+        bool isset = bs2.test(i);
+        if (isset) {
+            result += pow(2, i);
+        }
+    }
+
     return result;
 }
 

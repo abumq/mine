@@ -1,9 +1,9 @@
 #include "test.h"
-//#include "zlib-test.h"
+#include "zlib-test.h"
 //#include "big-integer-test.h"
 #include "rsa-test.h"
-//#include "aes-test.h"
-//#include "base64-test.h"
+#include "aes-test.h"
+#include "base64-test.h"
 #include "base16-test.h"
 
 INITIALIZE_EASYLOGGINGPP
