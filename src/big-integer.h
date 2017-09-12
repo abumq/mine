@@ -49,12 +49,12 @@ public:
     BigInteger(const Container& d);
     BigInteger(BigInteger&& other);
     BigInteger& operator=(const BigInteger& other);
-    BigInteger(long long);
+    BigInteger(int);
     BigInteger(const std::string&);
     virtual ~BigInteger() = default;
 
     // construct -----------------------------------------------------------
-    void init(long long);
+    void init(int);
     void init(const std::string&);
     inline void checkAndFixData()
     {
@@ -65,7 +65,7 @@ public:
     }
 
     // assign ---------------------------------------------------------------
-    BigInteger& operator=(long long);
+    BigInteger& operator=(int);
     BigInteger& operator=(const std::string&);
 
     // maths ---------------------------------------------------------------
@@ -96,7 +96,9 @@ public:
     BigInteger& operator^=(long e);
 
     BigInteger operator>>(int e) const;
+    BigInteger operator<<(int e) const;
     bool operator&(int e) const;
+    BigInteger operator|(int e) const;
 
     // compare ---------------------------------------------------------------
     bool operator>(const BigInteger& other) const;
@@ -127,7 +129,9 @@ public:
 
     // conversion ---------------------------------------------------------------
 
+    inline int base() const { return m_base; }
     std::string str() const;
+    std::string hex() const;
     long long toLong() const;
     explicit operator long long() const { return toLong(); }
     explicit operator int() const { return static_cast<int>(toLong()); }
@@ -140,6 +144,7 @@ public:
 private:
     bool m_negative;
     Container m_data;
+    int m_base;
 
     int compare(const BigInteger&) const;
 };

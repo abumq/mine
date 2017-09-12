@@ -49,6 +49,10 @@ TEST(BigIntegerTest, Construct)
     BigInteger bnegl(-23);
     ASSERT_EQ(bnegl.str(), "-23");
     ASSERT_TRUE(bnegl.isNegative());
+
+    BigInteger b16("0xff");
+    ASSERT_EQ(b16.str(), "255");
+    ASSERT_EQ(b16.base(), 16);
 }
 
 static TestData<BigInteger, BigInteger, bool> BiggerThanData = {
@@ -175,6 +179,24 @@ TEST(BigIntegerTest, RightShift)
     }
 }
 
+static TestData<BigInteger, int, BigInteger> LeftShiftData = {
+    TestCase(2, 1, 4),
+    TestCase(5, 1, 10),
+    TestCase(127, 1, 254),
+    TestCase(BigInteger("17389111712"), 1, BigInteger("34778223424")),
+    TestCase(0xF, 1, 30),
+};
+
+TEST(BigIntegerTest, LeftShift)
+{
+    for (const auto& item : LeftShiftData) {
+        BigInteger a = PARAM(0);
+        int shiftBy = PARAM(1);
+        BigInteger exp = PARAM(2);
+        ASSERT_EQ(a << shiftBy, exp);
+    }
+}
+
 static TestData<BigInteger, bool> BitwiseAndData = {
     TestCase(255, true),
     TestCase(127, true),
@@ -188,6 +210,22 @@ TEST(BigIntegerTest, BitwiseAnd)
         BigInteger a = PARAM(0);
         bool exp = PARAM(1);
         ASSERT_EQ(a & 1, exp);
+    }
+}
+
+static TestData<BigInteger, int, BigInteger> BitwiseOrData = {
+    TestCase(5, 6, 7),
+    TestCase(40, 29, 61),
+    TestCase(2932, 40, 2940),
+};
+
+TEST(BigIntegerTest, BitwiseOr)
+{
+    for (const auto& item : BitwiseOrData) {
+        BigInteger a = PARAM(0);
+        int b = PARAM(1);
+        BigInteger exp = PARAM(2);
+        ASSERT_EQ(a | b, exp);
     }
 }
 

@@ -174,10 +174,11 @@ public:
     static std::string encode(T n) noexcept
     {
         std::stringstream ss;
+        const int t16(16);
         int remainder;
         while (n != 0) {
-            remainder = n % 16;
-            n /= 16;
+            remainder = n % t16;
+            n /= t16;
             ss << kValidChars[remainder];
         }
         std::string res(ss.str());
@@ -875,7 +876,8 @@ private:
 ///
 /// \brief Minimal big integer for Mine library.
 ///
-/// This operates on base-10
+/// This operates on base-10 atm. Not for other uses as it does not contain
+/// all the operators implemented. only the ones needed for Mine RSA
 ///
 /// ******************* THIS IS NOT PRODUCTION READY YET!!! **********************
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
@@ -883,17 +885,22 @@ private:
 class BigInteger {
     using Container = std::vector<int>;
 public:
+    const static BigInteger kZero;
+    const static BigInteger kOne;
+    const static BigInteger kMinusOne;
+    const static BigInteger kTwoFiftySix;
+
     BigInteger();
     BigInteger(const BigInteger& other);
     BigInteger(const Container& d);
     BigInteger(BigInteger&& other);
     BigInteger& operator=(const BigInteger& other);
-    BigInteger(long long);
+    BigInteger(int);
     BigInteger(const std::string&);
     virtual ~BigInteger() = default;
 
     // construct -----------------------------------------------------------
-    void init(long long);
+    void init(int);
     void init(const std::string&);
     inline void checkAndFixData()
     {
@@ -904,36 +911,40 @@ public:
     }
 
     // assign ---------------------------------------------------------------
-    BigInteger& operator=(long long);
+    BigInteger& operator=(int);
     BigInteger& operator=(const std::string&);
 
     // maths ---------------------------------------------------------------
 
     // addition
-    BigInteger operator+(const BigInteger& other);
+    BigInteger operator+(const BigInteger& other) const;
     BigInteger& operator+=(const BigInteger& other);
-    BigInteger& operator++();
 
     // subtraction
-    BigInteger operator-(const BigInteger& other);
+    BigInteger operator-(const BigInteger& other) const;
     BigInteger& operator-=(const BigInteger& other);
-    BigInteger& operator--();
 
     // multiply
-    BigInteger operator*(const BigInteger& other);
+    BigInteger operator*(const BigInteger& other) const;
     BigInteger& operator*=(const BigInteger& other);
 
     // divide
-    void divide(const BigInteger& other, BigInteger& q, BigInteger& r);
-    BigInteger operator/(const BigInteger& other);
+    static void divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r);
+    void divide(const BigInteger& divident, BigInteger& q, BigInteger& r) const;
+    BigInteger operator/(const BigInteger& other) const;
     BigInteger& operator/=(const BigInteger& other);
 
-    BigInteger operator%(const BigInteger& other);
+    BigInteger operator%(const BigInteger& other) const;
     BigInteger& operator%=(const BigInteger& other);
 
     // power
-    BigInteger operator^(long e);
+    BigInteger operator^(long e) const;
     BigInteger& operator^=(long e);
+
+    BigInteger operator>>(int e) const;
+    BigInteger operator<<(int e) const;
+    bool operator&(int e) const;
+    BigInteger operator|(int e) const;
 
     // compare ---------------------------------------------------------------
     bool operator>(const BigInteger& other) const;
@@ -955,16 +966,21 @@ public:
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
+    unsigned long bitCount() const;
 
     ///
     /// \return Whether it's 1, 10, 100, 1000, ...
     ///
     bool is1er() const;
 
-    // string ---------------------------------------------------------------
+    // conversion ---------------------------------------------------------------
 
+    inline int base() const { return m_base; }
     std::string str() const;
+    std::string hex() const;
     long long toLong() const;
+    explicit operator long long() const { return toLong(); }
+    explicit operator int() const { return static_cast<int>(toLong()); }
 
     friend inline std::ostream& operator<<(std::ostream& os, const BigInteger& b)
     {
@@ -974,6 +990,7 @@ public:
 private:
     bool m_negative;
     Container m_data;
+    int m_base;
 
     int compare(const BigInteger&) const;
 };
@@ -995,11 +1012,10 @@ private:
 ///  -  operator/() [divide]
 ///  -  operator%() [mod]
 ///  -  operator>>() [right-shift]
-///  -  operator>>=() [short-hand right-shift]
 ///
 /// Also you must provide proper implementation to Helper class
 /// which will extend MathHelper and must implement
-/// <code>MathHelper<BigInteger>::bigIntegerToByte</code>
+/// <code>MathHelper<BigIntegerT>::bigIntegerToByte</code>
 /// function. The base function returns empty byte.
 ///
 
@@ -1017,47 +1033,34 @@ using RawString = ByteArray;
 ///
 /// \brief Contains helper functions for RSA throughout
 ///
-template <class BigInteger>
+template <class BigIntegerT>
 class MathHelper {
 public:
 
-    static const BigInteger kBigInteger256;
+    static const BigIntegerT kBigIntegerT256;
 
     MathHelper() = default;
     virtual ~MathHelper() = default;
 
     ///
-    /// \brief Implementation for (a ^ -1) mod b
+    /// \brief Implementation inverse mod
     ///
-    virtual BigInteger modInverse(BigInteger a, BigInteger b) const
+    virtual BigIntegerT modInverse(BigIntegerT a, BigIntegerT m) const
     {
-        BigInteger b0 = b, t, q;
-        BigInteger x0 = 0, x1 = 1;
-        if (b == 1) {
-            return 1;
+        BigIntegerT x, y;
+        BigIntegerT gcd = gcdExtended(a, m, &x, &y);
+        if (gcd != 1) {
+            throw std::invalid_argument("Inverse does not exist");
         }
-        while (a > 1) {
-            q = a / b;
-            t = b;
-            b = a % b;
-            a = t;
-            t = x0;
-            x0 = x1 - q * x0;
-            x1 = t;
-        }
-        if (x1 < 0) {
-            x1 += b0;
-        }
-        return x1;
+        return ((x % m) + m) % m;
     }
 
     ///
     /// \brief Fast GCD
-    /// \see https://en.wikipedia.org/wiki/Euclidean_algorithm#Extended_Euclidean_algorithm
     ///
-    virtual BigInteger gcd(BigInteger a, BigInteger b) const
+    virtual BigIntegerT gcd(BigIntegerT a, BigIntegerT b) const
     {
-        BigInteger c;
+        BigIntegerT c;
         while (a != 0) {
             c = a;
             a = b % a;
@@ -1067,14 +1070,36 @@ public:
     }
 
     ///
+    /// \brief Extended GCD
+    /// \see https://en.wikipedia.org/wiki/Euclidean_algorithm#Extended_Euclidean_algorithm
+    ///
+    virtual BigIntegerT gcdExtended(BigIntegerT a, BigIntegerT b, BigIntegerT* x, BigIntegerT* y) const
+    {
+        // Base case
+        if (a == 0)
+        {
+            *x = 0, *y = 1;
+            return b;
+        }
+
+        BigIntegerT x1, y1;
+        BigIntegerT gcd = gcdExtended(b % a, a, &x1, &y1);
+
+        *x = y1 - ((b / a) * x1);
+        *y = x1;
+
+        return gcd;
+    }
+
+    ///
     /// \brief Simple (b ^ e) mod m implementation
     /// \param b Base
     /// \param e Exponent
     /// \param m Mod
     ///
-    virtual BigInteger powerMod(BigInteger b, BigInteger e, BigInteger m) const
+    virtual BigIntegerT powerMod(BigIntegerT b, BigIntegerT e, BigIntegerT m) const
     {
-        BigInteger res = 1;
+        BigIntegerT res = 1;
         while (e > 0) {
             if (e % 2 != 0) {
                 res = (b * res) % m;
@@ -1088,13 +1113,13 @@ public:
     ///
     /// \brief Power of numb i.e, b ^ e
     ///
-    virtual BigInteger power(BigInteger b, BigInteger e) const
+    virtual BigIntegerT power(BigIntegerT b, BigIntegerT e) const
     {
-        BigInteger result = 1;
+        BigIntegerT result = 1;
         while (e > 0) {
             if (e % 2 == 1) {
                 // we decrement exponent to make it even
-                e--;
+                e = e - 1;
                 // store this multiplication directly to the
                 // result
                 result *= b;
@@ -1124,12 +1149,12 @@ public:
     ///
     /// \brief Counts number of bits in big integer
     ///
-    virtual unsigned int countBits(BigInteger b) const
+    virtual unsigned int countBits(BigIntegerT b) const
     {
         unsigned int bits = 0;
         while (b > 0) {
             bits++;
-            b >>= 1;
+            b = b >> 1;
         }
         return bits;
     }
@@ -1137,7 +1162,7 @@ public:
     ///
     /// \brief Count number of bytes in big integer
     ///
-    virtual inline unsigned int countBytes(BigInteger b) const
+    virtual inline unsigned int countBytes(BigIntegerT b) const
     {
         return countBits(b) * 8;
     }
@@ -1145,12 +1170,12 @@ public:
     ///
     /// Raw-string to integer (a.k.a os2ip)
     ///
-    BigInteger rawStringToInteger(const RawString& x) const
+    BigIntegerT rawStringToInteger(const RawString& x) const
     {
-        BigInteger result = 0;
+        BigIntegerT result = 0;
         std::size_t len = x.size();
         for (std::size_t i = len; i > 0; --i) {
-            result += BigInteger(x[i - 1]) * power(kBigInteger256, BigInteger(len - i));
+            result += BigIntegerT(x[i - 1]) * power(kBigIntegerT256, BigIntegerT(len - i));
         }
         return result;
     }
@@ -1159,18 +1184,18 @@ public:
     /// \brief Convert integer to raw string
     /// (this func is also known as i2osp)
     ///
-    RawString integerToRaw(BigInteger x, int xlen = -1) const
+    RawString integerToRaw(BigIntegerT x, int xlen = -1) const
     {
         xlen = xlen == -1 ? countBytes(x) : xlen;
 
         RawString ba(xlen);
-        BigInteger r;
-        BigInteger q;
+        BigIntegerT r;
+        BigIntegerT q;
 
         int i = 1;
 
         for (; i <= xlen; ++i) {
-            divideBigNumber(x, power(kBigInteger256, BigInteger(xlen - i)), &q, &r);
+            divideBigNumber(x, power(kBigIntegerT256, BigIntegerT(xlen - i)), &q, &r);
             ba[i - 1] = bigIntegerToByte(q);
             x = r;
         }
@@ -1183,8 +1208,8 @@ public:
     /// you are using.
     /// Result should be stored in quotient and remainder
     ///
-    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
-                                        BigInteger* quotient, BigInteger* remainder) const
+    virtual void divideBigNumber(const BigIntegerT& divisor, const BigIntegerT& divident,
+                                        BigIntegerT* quotient, BigIntegerT* remainder) const
     {
         *quotient = divisor / divident;
         *remainder = divisor % divident;
@@ -1193,7 +1218,7 @@ public:
     ///
     /// \brief Absolutely must override this - conversion from x to single byte
     ///
-    virtual inline byte bigIntegerToByte(const BigInteger&) const
+    virtual inline byte bigIntegerToByte(const BigIntegerT&) const
     {
         return static_cast<byte>(0);
     }
@@ -1201,7 +1226,7 @@ public:
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual std::string bigIntegerToHex(BigInteger n) const
+    virtual std::string bigIntegerToHex(BigIntegerT n) const
     {
         return Base16::encode(n);
     }
@@ -1209,7 +1234,7 @@ public:
     ///
     /// \brief Converts big integer to hex
     ///
-    virtual std::string bigIntegerToString(const BigInteger& b) const
+    virtual std::string bigIntegerToString(const BigIntegerT& b) const
     {
         std::stringstream ss;
         ss << b;
@@ -1220,13 +1245,10 @@ public:
     /// \brief Converts hex to big integer
     /// \param hex Hexadecimal without '0x' prefix
     ///
-    virtual BigInteger hexToBigInteger(const std::string& hex) const
+    virtual BigIntegerT hexToBigInteger(const std::string& hex) const
     {
         std::string readableMsg = "0x" + hex;
-        BigInteger msg;
-        std::istringstream iss(readableMsg);
-        iss >> std::hex >> msg;
-        return msg;
+        return BigIntegerT(readableMsg.c_str());
     }
 private:
     MathHelper(const MathHelper&) = delete;
@@ -1236,10 +1258,10 @@ private:
 ///
 /// \brief Big Integer = 256 (static declaration)
 ///
-template <typename BigInteger>
-const BigInteger MathHelper<BigInteger>::kBigInteger256 = 256;
+template <typename BigIntegerT>
+const BigIntegerT MathHelper<BigIntegerT>::kBigIntegerT256 = 256;
 
-template <class BigInteger, class Helper = MathHelper<BigInteger>>
+template <class BigIntegerT, class Helper = MathHelper<BigIntegerT>>
 class GenericBaseKey {
 public:
     GenericBaseKey() = default;
@@ -1248,11 +1270,11 @@ public:
     inline std::size_t emBits() const { return (m_helper.countBits(m_n) + 7) >> 3; }
     inline std::size_t modBits() const { return 8 * m_k; }
 
-    inline BigInteger n() const { return m_n; }
+    inline BigIntegerT n() const { return m_n; }
     inline unsigned int k() const { return m_k; }
     inline virtual bool empty() const = 0;
 
-    void init(const BigInteger& n)
+    void init(const BigIntegerT& n)
     {
         m_n = n;
         m_k = m_helper.countBytes(m_n);
@@ -1262,7 +1284,7 @@ public:
     }
 
 protected:
-    BigInteger m_n;
+    BigIntegerT m_n;
     unsigned int m_k;
     Helper m_helper;
 };
@@ -1270,9 +1292,9 @@ protected:
 ///
 /// \brief Public key object with generic big integer
 ///
-template <class BigInteger, class Helper = MathHelper<BigInteger>>
-class GenericPublicKey : public GenericBaseKey<BigInteger, Helper> {
-    using BaseKey = GenericBaseKey<BigInteger, Helper>;
+template <class BigIntegerT, class Helper = MathHelper<BigIntegerT>>
+class GenericPublicKey : public GenericBaseKey<BigIntegerT, Helper> {
+    using BaseKey = GenericBaseKey<BigIntegerT, Helper>;
 public:
 
     GenericPublicKey() = default;
@@ -1294,12 +1316,12 @@ public:
         return *this;
     }
 
-    GenericPublicKey(BigInteger n, int e)
+    GenericPublicKey(BigIntegerT n, int e)
     {
         init(n, e);
     }
 
-    void init(const BigInteger& n, int e = kDefaultPublicExponent)
+    void init(const BigIntegerT& n, int e = kDefaultPublicExponent)
     {
         BaseKey::init(n);
         m_e = e;
@@ -1317,9 +1339,9 @@ protected:
 ///
 /// \brief Private key object with generic big integer
 ///
-template <class BigInteger, class Helper = MathHelper<BigInteger>>
-class GenericPrivateKey : public GenericBaseKey<BigInteger, Helper> {
-    using BaseKey = GenericBaseKey<BigInteger, Helper>;
+template <class BigIntegerT, class Helper = MathHelper<BigIntegerT>>
+class GenericPrivateKey : public GenericBaseKey<BigIntegerT, Helper> {
+    using BaseKey = GenericBaseKey<BigIntegerT, Helper>;
 public:
 
     GenericPrivateKey() = default;
@@ -1353,12 +1375,12 @@ public:
         return *this;
     }
 
-    GenericPrivateKey(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent)
+    GenericPrivateKey(const BigIntegerT& p, const BigIntegerT& q, int e = kDefaultPublicExponent)
     {
         init(p, q, e);
     }
 
-    void init(const BigInteger& p, const BigInteger& q, int e = kDefaultPublicExponent)
+    void init(const BigIntegerT& p, const BigIntegerT& q, int e = kDefaultPublicExponent)
     {
         if (p == q || p == 0 || q == 0) {
             throw std::invalid_argument("p and q must be prime numbers unique to each other");
@@ -1367,9 +1389,9 @@ public:
         m_q = q;
         m_e = e;
 
-        const BigInteger pMinus1 = m_p - 1;
-        const BigInteger qMinus1 = m_q - 1;
-        const BigInteger phi = pMinus1 * qMinus1;
+        const BigIntegerT pMinus1 = m_p - 1;
+        const BigIntegerT qMinus1 = m_q - 1;
+        const BigIntegerT phi = pMinus1 * qMinus1;
 
         if (BaseKey::m_helper.gcd(m_e, phi) != 1) {
             throw std::invalid_argument("Invalid exponent, it must not share factor with phi");
@@ -1387,22 +1409,22 @@ public:
         // https://tools.ietf.org/html/rfc3447#section-2 says to use m_e
         // openssl says to use m_d - which one?!
         //
-        m_dp = BigInteger(m_d) % pMinus1;
-        m_dq = BigInteger(m_d) % qMinus1;
+        m_dp = BigIntegerT(m_d) % pMinus1;
+        m_dq = BigIntegerT(m_d) % qMinus1;
     }
 
     virtual ~GenericPrivateKey() = default;
 
-    inline BigInteger p() const { return m_p; }
-    inline BigInteger q() const { return m_q; }
-    inline BigInteger coeff() const { return m_coeff; }
+    inline BigIntegerT p() const { return m_p; }
+    inline BigIntegerT q() const { return m_q; }
+    inline BigIntegerT coeff() const { return m_coeff; }
     inline int e() const { return m_e; }
-    inline BigInteger d() const { return m_d; }
-    inline BigInteger dp() const { return m_dq; }
-    inline BigInteger dq() const { return m_dp; }
+    inline BigIntegerT d() const { return m_d; }
+    inline BigIntegerT dp() const { return m_dq; }
+    inline BigIntegerT dq() const { return m_dp; }
     inline virtual bool empty() const { return m_p == 0 || m_q == 0; }
 
-    friend std::ostream& operator<<(std::ostream& ss, const GenericPrivateKey<BigInteger, Helper>& k)
+    friend std::ostream& operator<<(std::ostream& ss, const GenericPrivateKey<BigIntegerT, Helper>& k)
     {
         ss << "modulus: " << k.m_n << "\npublicExponent: " << k.m_e << "\nprivateExponent: " << k.m_d
            << "\nprime1: " << k.m_p << "\nprime2: " << k.m_q << "\nexponent1: " << k.m_dp << "\nexponent2: "
@@ -1436,20 +1458,20 @@ public:
         return ss.str();
     }
 protected:
-    BigInteger m_p;
-    BigInteger m_q;
+    BigIntegerT m_p;
+    BigIntegerT m_q;
     int m_e;
-    BigInteger m_coeff;
-    BigInteger m_d;
-    BigInteger m_dp;
-    BigInteger m_dq;
+    BigIntegerT m_coeff;
+    BigIntegerT m_d;
+    BigIntegerT m_dp;
+    BigIntegerT m_dq;
     unsigned int m_k;
 };
 
 ///
 /// \brief Key pair (containing public and private key objects) with generic big integer
 ///
-template <class BigInteger, class Helper = MathHelper<BigInteger>>
+template <class BigIntegerT, class Helper = MathHelper<BigIntegerT>>
 class GenericKeyPair {
 public:
     GenericKeyPair() = default;
@@ -1469,36 +1491,36 @@ public:
         return *this;
     }
 
-    GenericKeyPair(const BigInteger& p, const BigInteger& q, unsigned int exp = kDefaultPublicExponent)
+    GenericKeyPair(const BigIntegerT& p, const BigIntegerT& q, unsigned int exp = kDefaultPublicExponent)
     {
         init(p, q, exp);
     }
 
-    void init(const BigInteger& p, const BigInteger& q, unsigned int exp = kDefaultPublicExponent)
+    void init(const BigIntegerT& p, const BigIntegerT& q, unsigned int exp = kDefaultPublicExponent)
     {
-        m_publicKey = GenericPublicKey<BigInteger, Helper>(p * q, exp);
-        m_privateKey = GenericPrivateKey<BigInteger, Helper>(p, q, exp);
+        m_publicKey = GenericPublicKey<BigIntegerT, Helper>(p * q, exp);
+        m_privateKey = GenericPrivateKey<BigIntegerT, Helper>(p, q, exp);
     }
 
     virtual ~GenericKeyPair() = default;
 
-    inline const GenericPublicKey<BigInteger, Helper>* publicKey() const { return &m_publicKey; }
-    inline const GenericPrivateKey<BigInteger, Helper>* privateKey() const { return &m_privateKey; }
+    inline const GenericPublicKey<BigIntegerT, Helper>* publicKey() const { return &m_publicKey; }
+    inline const GenericPrivateKey<BigIntegerT, Helper>* privateKey() const { return &m_privateKey; }
 
 protected:
-    GenericPublicKey<BigInteger, Helper> m_publicKey;
-    GenericPrivateKey<BigInteger, Helper> m_privateKey;
+    GenericPublicKey<BigIntegerT, Helper> m_publicKey;
+    GenericPrivateKey<BigIntegerT, Helper> m_privateKey;
 };
 
 ///
 /// \brief Provides RSA crypto functionalities
 ///
-template <class BigInteger, class Helper = MathHelper<BigInteger>>
+template <class BigIntegerT, class Helper = MathHelper<BigIntegerT>>
 class GenericRSA {
 public:
 
-    using PublicKey = GenericPublicKey<BigInteger, Helper>;
-    using PrivateKey = GenericPrivateKey<BigInteger, Helper>;
+    using PublicKey = GenericPublicKey<BigIntegerT, Helper>;
+    using PrivateKey = GenericPrivateKey<BigIntegerT, Helper>;
 
     GenericRSA() = default;
     GenericRSA(const GenericRSA&) = delete;
@@ -1506,7 +1528,7 @@ public:
 
     ///
     /// \brief Helper method to encrypt wide-string messages using public key.
-    /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
+    /// \see encrypt<T>(const GenericPublicKey<BigIntegerT>* publicKey, const T& m)
     ///
     inline std::string encrypt(const PublicKey* publicKey,
                                const std::wstring& message)
@@ -1516,7 +1538,7 @@ public:
 
     ///
     /// \brief Helper method to encrypt std::string messages using public key.
-    /// \see encrypt<T>(const GenericPublicKey<BigInteger>* publicKey, const T& m)
+    /// \see encrypt<T>(const GenericPublicKey<BigIntegerT>* publicKey, const T& m)
     ///
     inline std::string encrypt(const PublicKey* publicKey,
                                const std::string& message)
@@ -1536,8 +1558,8 @@ public:
     template <class T>
     std::string encrypt(const PublicKey* publicKey, const T& m)
     {
-        BigInteger paddedMsg = addPadding<T>(m, publicKey->emBits());
-        BigInteger cipher = m_helper.powerMod(paddedMsg, publicKey->e(), publicKey->n());
+        BigIntegerT paddedMsg = addPadding<T>(m, publicKey->emBits());
+        BigIntegerT cipher = m_helper.powerMod(paddedMsg, publicKey->e(), publicKey->n());
         return m_helper.bigIntegerToHex(cipher);
     }
 
@@ -1550,12 +1572,12 @@ public:
     template <class TResult = std::wstring>
     TResult decrypt(const PrivateKey* privateKey, const std::string& c)
     {
-        BigInteger msg = m_helper.hexToBigInteger(c);
+        BigIntegerT msg = m_helper.hexToBigInteger(c);
         int xlen = privateKey->emBits();
-        if (msg >= m_helper.power(MathHelper<BigInteger>::kBigInteger256, BigInteger(xlen))) {
+        if (msg >= m_helper.power(MathHelper<BigIntegerT>::kBigIntegerT256, BigIntegerT(xlen))) {
             throw std::runtime_error("Integer too large");
         }
-        BigInteger decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());
+        BigIntegerT decr = m_helper.powerMod(msg, privateKey->d(), privateKey->n());
         RawString rawStr = m_helper.integerToRaw(decr, xlen);
         return removePadding<TResult>(rawStr);
     }
@@ -1571,9 +1593,9 @@ public:
         if (sign.size() != publicKey->k()) {
             //return false;
         }
-        BigInteger signature = m_helper.rawStringToInteger(MineCommon::rawStringToByteArray(sign));
+        BigIntegerT signature = m_helper.rawStringToInteger(MineCommon::rawStringToByteArray(sign));
         try {
-            BigInteger verifyPrimitive = createVerificationPrimitive(publicKey, signature);
+            BigIntegerT verifyPrimitive = createVerificationPrimitive(publicKey, signature);
             RawString em = m_helper.integerToRaw(verifyPrimitive, publicKey->emBits());
             return emsaPssVerify(msg, em, publicKey->modBits() - 1);
         } catch (const std::exception&) {
@@ -1591,9 +1613,9 @@ public:
     {
         RawString encoded = emsaPssEncode(msg, privateKey->modBits() - 1);
 
-        BigInteger m = m_helper.rawStringToInteger(encoded);
+        BigIntegerT m = m_helper.rawStringToInteger(encoded);
 
-        BigInteger signPrimitive = createSignaturePrimitive(privateKey, m);
+        BigIntegerT signPrimitive = createSignaturePrimitive(privateKey, m);
         return m_helper.integerToRaw(signPrimitive, privateKey->k());
     }
 
@@ -1623,7 +1645,7 @@ private:
     /// \return corresponding nonnegative integer
     ///
     template <class T = std::wstring>
-    BigInteger addPadding(const T& s, std::size_t n) {
+    BigIntegerT addPadding(const T& s, std::size_t n) {
         if (n < s.size() + 11) {
             throw std::runtime_error("Message too long");
         }
@@ -1741,7 +1763,7 @@ private:
     /// \return message representative, an integer between 0 and n - 1
     /// \see https://tools.ietf.org/html/rfc3447#section-5.2.2
     ///
-    BigInteger createVerificationPrimitive(const PublicKey* publicKey, const BigInteger& signature)
+    BigIntegerT createVerificationPrimitive(const PublicKey* publicKey, const BigIntegerT& signature)
     {
         if (signature < 0 || signature > publicKey->n() - 1) {
             throw std::runtime_error("signature representative out of range");
@@ -1755,7 +1777,7 @@ private:
     /// \return message representative, an integer between 0 and n - 1
     /// \see https://tools.ietf.org/html/rfc3447#section-5.2.2
     ///
-    BigInteger createSignaturePrimitive(const PrivateKey* privateKey, const BigInteger& msg)
+    BigIntegerT createSignaturePrimitive(const PrivateKey* privateKey, const BigIntegerT& msg)
     {
         if (msg < 0 || msg > privateKey->n() - 1) {
             throw std::runtime_error("message representative out of range");

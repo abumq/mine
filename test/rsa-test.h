@@ -9,29 +9,40 @@
 #   include "src/rsa.h"
 #endif
 
+#define USE_CRYPTOPP_BIG_INTEGER 1
+
 #include <type_traits>
-//#include <cryptopp/integer.h>
+#if USE_CRYPTOPP_BIG_INTEGER
+#   include <cryptopp/integer.h>
+#else
+#   include "src/big-integer.h"
+#endif
 #include <cryptopp/pem-com.h> // for readPem func
 #include "src/base64.h"
 
 namespace mine {
 
-//using BigInteger = CryptoPP::Integer;
+#if USE_CRYPTOPP_BIG_INTEGER
+using BigInteger = CryptoPP::Integer;
 
 class Helper : public MathHelper<BigInteger>
 {
 public:
+
+    virtual BigInteger modInverse(BigInteger a, BigInteger b) const override
+    {
+        return a.InverseMod(b);
+    }
+
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
-        return static_cast<byte>(b.toLong());
-        //return static_cast<byte>(b.ConvertToLong());
+        return static_cast<byte>(b.ConvertToLong());
     }
 
     virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const override
     {
-        BigInteger::divide(divisor, divident, *quotient, *remainder);
-        //BigInteger::Divide(*remainder, *quotient, divisor, divident);
+        BigInteger::Divide(*remainder, *quotient, divisor, divident);
     }
 
     virtual std::string bigIntegerToHex(BigInteger b) const override
@@ -52,6 +63,33 @@ public:
         return h;
     }
 };
+#else
+
+class Helper : public MathHelper<BigInteger>
+{
+public:
+    virtual byte bigIntegerToByte(const BigInteger& b) const override
+    {
+        return static_cast<byte>(b.toLong());
+    }
+
+    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+                                        BigInteger* quotient, BigInteger* remainder) const override
+    {
+        BigInteger::divide(divisor, divident, *quotient, *remainder);
+    }
+
+    virtual std::string bigIntegerToHex(BigInteger b) const override
+    {
+        return b.hex();
+    }
+
+    virtual std::string bigIntegerToString(const BigInteger& b) const override
+    {
+        return b.str();
+    }
+};
+#endif
 
 class RSA : public GenericRSA<BigInteger, Helper> {};
 class PublicKey : public GenericPublicKey<BigInteger, Helper> {}; // you can choose to not add this line
@@ -74,10 +112,12 @@ public:
         }
         std::stringstream ss;
         ss << keyOut.GetPrime1();
-        BigInteger p(ss.str());
+        std::string ssstr(ss.str());
+        BigInteger p(ssstr.c_str());
         ss.str("");
         ss << keyOut.GetPrime2();
-        BigInteger q(ss.str());
+        ssstr = ss.str();
+        BigInteger q(ssstr.c_str());
         init(p, q, static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
     }
 };

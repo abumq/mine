@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include "src/base16.h"
 #include "src/big-integer.h"
 
 using namespace mine;
@@ -25,14 +26,15 @@ const BigInteger BigInteger::kOne = BigInteger(1);
 const BigInteger BigInteger::kMinusOne = BigInteger(-1);
 const BigInteger BigInteger::kTwoFiftySix = BigInteger(256);
 
-BigInteger::BigInteger() : m_negative(false)
+BigInteger::BigInteger() : m_negative(false), m_base(10)
 {
     checkAndFixData();
 }
 
 BigInteger::BigInteger(const Container &d)
     : m_negative(false),
-      m_data(d) {
+      m_data(d),
+      m_base(10) {
     checkAndFixData();
 }
 
@@ -40,6 +42,7 @@ BigInteger::BigInteger(const BigInteger& other)
 {
     m_data = other.m_data;
     m_negative = other.m_negative;
+    m_base = other.m_base;
     checkAndFixData();
 }
 
@@ -47,6 +50,7 @@ BigInteger::BigInteger(BigInteger&& other)
 {
     m_data = std::move(other.m_data);
     m_negative = other.m_negative;
+    m_base = other.m_base;
     other.m_negative = false;
     checkAndFixData();
     other.checkAndFixData();
@@ -57,14 +61,10 @@ BigInteger& BigInteger::operator=(const BigInteger& other)
     if (this != &other) {
         m_data = other.m_data;
         m_negative = other.m_negative;
+        m_base = other.m_base;
         checkAndFixData();
     }
     return *this;
-}
-
-BigInteger::BigInteger(long long n)
-{
-    init(n);
 }
 
 BigInteger::BigInteger(const std::string& n)
@@ -72,8 +72,12 @@ BigInteger::BigInteger(const std::string& n)
     init(n);
 }
 
+BigInteger::BigInteger(int n)
+{
+    init(n);
+}
 
-BigInteger& BigInteger::operator=(long long n)
+BigInteger& BigInteger::operator=(int n)
 {
     init(n);
     return *this;
@@ -85,7 +89,7 @@ BigInteger& BigInteger::operator=(const std::string& n)
     return *this;
 }
 
-void BigInteger::init(long long n)
+void BigInteger::init(int n)
 {
     if (n < 0) {
         m_negative = true;
@@ -93,10 +97,11 @@ void BigInteger::init(long long n)
     } else {
         m_negative = false;
     }
+    m_base = 10;
     m_data.clear();
     do {
-        m_data.insert(m_data.begin(), n % 10);
-        n /= 10;
+        m_data.insert(m_data.begin(), n % m_base);
+        n /= m_base;
     } while (n);
     checkAndFixData();
 }
@@ -106,22 +111,34 @@ void BigInteger::init(const std::string& n)
     if (n.empty()) {
         throw std::invalid_argument("Invalid number");
     }
+    m_base = 10;
     m_negative = n[0] == '-';
     int beginOffset = m_negative ? 1 : 0;
+    if (n.size() > 2 && n[0] == '0' && (n[1] == 'x' || n[1] == 'X')) {
+        m_base = 16;
+        beginOffset += 2;
+        std::string hex(n);
+        hex.erase(hex.begin(), hex.begin() + beginOffset);
+        std::transform(hex.begin(), hex.end(), hex.begin(), ::toupper);
 
-    m_data.clear();
+        BigInteger r(Base16::decodeInt<BigInteger>(hex));
+        m_data = std::move(r.m_data);
+    } else {
+        // base 10
+        m_data.clear();
 
-    bool firstNonZeroDigitFound = false;
-    for (auto it = n.begin() + beginOffset; it < n.end(); ++it) {
-        char c = *it;
-        if (!isnumber(c)) {
-            throw std::invalid_argument("Invalid number");
+        bool firstNonZeroDigitFound = false;
+        for (auto it = n.begin() + beginOffset; it < n.end(); ++it) {
+            char c = *it;
+            if (!isnumber(c)) {
+                throw std::invalid_argument("Invalid number");
+            }
+            if (c == '0' && !firstNonZeroDigitFound) {
+                continue;
+            }
+            firstNonZeroDigitFound = true;
+            m_data.push_back(static_cast<int>(c) - '0');
         }
-        if (c == '0' && !firstNonZeroDigitFound) {
-            continue;
-        }
-        firstNonZeroDigitFound = true;
-        m_data.push_back(static_cast<int>(c) - '0');
     }
     checkAndFixData();
 }
@@ -215,7 +232,7 @@ BigInteger BigInteger::operator-(const BigInteger& other) const
     return result;
 }
 
-/*
+#if 0
 BigInteger BigInteger::operator*(const BigInteger& other) const
 {
     if (*this < 10 && other < 10) {
@@ -242,7 +259,8 @@ BigInteger BigInteger::operator*(const BigInteger& other) const
     BigInteger second = (z1 - z2 - z0) * pow(B, mid);
 
     return (first + second + z0);
-}*/
+}
+#else
 
 // we use temp this and then fix the one above (commented one)
 BigInteger BigInteger::operator*(const BigInteger& other) const
@@ -294,6 +312,7 @@ BigInteger BigInteger::operator*(const BigInteger& other) const
     result.m_negative = (m_negative || other.m_negative) && m_negative != other.m_negative;
     return result;
 }
+#endif
 
 void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r) const
 {
@@ -311,13 +330,38 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
         divide(divisor, d2, q, r);
         return;
     }
-    // todo: handle less than zero case
-    q = 0;
-    r = divisor;
-    while (r >= divident) {
-        q = q + 1;
-        r -= divident;
-        std::cout << "New r " << r << std::endl;
+
+    if (divident < 10) {
+        // manual long
+        int d = static_cast<int>(divident.toLong());
+        int rem = 0;
+        int quo = 0;
+        for (auto i = divisor.m_data.begin(); i < divisor.m_data.end(); ++i) {
+            int v = (rem * 10) + *i;
+            quo = v / d;
+            rem = v % d;
+            if (i == divisor.m_data.begin()) {
+                q = quo;
+            } else {
+                q.m_data.push_back(quo);
+            }
+        }
+        r = rem;
+
+        if (!q.m_data.empty() && q.m_data[0] == 0) {
+            q.m_data.erase(std::find_if_not(q.m_data.begin(), q.m_data.end(), [&](int c) -> bool {
+                return c > 0;
+            }));
+        }
+    } else {
+        // fixme: extremely slow algo!
+        // todo: handle less than zero case
+        q = 0;
+        r = divisor;
+        while (r >= divident) {
+            q = q + 1;
+            r -= divident;
+        }
     }
 }
 
@@ -359,7 +403,12 @@ BigInteger BigInteger::operator^(long e) const
 
 BigInteger BigInteger::operator>>(int e) const
 {
-    return *this / 2;//(pow(2, e));
+    return *this / static_cast<int>((pow(2, e)));
+}
+
+BigInteger BigInteger::operator<<(int e) const
+{
+    return *this * static_cast<int>((pow(2, e)));
 }
 
 bool BigInteger::operator&(int e) const
@@ -370,6 +419,16 @@ bool BigInteger::operator&(int e) const
         }
     }
     return false;
+}
+
+BigInteger BigInteger::operator|(int e) const
+{
+    BigInteger result;
+
+    for (int d : m_data) {
+        result = d | e;
+    }
+    return result;
 }
 
 // ------------------------------------ short hand operators ---------------------
@@ -510,6 +569,16 @@ std::string BigInteger::str() const
     }
     std::copy(m_data.begin(), m_data.end(), std::ostream_iterator<int>(ss));
     return ss.str();
+}
+
+std::string BigInteger::hex() const
+{
+    std::string s(str());
+    int offset = 0;
+    if (!s.empty() && s[0] == '-') {
+        offset++;
+    }
+    return Base16::encode(s.begin() + offset, s.end());
 }
 
 long long BigInteger::toLong() const
