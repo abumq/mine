@@ -13,6 +13,7 @@
 //
 //  https://github.com/muflihun/mine
 //
+#include <climits>
 #include <iostream>
 #include <sstream>
 #include <cmath>
@@ -331,35 +332,31 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
         divide(divisor, d2, q, r);
         return;
     }
-    const std::size_t maxMan = 100;
+    const unsigned long long maxMan = 10000;
 
-    auto concat = [&](int x, int y) {
-        return x + (y * 10);
+    auto extract = [&](int from, int to) -> unsigned long long {
+        if (to >= divisor.m_data.size()) {
+            throw "Out of range";
+        }
+        std::stringstream ss;
+        for (unsigned long long i = from; i < from + to; ++i) {
+            ss << divisor.m_data[i];
+        }
+        std::cout << ss.str() << std::endl;
+        return std::stoull(ss.str());
     };
 
-    if (divident < maxMan) {
+
+    if (static_cast<unsigned long long>(divident) < maxMan) {
         // manual long
-        int d = static_cast<int>(divident);
-        int rem = 0;
-        int quo = 0;
+        unsigned long long d = static_cast<unsigned long long>(divident);
+        unsigned long long rem = 0;
+        unsigned long long quo = 0;
 
         const int maxLen = divident.m_data.size();
+        unsigned long long v = extract(0, maxLen);
 
-        for (std::size_t i = 0; i < divisor.m_data.size(); i += maxLen) {
-            int v = 0;
-            for (std::size_t j = i; j < i + maxLen; ++j) {
-                int ct = concat(rem, v);
-                if (i < divisor.m_data.size() - 1 && BigInteger(ct) >= divident) {
-                    --i;
-                } else {
-                    if (j < divisor.m_data.size()) {
-                        v = concat(divisor.m_data[j], v);
-                    }
-                }
-            }
-            if (BigInteger(v) < divident) {
-                v = concat(v, rem);
-            }
+        for (std::size_t i = 0; i < (divisor.m_data.size() - maxLen) + 1; ++i) {
             quo = v / d;
             rem = v % d;
             if (i == 0) {
@@ -367,6 +364,7 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
             } else {
                 q.m_data.push_back(quo);
             }
+            v = (rem * 10) + (divisor.m_data[i + maxLen]);
         }
         r = rem;
     } else {
@@ -621,5 +619,20 @@ std::string BigInteger::hex() const
 
 long long BigInteger::toLong() const
 {
-    return std::stol(str()) * (m_negative ? -1 : 1);
+    std::string s(str());
+    int offset = 0;
+    if (!s.empty() && s[0] == '-') {
+        offset++;
+    }
+    return std::stoll(s) * (m_negative ? -1 : 1);
+}
+
+unsigned long long BigInteger::toULongLong() const
+{
+    std::string s(str());
+    int offset = 0;
+    if (!s.empty() && s[0] == '-') {
+        offset++;
+    }
+    return std::stoull(s);
 }

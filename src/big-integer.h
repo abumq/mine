@@ -133,7 +133,9 @@ public:
     std::string str() const;
     std::string hex() const;
     long long toLong() const;
+    unsigned long long toULongLong() const;
     explicit operator long long() const { return toLong(); }
+    explicit operator unsigned long long() const { return toULongLong(); }
     explicit operator int() const { return static_cast<int>(toLong()); }
 
     friend inline std::ostream& operator<<(std::ostream& os, const BigInteger& b)

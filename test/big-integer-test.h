@@ -50,9 +50,9 @@ TEST(BigIntegerTest, Construct)
     ASSERT_EQ(bnegl.str(), "-23");
     ASSERT_TRUE(bnegl.isNegative());
 
-    /*BigInteger b16("0xff");
+    BigInteger b16("0xff");
     ASSERT_EQ(b16.str(), "255");
-    ASSERT_EQ(b16.base(), 16);*/
+    ASSERT_EQ(b16.base(), 16);
 }
 
 static TestData<BigInteger, BigInteger, bool> BiggerThanData = {
@@ -163,10 +163,10 @@ TEST(BigIntegerTest, Subtraction)
 }
 
 static TestData<BigInteger, int, BigInteger> RightShiftData = {
-    /*TestCase(4, 1, 2), // 100 => 10
+    TestCase(4, 1, 2), // 100 => 10
     TestCase(10, 1, 5), // 1010 => 101
     TestCase(255, 1, 127),
-    TestCase(BigInteger("34778223424"), 1, BigInteger("17389111712")),*/
+    TestCase(BigInteger("34778223424"), 1, BigInteger("17389111712")),
 };
 
 TEST(BigIntegerTest, RightShift)
@@ -214,9 +214,9 @@ TEST(BigIntegerTest, BitwiseAnd)
 }
 
 static TestData<BigInteger, int, BigInteger> BitwiseOrData = {
-    /*TestCase(5, 6, 7),
+    TestCase(5, 6, 7),
     TestCase(40, 29, 61),
-    TestCase(2932, 40, 2940),*/
+    TestCase(2932, 40, 2940),
 };
 
 TEST(BigIntegerTest, BitwiseOr)
@@ -251,10 +251,10 @@ static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
 TEST(BigIntegerTest, Multiplication)
 {
     auto printCalc = [](BigInteger x, BigInteger y, BigInteger exp) {
-        /*std::cout << "    " << x << "\n x  " << y
+        std::cout << "    " << x << "\n x  " << y
                   << "\n-------------------------------------------------------\n =  "
                   << exp << std::endl;
-        std::cout << std::endl;*/
+        std::cout << std::endl;
     };
 
     for (const auto& item : MultiplyData) {
@@ -294,9 +294,11 @@ TEST(BigIntegerTest, Multiplication)
 }
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
+    TestCase(BigInteger("193"), 91, BigInteger("2"), 11),
     TestCase(BigInteger("51922968580"), 10, BigInteger("5192296858"), 0),
-    //TestCase(BigInteger("519229685810"), 100, BigInteger("5192296858"), 1),
-    //TestCase(BigInteger("51922968580"), 100, BigInteger("519229685"), 8),
+    TestCase(BigInteger("519229685810"), 100, BigInteger("5192296858"), 10),
+    TestCase(BigInteger("51922968580"), 100, BigInteger("519229685"), 80),
+    TestCase(BigInteger("51922968580"), 100000, BigInteger("519229"), 68580),
     TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
     TestCase(4, 2, 2, 0),
     TestCase(4, 3, 1, 1),
