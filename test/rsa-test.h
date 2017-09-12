@@ -70,7 +70,7 @@ class Helper : public MathHelper<BigInteger>
 public:
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
-        return static_cast<byte>(b.toLong());
+        return static_cast<byte>(static_cast<int>(b));
     }
 
     virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,

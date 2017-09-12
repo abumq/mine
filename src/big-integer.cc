@@ -364,11 +364,8 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
     const unsigned long long maxMan = ULONG_LONG_MAX;
 
     auto extract = [&](std::size_t from, std::size_t to) -> unsigned long long {
-        if (to > divisor.m_data.size()) {
-            throw "Out of range";
-        }
         std::stringstream ss;
-        for (std::size_t i = from; i < from + to; ++i) {
+        for (std::size_t i = from; i < std::min(from + to, divisor.m_data.size()); ++i) {
             ss << divisor.m_data[i];
         }
         return std::stoull(ss.str().c_str());
@@ -392,7 +389,9 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
             } else {
                 q.m_data.push_back(quo);
             }
-            v = (rem * 10) + (divisor.m_data[i + maxLen]);
+            if (divisor.m_data.size() > i + maxLen) {
+                v = (rem * 10) + (divisor.m_data[i + maxLen]);
+            }
         }
         r = rem;
     } else {
