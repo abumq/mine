@@ -294,11 +294,13 @@ TEST(BigIntegerTest, Multiplication)
 }
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
+    TestCase(BigInteger("6560926371163053827"), BigInteger("911249695"), BigInteger("7199921610"), BigInteger("26644877")),
     TestCase(BigInteger("193"), 91, BigInteger("2"), 11),
     TestCase(BigInteger("51922968580"), 10, BigInteger("5192296858"), 0),
     TestCase(BigInteger("519229685810"), 100, BigInteger("5192296858"), 10),
     TestCase(BigInteger("51922968580"), 100, BigInteger("519229685"), 80),
     TestCase(BigInteger("51922968580"), 100000, BigInteger("519229"), 68580),
+    TestCase(BigInteger("51922968580"), BigInteger("100000000"), BigInteger("519"), BigInteger("22968580")),
     TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
     TestCase(4, 2, 2, 0),
     TestCase(4, 3, 1, 1),

@@ -21,6 +21,7 @@
 #ifndef BIG_INTEGER_H
 #define BIG_INTEGER_H
 
+#include <bitset>
 #include <iosfwd>
 #include <vector>
 #include <string>
@@ -37,6 +38,7 @@ namespace mine {
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
 ///
 class BigInteger {
+    using BigIntegerBitSet = std::bitset<8096>;
     using Container = std::vector<int>;
 public:
     const static BigInteger kZero;
@@ -47,14 +49,17 @@ public:
     BigInteger();
     BigInteger(const BigInteger& other);
     BigInteger(const Container& d);
+    BigInteger(const BigIntegerBitSet& d);
     BigInteger(BigInteger&& other);
     BigInteger& operator=(const BigInteger& other);
     BigInteger(int);
+    BigInteger(unsigned long long);
     BigInteger(const std::string&);
     virtual ~BigInteger() = default;
 
     // construct -----------------------------------------------------------
     void init(int);
+    void init(unsigned long long);
     void init(const std::string&);
     inline void checkAndFixData()
     {
@@ -129,6 +134,7 @@ public:
 
     // conversion ---------------------------------------------------------------
 
+    inline BigIntegerBitSet bin() const;
     inline int base() const { return m_base; }
     std::string str() const;
     std::string hex() const;

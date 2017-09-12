@@ -26,6 +26,7 @@
 #include <iostream>
 #include <array>
 #include <map>
+#include <bitset>
 #include <iosfwd>
 #include <cmath>
 #include <stdexcept>
@@ -883,6 +884,7 @@ private:
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
 ///
 class BigInteger {
+    using BigIntegerBitSet = std::bitset<8096>;
     using Container = std::vector<int>;
 public:
     const static BigInteger kZero;
@@ -893,14 +895,17 @@ public:
     BigInteger();
     BigInteger(const BigInteger& other);
     BigInteger(const Container& d);
+    BigInteger(const BigIntegerBitSet& d);
     BigInteger(BigInteger&& other);
     BigInteger& operator=(const BigInteger& other);
     BigInteger(int);
+    BigInteger(unsigned long long);
     BigInteger(const std::string&);
     virtual ~BigInteger() = default;
 
     // construct -----------------------------------------------------------
     void init(int);
+    void init(unsigned long long);
     void init(const std::string&);
     inline void checkAndFixData()
     {
@@ -975,11 +980,14 @@ public:
 
     // conversion ---------------------------------------------------------------
 
+    inline BigIntegerBitSet bin() const;
     inline int base() const { return m_base; }
     std::string str() const;
     std::string hex() const;
     long long toLong() const;
+    unsigned long long toULongLong() const;
     explicit operator long long() const { return toLong(); }
+    explicit operator unsigned long long() const { return toULongLong(); }
     explicit operator int() const { return static_cast<int>(toLong()); }
 
     friend inline std::ostream& operator<<(std::ostream& os, const BigInteger& b)
@@ -1175,7 +1183,7 @@ public:
         BigIntegerT result = 0;
         std::size_t len = x.size();
         for (std::size_t i = len; i > 0; --i) {
-            result += BigIntegerT(x[i - 1]) * power(kBigIntegerT256, BigIntegerT(len - i));
+            result += BigIntegerT(x[i - 1]) * power(kBigIntegerT256, BigIntegerT(static_cast<unsigned long long>(len - i)));
         }
         return result;
     }

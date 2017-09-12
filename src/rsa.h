@@ -211,7 +211,7 @@ public:
         BigIntegerT result = 0;
         std::size_t len = x.size();
         for (std::size_t i = len; i > 0; --i) {
-            result += BigIntegerT(x[i - 1]) * power(kBigIntegerT256, BigIntegerT(len - i));
+            result += BigIntegerT(x[i - 1]) * power(kBigIntegerT256, BigIntegerT(static_cast<unsigned long long>(len - i)));
         }
         return result;
     }

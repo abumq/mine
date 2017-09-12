@@ -1127,6 +1127,19 @@ BigInteger::BigInteger(const Container &d)
     checkAndFixData();
 }
 
+BigInteger::BigInteger(const BigIntegerBitSet &d)
+    : m_negative(false),
+      m_base(10) {
+    BigInteger r;
+    for (std::size_t i = 0; i < d.size(); ++i) {
+        if (d.test(i)) {
+            r += (static_cast<unsigned long long>(pow(2, i)));
+        }
+    }
+
+    m_data = r.m_data;
+}
+
 BigInteger::BigInteger(const BigInteger& other)
 {
     m_data = other.m_data;
@@ -1166,6 +1179,11 @@ BigInteger::BigInteger(int n)
     init(n);
 }
 
+BigInteger::BigInteger(unsigned long long n)
+{
+    init(n);
+}
+
 BigInteger& BigInteger::operator=(int n)
 {
     init(n);
@@ -1186,6 +1204,17 @@ void BigInteger::init(int n)
     } else {
         m_negative = false;
     }
+    m_base = 10;
+    m_data.clear();
+    do {
+        m_data.insert(m_data.begin(), n % m_base);
+        n /= m_base;
+    } while (n);
+    checkAndFixData();
+}
+
+void BigInteger::init(unsigned long long n)
+{
     m_base = 10;
     m_data.clear();
     do {
@@ -1419,35 +1448,30 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
         divide(divisor, d2, q, r);
         return;
     }
-    const std::size_t maxMan = 100;
+    const unsigned long long maxMan = ULONG_LONG_MAX;
 
-    auto concat = [&](int x, int y) {
-        return x + (y * 10);
+    auto extract = [&](std::size_t from, std::size_t to) -> unsigned long long {
+        if (to > divisor.m_data.size()) {
+            throw "Out of range";
+        }
+        std::stringstream ss;
+        for (std::size_t i = from; i < from + to; ++i) {
+            ss << divisor.m_data[i];
+        }
+        return std::stoull(ss.str().c_str());
     };
+
 
     if (divident < maxMan) {
         // manual long
-        int d = static_cast<int>(divident);
-        int rem = 0;
-        int quo = 0;
+        unsigned long long d = static_cast<unsigned long long>(divident);
+        unsigned long long rem = 0;
+        unsigned long long quo = 0;
 
-        const int maxLen = divident.m_data.size();
+        const std::size_t maxLen = divident.m_data.size();
+        unsigned long long v = extract(0, maxLen);
 
-        for (std::size_t i = 0; i < divisor.m_data.size(); i += maxLen) {
-            int v = 0;
-            for (std::size_t j = i; j < i + maxLen; ++j) {
-                int ct = concat(rem, v);
-                if (i < divisor.m_data.size() - 1 && BigInteger(ct) >= divident) {
-                    --i;
-                } else {
-                    if (j < divisor.m_data.size()) {
-                        v = concat(divisor.m_data[j], v);
-                    }
-                }
-            }
-            if (BigInteger(v) < divident) {
-                v = concat(v, rem);
-            }
+        for (std::size_t i = 0; i < (divisor.m_data.size() - maxLen) + 1; ++i) {
             quo = v / d;
             rem = v % d;
             if (i == 0) {
@@ -1455,6 +1479,7 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
             } else {
                 q.m_data.push_back(quo);
             }
+            v = (rem * 10) + (divisor.m_data[i + maxLen]);
         }
         r = rem;
     } else {
@@ -1533,28 +1558,8 @@ bool BigInteger::operator&(int e) const
 
 BigInteger BigInteger::operator|(int e) const
 {
-    // very very dirty for unit tests
-    BigInteger result;
-
-    std::string binary;
-
-    BigInteger next(m_data);
-    while (!next.isZero()) {
-        binary += next % 2 == 0 ? '0' : '1';
-        next /= 2;
-    }
-    std::reverse(binary.begin(), binary.end());
-
-    std::bitset<8096> bs2 = std::bitset<8096>(binary) | std::bitset<8096>(e);
-
-    for (std::size_t i = 0; i < bs2.size(); ++i) {
-        bool isset = bs2.test(i);
-        if (isset) {
-            result += pow(2, i);
-        }
-    }
-
-    return result;
+    BigIntegerBitSet bs2 = bin() | BigIntegerBitSet(e);
+    return BigInteger(bs2);
 }
 
 // ------------------------------------ short hand operators ---------------------
@@ -1618,6 +1623,18 @@ bool BigInteger::is1er() const
         return x == 0;
     });
     return m_data[0] == 1 && iter == m_data.end();
+}
+
+std::bitset<8096> BigInteger::bin() const
+{
+    std::string binary;
+    BigInteger next(m_data);
+    while (!next.isZero()) {
+        binary += next % 2 == 0 ? '0' : '1';
+        next /= 2;
+    }
+    std::reverse(binary.begin(), binary.end());
+    return std::bitset<8096>(binary);
 }
 
 bool BigInteger::isZero() const
@@ -1709,7 +1726,16 @@ std::string BigInteger::hex() const
 
 long long BigInteger::toLong() const
 {
-    return std::stol(str()) * (m_negative ? -1 : 1);
+    std::ostringstream ss;
+    std::copy(m_data.begin(), m_data.end(), std::ostream_iterator<int>(ss));
+    return std::stol(ss.str()) * (m_negative ? -1 : 1);
+}
+
+unsigned long long BigInteger::toULongLong() const
+{
+    std::ostringstream ss;
+    std::copy(m_data.begin(), m_data.end(), std::ostream_iterator<int>(ss));
+    return std::stoull(ss.str());
 }
 
 
