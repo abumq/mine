@@ -88,10 +88,10 @@ public:
     BigInteger& operator*=(const BigInteger& other);
 
     // divide
-    static void divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r);
-    void divide(const BigInteger& divident, BigInteger& q, BigInteger& r) const;
-    BigInteger operator/(const BigInteger& other) const;
-    BigInteger& operator/=(const BigInteger& other);
+    static void divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r);
+    void divide(const BigInteger& d, BigInteger& q, BigInteger& r) const;
+    BigInteger operator/(const BigInteger& d) const;
+    BigInteger& operator/=(const BigInteger& d);
 
     BigInteger operator%(const BigInteger& other) const;
     BigInteger& operator%=(const BigInteger& other);
@@ -102,7 +102,7 @@ public:
 
     BigInteger operator>>(int e) const;
     BigInteger operator<<(int e) const;
-    bool operator&(int e) const;
+    BigInteger operator&(int e) const;
     BigInteger operator|(int e) const;
 
     // compare ---------------------------------------------------------------
@@ -155,6 +155,7 @@ private:
     int m_base;
 
     int compare(const BigInteger&) const;
+
 };
 
 } // end namespace mine

@@ -350,59 +350,55 @@ void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r) const
     divide(*this, d, q, r);
 }
 
-void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, BigInteger& q, BigInteger& r)
+void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r)
 {
-    if (divident.isZero()) {
+    if (d.isZero()) {
         throw std::invalid_argument("Division by zero");
     }
-    if (divident < 0) {
-        BigInteger d2(divident);
+    if (d < 0) {
+        BigInteger d2(d);
         d2 *= kMinusOne;
-        divide(divisor, d2, q, r);
+        divide(n, d2, q, r);
         return;
     }
-    const unsigned long long maxMan = ULONG_LONG_MAX;
-
-    auto extract = [&](std::size_t from, std::size_t to) -> unsigned long long {
-        std::stringstream ss;
-        for (std::size_t i = from; i < std::min(from + to, divisor.m_data.size()); ++i) {
-            ss << divisor.m_data[i];
-        }
-        return std::stoull(ss.str().c_str());
-    };
 
 
-    if (divident < maxMan) {
-        // manual long
-        unsigned long long d = static_cast<unsigned long long>(divident);
-        unsigned long long rem = 0;
-        unsigned long long quo = 0;
-
-        const std::size_t maxLen = divident.m_data.size();
-        unsigned long long v = extract(0, maxLen);
-
-        for (std::size_t i = 0; i < (divisor.m_data.size() - maxLen) + 1; ++i) {
-            quo = v / d;
-            rem = v % d;
-            if (i == 0) {
+    if (d < 10) {
+        int di = static_cast<int>(d.toLong());
+        int rem = 0;
+        int quo = 0;
+        for (auto i = n.m_data.begin(); i < n.m_data.end(); ++i) {
+            int v = (rem * 10) + *i;
+            quo = v / di;
+            rem = v % di;
+            if (i == n.m_data.begin()) {
                 q = quo;
             } else {
                 q.m_data.push_back(quo);
             }
-            if (divisor.m_data.size() > i + maxLen) {
-                v = (rem * 10) + (divisor.m_data[i + maxLen]);
-            }
         }
         r = rem;
     } else {
-        // fixme: extremely slow algo!
-        // todo: handle less than zero case
         q = 0;
-        r = divisor;
-        while (r >= divident) {
-            q = q + 1;
-            r -= divident;
+        int pos = -1;
+        while (d < n) {
+            d = d << 1;
+            pos++;
         }
+
+        d = d >> 1;
+
+        while (pos > -1) {
+            if (n >= d) {
+                q = q + (1 << pos);
+                n = n - d;
+            }
+
+            d = d >> 1;
+            --pos;
+        }
+
+        r = n;
     }
 
     while (!q.m_data.empty() && q.m_data[0] == 0) {
@@ -412,11 +408,11 @@ void BigInteger::divide(const BigInteger& divisor, const BigInteger& divident, B
     }
 }
 
-BigInteger BigInteger::operator/(const BigInteger& other) const
+BigInteger BigInteger::operator/(const BigInteger& d) const
 {
     BigInteger q;
     BigInteger r;
-    divide(other, q, r);
+    divide(d, q, r);
     return q;
 }
 
@@ -450,28 +446,22 @@ BigInteger BigInteger::operator^(long e) const
 
 BigInteger BigInteger::operator>>(int e) const
 {
-    return *this / static_cast<int>((pow(2, e)));
+    return BigInteger(bin() >> e);
 }
 
 BigInteger BigInteger::operator<<(int e) const
 {
-    return *this * static_cast<int>((pow(2, e)));
-}
-
-bool BigInteger::operator&(int e) const
-{
-    for (int d : m_data) {
-        if (d & e) {
-            return true;
-        }
-    }
-    return false;
+    return BigInteger(bin() << e);
 }
 
 BigInteger BigInteger::operator|(int e) const
 {
-    BigIntegerBitSet bs2 = bin() | BigIntegerBitSet(e);
-    return BigInteger(bs2);
+    return BigInteger(bin() | BigIntegerBitSet(e));
+}
+
+BigInteger BigInteger::operator&(int e) const
+{
+    return BigInteger(bin() & BigIntegerBitSet(e));
 }
 
 // ------------------------------------ short hand operators ---------------------
@@ -500,17 +490,17 @@ BigInteger& BigInteger::operator*=(const BigInteger& other)
     return *this;
 }
 
-BigInteger& BigInteger::operator/=(const BigInteger& other)
+BigInteger& BigInteger::operator/=(const BigInteger& d)
 {
-    BigInteger b = *this / other;
+    BigInteger b = *this / d;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;
 }
 
-BigInteger& BigInteger::operator%=(const BigInteger& other)
+BigInteger& BigInteger::operator%=(const BigInteger& d)
 {
-    BigInteger b = *this % other;
+    BigInteger b = *this % d;
     m_data = std::move(b.m_data);
     m_negative = b.m_negative;
     return *this;
