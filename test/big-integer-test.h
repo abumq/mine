@@ -50,9 +50,9 @@ TEST(BigIntegerTest, Construct)
     ASSERT_EQ(bnegl.str(), "-23");
     ASSERT_TRUE(bnegl.isNegative());
 
-    /*BigInteger b16("0xff");
+    BigInteger b16("0xff");
     ASSERT_EQ(b16.str(), "255");
-    ASSERT_EQ(b16.base(), 16);*/
+    ASSERT_EQ(b16.base(), 16);
 }
 
 static TestData<BigInteger, BigInteger, bool> BiggerThanData = {
@@ -134,9 +134,9 @@ TEST(BigIntegerTest, Addition)
         BigInteger a = PARAM(0);
         BigInteger b = PARAM(1);
         BigInteger exp = PARAM(2);
-        //ASSERT_EQ(a + b, exp);
-        //a += b;
-        //ASSERT_EQ(a, exp);
+        ASSERT_EQ(a + b, exp);
+        a += b;
+        ASSERT_EQ(a, exp);
     }
 }
 
@@ -253,12 +253,18 @@ static TestData<BigInteger, BigInteger, BigInteger> MultiplyData = {
 
 TEST(BigIntegerTest, Multiplication)
 {
-    auto printCalc = [](BigInteger x, BigInteger y, BigInteger exp) {
+#if 0
+    auto printCalc = [](const BigInteger& x, const BigInteger& y, const BigInteger& exp) {
         std::cout << "    " << x << "\n x  " << y
                   << "\n-------------------------------------------------------\n =  "
                   << exp << std::endl;
         std::cout << std::endl;
     };
+#else
+    auto printCalc = [](const BigInteger&, const BigInteger&, const BigInteger&) {
+
+    };
+#endif
 
     for (const auto& item : MultiplyData) {
         printCalc(PARAM(1), PARAM(0), PARAM(2));
@@ -297,6 +303,8 @@ TEST(BigIntegerTest, Multiplication)
 }
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
+#if 0
+    TestCase(-933, 2443, 0, -933),
     TestCase(4, 2, 2, 0),
     TestCase(4, -2, -2, 0),
     TestCase(-4, 2, -2, 0),
@@ -304,18 +312,20 @@ static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
     TestCase(4, 3, 1, 1),
     TestCase(48, 32, 1, 16),
     TestCase(487, 32, 15, 7),
-    TestCase(-487, 32, -15, 7),
+    TestCase(-487, 32, -15, -7),
     TestCase(487, -32, -15, 7),
-    TestCase(-487, -32, 15, 7),
+    TestCase(-487, -32, 15, -7),
     TestCase(BigInteger("193"), 3, BigInteger("64"), 1),
     TestCase(BigInteger("193"), 91, BigInteger("2"), 11),
-    TestCase(BigInteger("6560926371163053827"), BigInteger("911249695"), BigInteger("7199921610"), BigInteger("26644877")),
     TestCase(BigInteger("51922968580"), 10, BigInteger("5192296858"), 0),
     TestCase(BigInteger("519229685810"), 100, BigInteger("5192296858"), 10),
     TestCase(BigInteger("51922968580"), 100, BigInteger("519229685"), 80),
     TestCase(BigInteger("51922968580"), 100000, BigInteger("519229"), 68580),
     TestCase(BigInteger("51922968580"), BigInteger("100000000"), BigInteger("519"), BigInteger("22968580")),
     TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
+    TestCase(BigInteger("6560926371163053827"), BigInteger("911249695"), BigInteger("7199921610"), BigInteger("26644877")),
+#endif
+    TestCase(BigInteger("6560926371163053"), BigInteger("911249695"), BigInteger("7199921"), BigInteger("555888958")),
 };
 
 TEST(BigIntegerTest, Division)
@@ -331,6 +341,23 @@ TEST(BigIntegerTest, Division)
         ASSERT_EQ(r, expR);
     }
 }
+
+static TestData<BigInteger, unsigned int> BitsData = {
+    TestCase(BigInteger("9223372036854775807"), 63),
+    TestCase(BigInteger("13866701041466745229"), 64),
+    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"), 256),
+    TestCase(BigInteger("60779"), 16),
+};
+
+TEST(BigIntegerTest, CountBits)
+{
+    for (const auto& item : BitsData) {
+        BigInteger a = PARAM(0);
+        unsigned long exp = PARAM(1);
+        ASSERT_EQ(a.bitCount(), exp);
+    }
+}
+
 
 }
 

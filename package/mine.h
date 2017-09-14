@@ -884,7 +884,7 @@ private:
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
 ///
 class BigInteger {
-    static const std::size_t kMaxSizeInBits = 256; // todo: change to template
+    static const std::size_t kMaxSizeInBits = 4096; // todo: change to template
     using BigIntegerBitSet = std::bitset<kMaxSizeInBits>;
     using Container = std::vector<int>;
 public:
@@ -984,7 +984,7 @@ public:
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
-    unsigned long bitCount() const;
+    unsigned int bitCount() const;
 
     ///
     /// \return Whether it's 1, 10, 100, 1000, ...
@@ -1074,6 +1074,10 @@ public:
         if (gcdResult != 1) {
             throw std::invalid_argument("Inverse does not exist");
         }
+        /*std::cout << x << std::endl;
+        std::cout << (x % m) << std::endl;
+        std::cout << (x % m) + m << std::endl;
+        std::cout << ((x % m) + m) % m << std::endl;*/
         return ((x % m) + m) % m;
     }
 
@@ -1107,6 +1111,8 @@ public:
         BigIntegerT x1, y1;
         BigIntegerT gcd = gcdExtended(b % a, a, &x1, &y1);
 
+        /*std::cout << y1 << " - " << ((b / a) * x1) << " = " << (y1 - ((b / a) * x1)) << std::endl;
+        std::cout << std::endl;*/
         *x = y1 - ((b / a) * x1);
         *y = x1;
 
@@ -1171,12 +1177,13 @@ public:
     ///
     /// \brief Counts number of bits in big integer
     ///
-    virtual unsigned int countBits(BigIntegerT b) const
+    virtual unsigned int countBits(const BigIntegerT& b) const
     {
+        BigIntegerT bc(b);
         unsigned int bits = 0;
-        while (b > 0) {
+        while (bc > 0) {
             bits++;
-            b = b >> 1;
+            bc = bc >> 1;
         }
         return bits;
     }
@@ -1184,7 +1191,7 @@ public:
     ///
     /// \brief Count number of bytes in big integer
     ///
-    virtual inline unsigned int countBytes(BigIntegerT b) const
+    virtual inline unsigned int countBytes(const BigIntegerT& b) const
     {
         return countBits(b) * 8;
     }

@@ -424,10 +424,12 @@ BigInteger BigInteger::divide_(const BigInteger& dividend, const BigInteger& div
         r = 0;
         return isNeg ? -1 : 1;
     } else if (tdividend < tdivisor) {
-        r = tdividend < 0 ? tdividend * -1 : tdividend;
+        r = tdividend;
+        r.m_negative = dividend.isNegative();
         return 0;
     }
-    while (tdivisor << 1 <= tdividend) {
+    // add two checks to reduce unneeded shifting
+    while (!tdivisor.isZero() && tdivisor << 1 <= tdividend) {
         tdivisor <<= 1;
         quotient <<= 1;
     }
@@ -452,7 +454,7 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
     }
 
 
-    if (d > 0 && d < 10) {
+    if (d < 10) {
         int di = static_cast<int>(d.toLong());
         int rem = 0;
         int quo = 0;
@@ -471,7 +473,24 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         }
         r = rem;
     } else {
-        q = divide_(n, d, d, r);
+        //q = divide_(n, d, d, r);
+
+        q = 0;
+        long long pos = -1;
+        while (d <  n){
+            d <<= 1;
+            ++pos;
+        }
+        d >>= 1;
+        while (pos > -1) {
+            if (n >= d) {
+                q += 1 << pos;
+                n -= d;
+            }
+            d >>= 1;
+            --pos;
+        }
+        r = n;
     }
 
     while (!q.m_data.empty() && q.m_data[0] == 0) {
@@ -479,6 +498,7 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
             return c > 0;
         }));
     }
+    q.checkAndFixData();
 }
 
 BigInteger BigInteger::operator/(const BigInteger& d) const
@@ -655,6 +675,17 @@ bool BigInteger::isZero() const
         return x == 0;
     });
     return iter == m_data.end();
+}
+
+unsigned int BigInteger::bitCount() const
+{
+    auto b = bin();
+    unsigned int bits = 0;
+    while (b.any()) {
+        bits++;
+        b >>= 1;
+    }
+    return bits;
 }
 
 // ----------------------------- comparison ----------------------------------------

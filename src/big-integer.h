@@ -38,7 +38,7 @@ namespace mine {
 /// ******************** DESIGN IS SUBJECT TO CHANGE ****************************
 ///
 class BigInteger {
-    static const std::size_t kMaxSizeInBits = 256; // todo: change to template
+    static const std::size_t kMaxSizeInBits = 4096; // todo: change to template
     using BigIntegerBitSet = std::bitset<kMaxSizeInBits>;
     using Container = std::vector<int>;
 public:
@@ -138,7 +138,7 @@ public:
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
-    unsigned long bitCount() const;
+    unsigned int bitCount() const;
 
     ///
     /// \return Whether it's 1, 10, 100, 1000, ...
