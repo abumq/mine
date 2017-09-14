@@ -135,20 +135,21 @@ TEST(BigIntegerTest, Addition)
         BigInteger b = PARAM(1);
         BigInteger exp = PARAM(2);
         //ASSERT_EQ(a + b, exp);
-        a += b;
+        //a += b;
         //ASSERT_EQ(a, exp);
     }
 }
 
 static TestData<BigInteger, BigInteger, BigInteger> SubtractionData = {
-    /*TestCase(0, 123, -123),
+    TestCase(-1, 2, -3),
+    TestCase(0, 123, -123),
     TestCase(4560, 123, 4437),
     TestCase(123, 4560, -4437),
     TestCase(1, 4560, -4559),
     TestCase(-500, -1, -499),
-    TestCase(1, -3, 4),*/
     TestCase(1, -3, 4),
-    TestCase(-1, -3, -4),
+    TestCase(-1, -3, 2),
+    TestCase(-3, -1, -2),
     TestCase(BigInteger("243392213323222342"), BigInteger("3221213232223221"), BigInteger("240171000090999121")),
     TestCase(BigInteger("243392213323222342"), BigInteger("240171000090999121"), BigInteger("3221213232223221")),
 };

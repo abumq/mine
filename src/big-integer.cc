@@ -242,15 +242,27 @@ BigInteger BigInteger::operator-(const BigInteger& other) const
         BigInteger thisCopy(*this);
         thisCopy.m_negative = false;
 
-        return thisCopy + otherCopy;
+        BigInteger result;
+        if (thisCopy > otherCopy) {
+            result = thisCopy + otherCopy;
+        } else {
+            result = otherCopy + thisCopy;
+            result.m_negative = m_negative; // previously negative or not
+        }
+        return result;
     } else if (m_negative && other.m_negative) {
         BigInteger otherCopy(other);
         otherCopy.m_negative = false;
         BigInteger thisCopy(*this);
         thisCopy.m_negative = false;
 
-        BigInteger result = thisCopy + otherCopy;
-        result.m_negative = true;
+        BigInteger result;
+        if (thisCopy > otherCopy) {
+            result = thisCopy - otherCopy;
+            result.m_negative = true;
+        } else {
+            result = otherCopy - thisCopy;
+        }
         return result;
     }
     Container data;

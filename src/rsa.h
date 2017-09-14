@@ -89,6 +89,7 @@ public:
         if (gcdResult != 1) {
             throw std::invalid_argument("Inverse does not exist");
         }
+        //std::cout << x << std::endl;
         return ((x % m) + m) % m;
     }
 
@@ -122,6 +123,8 @@ public:
         BigIntegerT x1, y1;
         BigIntegerT gcd = gcdExtended(b % a, a, &x1, &y1);
 
+        //std::cout << y1 << " - " << ((b / a) * x1) << " = " << (y1 - ((b / a) * x1)) << std::endl;
+        //std::cout << std::endl;
         *x = y1 - ((b / a) * x1);
         *y = x1;
 
