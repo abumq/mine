@@ -304,6 +304,7 @@ TEST(BigIntegerTest, Multiplication)
 }
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
+    #if 0
     TestCase(-933, 2443, 0, -933),
     TestCase(BigInteger("7350057016"), 16, BigInteger("459378563"), 8),
     TestCase(4, 2, 2, 0),
@@ -318,14 +319,18 @@ static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
     TestCase(-487, -32, 15, -7),
     TestCase(BigInteger("193"), 3, BigInteger("64"), 1),
     TestCase(BigInteger("193"), 91, BigInteger("2"), 11),
+    TestCase(BigInteger("5190"), 10, BigInteger("519"), 0),
+    TestCase(BigInteger("51910"), 10, BigInteger("5191"), 0),
+    TestCase(BigInteger("5192296850"), 10, BigInteger("519229685"), 0),
     TestCase(BigInteger("51922968580"), 10, BigInteger("5192296858"), 0),
     TestCase(BigInteger("519229685810"), 100, BigInteger("5192296858"), 10),
     TestCase(BigInteger("51922968580"), 100, BigInteger("519229685"), 80),
     TestCase(BigInteger("51922968580"), 100000, BigInteger("519229"), 68580),
     TestCase(BigInteger("51922968580"), BigInteger("100000000"), BigInteger("519"), BigInteger("22968580")),
-    TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
     TestCase(BigInteger("6560926371163053827"), BigInteger("911249695"), BigInteger("7199921610"), BigInteger("26644877")),
     TestCase(BigInteger("6560926371163053"), BigInteger("911249695"), BigInteger("7199921"), BigInteger("555888958")),
+    #endif
+    TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
 };
 
 TEST(BigIntegerTest, Division)

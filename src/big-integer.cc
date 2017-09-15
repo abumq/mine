@@ -510,7 +510,7 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         d >>= 1;
         while (pos > -1) {
             if (n >= d) {
-                q += 1 << pos;
+                q += kOne << pos;
                 n -= d;
             }
             d >>= 1;
