@@ -140,7 +140,7 @@ public:
     /// \param e Exponent
     /// \param m Mod
     ///
-    virtual BigIntegerT powerMod(BigIntegerT b, BigIntegerT e, BigIntegerT m) const
+    virtual BigIntegerT powerMod(BigIntegerT b, BigIntegerT e, const BigIntegerT& m) const
     {
         BigIntegerT res = 1;
         while (e > 0) {

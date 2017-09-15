@@ -47,6 +47,7 @@ public:
     const static BigInteger kTwo;
     const static BigInteger kMinusOne;
     const static BigInteger kTwoFiftySix;
+    const static BigInteger kSixteen;
 
     BigInteger();
     BigInteger(const BigInteger& other);
@@ -97,6 +98,7 @@ public:
     // power
     BigInteger power(long long e) const;
     static BigInteger twoPower(long long e);
+    BigInteger powerMod(BigInteger e, const BigInteger& m);
 
     // bitwise op
     BigInteger operator>>(int e) const;
@@ -132,6 +134,7 @@ public:
 
     // properties ---------------------------------------------------------------
     inline bool isNegative() const { return m_negative; }
+    inline bool isEven() const;
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
     inline bool isOne() const;

@@ -26,6 +26,7 @@ const BigInteger BigInteger::kZero = BigInteger(0);
 const BigInteger BigInteger::kOne = BigInteger(1);
 const BigInteger BigInteger::kTwo = BigInteger(2);
 const BigInteger BigInteger::kMinusOne = BigInteger(-1);
+const BigInteger BigInteger::kSixteen = BigInteger(16);
 const BigInteger BigInteger::kTwoFiftySix = BigInteger(256);
 
 BigInteger::BigInteger() : m_negative(false), m_base(10)
@@ -493,7 +494,7 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         }
         r = rem;
     } else {
-#if 1
+#if 0
         q = divide_(n, d, d, r);
 #else
         bool negative = false;
@@ -564,6 +565,21 @@ BigInteger BigInteger::power(long long e) const
         base *= base;
     }
 
+    return result;
+}
+
+BigInteger BigInteger::powerMod(BigInteger e, const BigInteger& m)
+{
+    BigInteger t(*this);
+    BigInteger result = 1;
+    while (!e.isZero() && !e.isNegative()) {
+        if (!e.isEven()) {
+            result *= t;
+            result %= m;
+        }
+        t = (t * t) % m;
+        e /= 2;
+    }
     return result;
 }
 
@@ -704,13 +720,15 @@ bool BigInteger::is1er() const
 
 bool BigInteger::isZero() const
 {
-    if (m_data.empty()) {
-        return true;
-    }
     auto iter = std::find_if_not(m_data.begin(), m_data.end(), [&](int x) {
         return x == 0;
     });
     return iter == m_data.end();
+}
+
+bool BigInteger::isEven() const
+{
+    return m_data[m_data.size() - 1] % 2 == 0;
 }
 
 unsigned int BigInteger::bitCount() const
@@ -792,7 +810,19 @@ std::string BigInteger::str() const
 
 std::string BigInteger::hex() const
 {
-    return Base16::encode<BigInteger>(*this);
+    // we avoid Base16::encode<BigInteger>(*this)
+    // as we can use divide for faster division
+    std::stringstream ss;
+    BigInteger n(*this);
+    BigInteger q, r;
+    while (!n.isZero()) {
+        n.divide(kSixteen, q, r);
+        n = std::move(q);
+        ss << Base16::kValidChars[static_cast<int>(r)];
+    }
+    std::string res(ss.str());
+    std::reverse(res.begin(), res.end());
+    return res;
 }
 
 BigInteger::BigIntegerBitSet BigInteger::bin() const

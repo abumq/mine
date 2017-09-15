@@ -30,12 +30,12 @@ using BigInteger = CryptoPP::Integer;
 class Helper : public MathHelper<BigInteger>
 {
 public:
-/*
+
     virtual BigInteger modInverse(BigInteger a, BigInteger b) const override
     {
         return a.InverseMod(b);
     }
-*/
+
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
         return static_cast<byte>(b.ConvertToLong());
@@ -78,6 +78,11 @@ public:
     virtual unsigned int countBits(const BigInteger& b) const override
     {
         return b.bitCount();
+    }
+
+    virtual BigInteger powerMod(BigInteger b, BigInteger e, const BigInteger& m) const override
+    {
+        return b.powerMod(e, m);
     }
 
     virtual void divideBigInteger(const BigInteger& divisor, const BigInteger& divident,
