@@ -102,21 +102,6 @@ TEST(BigIntegerTest, IsOnerTest)
     }
 }
 
-static TestData<BigInteger, std::string> HexData = {
-    //TestCase(123, "7B"),
-    //TestCase(BigInteger("237880508015677"), "D859DF2DE43D"),
-    //TestCase(BigInteger("2378805080156772382834702348329084290384023424"), "6AAB57D56570D0260D4D5C87A68C44DE304F80"),
-};
-
-TEST(BigIntegerTest, Hex)
-{
-    for (const auto& item : HexData) {
-        BigInteger a = PARAM(0);
-        std::string exp = PARAM(1);
-        ASSERT_EQ(a.hex(), exp);
-    }
-}
-
 static TestData<BigInteger, long long, BigInteger> PowerData = {
     TestCase(10, 0, 1),
     TestCase(10, 1, 10),
@@ -355,6 +340,21 @@ TEST(BigIntegerTest, Division)
         a.divide(b, q, r);
         ASSERT_EQ(q, expQ);
         ASSERT_EQ(r, expR);
+    }
+}
+
+static TestData<BigInteger, std::string> HexData = {
+    TestCase(123, "7B"),
+    TestCase(BigInteger("237880508015677"), "D859DF2DE43D"),
+    TestCase(BigInteger("2378805080156772382834702348329084290384023424"), "6AAB57D56570D0260D4D5C87A68C44DE304F80"),
+};
+
+TEST(BigIntegerTest, Hex)
+{
+    for (const auto& item : HexData) {
+        BigInteger a = PARAM(0);
+        std::string exp = PARAM(1);
+        ASSERT_EQ(a.hex(), exp);
     }
 }
 

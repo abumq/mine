@@ -1249,7 +1249,7 @@ void BigInteger::init(const std::string& n)
         bool firstNonZeroDigitFound = false;
         for (auto it = n.begin() + beginOffset; it < n.end(); ++it) {
             char c = *it;
-            if (!isnumber(c)) {
+            if (!isdigit(c)) {
                 throw std::invalid_argument("Invalid number");
             }
             if (c == '0' && !firstNonZeroDigitFound) {
@@ -1581,7 +1581,7 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         }
         r = rem;
     } else {
-#if 1
+#if 0
         q = divide_(n, d, d, r);
 #else
         bool negative = false;

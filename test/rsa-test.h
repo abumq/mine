@@ -7,6 +7,7 @@
 #   include "package/mine.h"
 #else
 #   include "src/rsa.h"
+#   include "src/base64.h"
 #endif
 
 #define USE_CRYPTOPP_BIG_INTEGER 0
@@ -20,11 +21,6 @@
 #   endif
 #endif
 #include <cryptopp/pem-com.h> // for readPem func
-
-// b64
-#ifndef MINE_SINGLE_HEADER_TEST
-#   include "src/base64.h"
-#endif
 
 namespace mine {
 
@@ -45,7 +41,7 @@ public:
         return static_cast<byte>(b.ConvertToLong());
     }
 
-    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+    virtual void divideBigInteger(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const override
     {
         BigInteger::Divide(*remainder, *quotient, divisor, divident);
@@ -84,7 +80,7 @@ public:
         return b.bitCount();
     }
 
-    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+    virtual void divideBigInteger(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const override
     {
         BigInteger::divide(divisor, divident, *quotient, *remainder);

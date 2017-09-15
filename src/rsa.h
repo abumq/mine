@@ -239,7 +239,7 @@ public:
         int i = 1;
 
         for (; i <= xlen; ++i) {
-            divideBigNumber(x, power(kBigIntegerT256, BigIntegerT(xlen - i)), &q, &r);
+            divideBigInteger(x, power(kBigIntegerT256, BigIntegerT(xlen - i)), &q, &r);
             ba[i - 1] = bigIntegerToByte(q);
             x = r;
         }
@@ -252,7 +252,7 @@ public:
     /// you are using.
     /// Result should be stored in quotient and remainder
     ///
-    virtual void divideBigNumber(const BigIntegerT& divisor, const BigIntegerT& divident,
+    virtual void divideBigInteger(const BigIntegerT& divisor, const BigIntegerT& divident,
                                         BigIntegerT* quotient, BigIntegerT* remainder) const
     {
         *quotient = divisor / divident;

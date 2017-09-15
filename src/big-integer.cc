@@ -161,7 +161,7 @@ void BigInteger::init(const std::string& n)
         bool firstNonZeroDigitFound = false;
         for (auto it = n.begin() + beginOffset; it < n.end(); ++it) {
             char c = *it;
-            if (!isnumber(c)) {
+            if (!isdigit(c)) {
                 throw std::invalid_argument("Invalid number");
             }
             if (c == '0' && !firstNonZeroDigitFound) {
