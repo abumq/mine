@@ -301,10 +301,11 @@ TEST(BigIntegerTest, Multiplication)
     printCalc(a, exp6, exp7);
     ASSERT_EQ(exp6 * a, exp7);
 
+    ASSERT_EQ(a * a * a * a * a * a * a, exp7);
+
 }
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
-    #if 0
     TestCase(-933, 2443, 0, -933),
     TestCase(BigInteger("7350057016"), 16, BigInteger("459378563"), 8),
     TestCase(4, 2, 2, 0),
@@ -329,7 +330,6 @@ static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
     TestCase(BigInteger("51922968580"), BigInteger("100000000"), BigInteger("519"), BigInteger("22968580")),
     TestCase(BigInteger("6560926371163053827"), BigInteger("911249695"), BigInteger("7199921610"), BigInteger("26644877")),
     TestCase(BigInteger("6560926371163053"), BigInteger("911249695"), BigInteger("7199921"), BigInteger("555888958")),
-    #endif
     TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
 };
 
@@ -359,7 +359,12 @@ TEST(BigIntegerTest, Hex)
     for (const auto& item : HexData) {
         BigInteger a = PARAM(0);
         std::string exp = PARAM(1);
+        LOG(INFO) << a << " => " << exp;
         ASSERT_EQ(a.hex(), exp);
+
+        LOG(INFO) << "0x" << exp << " => " << a;
+        BigInteger b("0x" + exp);
+        ASSERT_EQ(b, a);
     }
 }
 
@@ -375,6 +380,7 @@ TEST(BigIntegerTest, CountBits)
     for (const auto& item : BitsData) {
         BigInteger a = PARAM(0);
         unsigned long exp = PARAM(1);
+        LOG(INFO) << exp << "-bits";
         ASSERT_EQ(a.bitCount(), exp);
     }
 }

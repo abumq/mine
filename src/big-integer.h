@@ -167,7 +167,7 @@ private:
     int m_base;
 
     int compare(const BigInteger&) const;
-    static BigInteger divide_(const BigInteger& dividend, const BigInteger& divisor, const BigInteger& originalDivisor, BigInteger& r);
+    static void specialDivide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r);
 
 };
 

@@ -1114,6 +1114,7 @@ const BigInteger BigInteger::kZero = BigInteger(0);
 const BigInteger BigInteger::kOne = BigInteger(1);
 const BigInteger BigInteger::kTwo = BigInteger(2);
 const BigInteger BigInteger::kMinusOne = BigInteger(-1);
+const BigInteger BigInteger::kSixteen = BigInteger(16);
 const BigInteger BigInteger::kTwoFiftySix = BigInteger(256);
 
 BigInteger::BigInteger() : m_negative(false), m_base(10)
@@ -1521,34 +1522,6 @@ void BigInteger::divide(const BigInteger& d, BigInteger& q, BigInteger& r) const
     divide(*this, d, q, r);
 }
 
-BigInteger BigInteger::divide_(const BigInteger& dividend, const BigInteger& divisor, const BigInteger& originalDivisor, BigInteger& r) {
-    BigInteger quotient = 1;
-    bool isNeg = (dividend > 0 && divisor < 0) || (dividend < 0 && divisor > 0);
-
-    BigInteger tdividend(dividend);
-    tdividend.m_negative = false;
-    BigInteger tdivisor(divisor);
-    tdivisor.m_negative = false;
-    if (tdividend == tdivisor) {
-        r = 0;
-        return isNeg ? -1 : 1;
-    } else if (tdividend < tdivisor) {
-        r = tdividend;
-        r.m_negative = dividend.isNegative();
-        return 0;
-    }
-    // add two checks to reduce unneeded shifting
-    while (!tdivisor.isZero() && tdivisor << 1 <= tdividend) {
-        tdivisor <<= 1;
-        quotient <<= 1;
-    }
-    BigInteger next = tdividend - tdivisor;
-    next.m_negative = isNeg;
-    quotient.m_negative = isNeg;
-    quotient += divide_(next, originalDivisor, originalDivisor, r);
-    return quotient;
-}
-
 void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r)
 {
     if (d.isZero()) {
@@ -1581,9 +1554,55 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         }
         r = rem;
     } else {
-#if 0
-        q = divide_(n, d, d, r);
-#else
+        bool negative = false;
+        if (n.isNegative()) {
+            negative = true;
+            n.m_negative = false;
+        }
+        q = 1;
+        BigInteger divisor(d);
+        while (n > divisor) {
+            divisor <<= 1;
+            q <<= 1;
+        }
+
+        if (divisor > n) {
+            BigInteger qs, rs;
+            specialDivide((divisor - n), d, qs, rs);
+            BigInteger distance(qs);
+            divisor -= (d * distance);
+            q -= distance;
+        }
+        // remainings
+        while (divisor > n) {
+          divisor -= d;
+          q -= 1;
+        }
+        r = n - divisor;
+        q.m_negative = negative;
+        r.m_negative = negative;
+    }
+
+    q.checkAndFixData();
+    r.checkAndFixData();
+}
+
+void BigInteger::specialDivide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r)
+{
+    if (d.isZero()) {
+        throw std::invalid_argument("Division by zero");
+    }
+    if (d < 0) {
+        BigInteger d2(d);
+        d2 *= kMinusOne;
+        divide(n, d2, q, r);
+        q.m_negative = !n.isNegative();
+        return;
+    }
+
+    if (d < 10) {
+        return n.divide(d, q, r);
+    } else {
         bool negative = false;
         if (n.isNegative()) {
             negative = true;
@@ -1591,14 +1610,14 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         }
         q = 0;
         long long pos = -1;
-        while (d <  n){
+        while (d < n) {
             d <<= 1;
             ++pos;
         }
         d >>= 1;
         while (pos > -1) {
             if (n >= d) {
-                q += 1 << pos;
+                q += kOne << pos;
                 n -= d;
             }
             d >>= 1;
@@ -1607,7 +1626,6 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         r = n;
         q.m_negative = negative;
         r.m_negative = negative;
-#endif
     }
 
     q.checkAndFixData();
@@ -1655,6 +1673,21 @@ BigInteger BigInteger::power(long long e) const
     return result;
 }
 
+BigInteger BigInteger::powerMod(BigInteger e, const BigInteger& m)
+{
+    BigInteger t(*this);
+    BigInteger result = 1;
+    while (!e.isZero() && !e.isNegative()) {
+        if (!e.isEven()) {
+            result *= t;
+            result %= m;
+        }
+        t = (t * t) % m;
+        e /= 2;
+    }
+    return result;
+}
+
 BigInteger BigInteger::twoPower(long long e)
 {
 #if 1
@@ -1674,7 +1707,7 @@ BigInteger BigInteger::operator>>(int e) const
 
 BigInteger BigInteger::operator<<(int e) const
 {
-    if (e <= 3) {
+    if (e <= 4) {
         return operator*(static_cast<int>(pow(2, e)));
     }
     return BigInteger(bin() << e);
@@ -1792,13 +1825,15 @@ bool BigInteger::is1er() const
 
 bool BigInteger::isZero() const
 {
-    if (m_data.empty()) {
-        return true;
-    }
     auto iter = std::find_if_not(m_data.begin(), m_data.end(), [&](int x) {
         return x == 0;
     });
     return iter == m_data.end();
+}
+
+bool BigInteger::isEven() const
+{
+    return m_data[m_data.size() - 1] % 2 == 0;
 }
 
 unsigned int BigInteger::bitCount() const
@@ -1880,7 +1915,19 @@ std::string BigInteger::str() const
 
 std::string BigInteger::hex() const
 {
-    return Base16::encode<BigInteger>(*this);
+    // we avoid Base16::encode<BigInteger>(*this)
+    // as we can use divide for faster division
+    std::stringstream ss;
+    BigInteger n(*this);
+    BigInteger q, r;
+    while (!n.isZero()) {
+        n.divide(kSixteen, q, r);
+        n = std::move(q);
+        ss << Base16::kValidChars[static_cast<int>(r)];
+    }
+    std::string res(ss.str());
+    std::reverse(res.begin(), res.end());
+    return res;
 }
 
 BigInteger::BigIntegerBitSet BigInteger::bin() const

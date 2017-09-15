@@ -893,6 +893,7 @@ public:
     const static BigInteger kTwo;
     const static BigInteger kMinusOne;
     const static BigInteger kTwoFiftySix;
+    const static BigInteger kSixteen;
 
     BigInteger();
     BigInteger(const BigInteger& other);
@@ -943,6 +944,7 @@ public:
     // power
     BigInteger power(long long e) const;
     static BigInteger twoPower(long long e);
+    BigInteger powerMod(BigInteger e, const BigInteger& m);
 
     // bitwise op
     BigInteger operator>>(int e) const;
@@ -978,6 +980,7 @@ public:
 
     // properties ---------------------------------------------------------------
     inline bool isNegative() const { return m_negative; }
+    inline bool isEven() const;
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
     inline bool isOne() const;
@@ -1010,7 +1013,7 @@ private:
     int m_base;
 
     int compare(const BigInteger&) const;
-    static BigInteger divide_(const BigInteger& dividend, const BigInteger& divisor, const BigInteger& originalDivisor, BigInteger& r);
+    static void specialDivide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r);
 
 };
 
@@ -1122,7 +1125,7 @@ public:
     /// \param e Exponent
     /// \param m Mod
     ///
-    virtual BigIntegerT powerMod(BigIntegerT b, BigIntegerT e, BigIntegerT m) const
+    virtual BigIntegerT powerMod(BigIntegerT b, BigIntegerT e, const BigIntegerT& m) const
     {
         BigIntegerT res = 1;
         while (e > 0) {
