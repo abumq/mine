@@ -86,6 +86,7 @@ public:
     BigInteger& operator-=(const BigInteger& other);
 
     // multiply
+    BigInteger longMul(const BigInteger& other) const;
     BigInteger operator*(const BigInteger& other) const;
     BigInteger& operator*=(const BigInteger& other);
 
@@ -138,6 +139,7 @@ public:
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
+    inline bool isOne() const;
     unsigned int bitCount() const;
 
     ///
