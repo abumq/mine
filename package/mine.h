@@ -909,13 +909,8 @@ public:
     void init(int);
     void init(unsigned long long);
     void init(const std::string&);
-    inline void checkAndFixData()
-    {
-        if (m_data.empty()) {
-            m_data.push_back(0);
-            m_negative = false;
-        }
-    }
+
+    void checkAndFixData();
 
     // assign ---------------------------------------------------------------
     BigInteger& operator=(int);
@@ -932,6 +927,7 @@ public:
     BigInteger& operator-=(const BigInteger& other);
 
     // multiply
+    BigInteger longMul(const BigInteger& other) const;
     BigInteger operator*(const BigInteger& other) const;
     BigInteger& operator*=(const BigInteger& other);
 
@@ -984,6 +980,7 @@ public:
     inline bool isNegative() const { return m_negative; }
     inline std::size_t digits() const { return m_data.size(); }
     inline bool isZero() const;
+    inline bool isOne() const;
     unsigned int bitCount() const;
 
     ///

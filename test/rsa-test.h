@@ -15,10 +15,16 @@
 #if USE_CRYPTOPP_BIG_INTEGER
 #   include <cryptopp/integer.h>
 #else
-#   include "src/big-integer.h"
+#   ifndef MINE_SINGLE_HEADER_TEST
+#      include "src/big-integer.h"
+#   endif
 #endif
 #include <cryptopp/pem-com.h> // for readPem func
-#include "src/base64.h"
+
+// b64
+#ifndef MINE_SINGLE_HEADER_TEST
+#   include "src/base64.h"
+#endif
 
 namespace mine {
 

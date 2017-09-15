@@ -174,6 +174,22 @@ void BigInteger::init(const std::string& n)
     checkAndFixData();
 }
 
+void BigInteger::checkAndFixData()
+{
+    while (digits() > 1 && m_data[0] == 0) {
+        m_data.erase(std::find_if_not(m_data.begin(), m_data.end(), [&](int c) -> bool {
+            return c > 0;
+        }));
+    }
+    if (m_data.empty()) {
+        m_data.push_back(0);
+        m_negative = false;
+    }
+    if (isZero() && m_negative) {
+        m_negative = false;
+    }
+}
+
 BigInteger BigInteger::operator+(const BigInteger& other) const
 {
     if ((m_negative || other.m_negative) && m_negative != other.m_negative) {
@@ -477,9 +493,14 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
         }
         r = rem;
     } else {
-#if 0
+#if 1
         q = divide_(n, d, d, r);
 #else
+        bool negative = false;
+        if (n.isNegative()) {
+            negative = true;
+            n.m_negative = false;
+        }
         q = 0;
         long long pos = -1;
         while (d <  n){
@@ -496,14 +517,13 @@ void BigInteger::divide(BigInteger n, BigInteger d, BigInteger& q, BigInteger& r
             --pos;
         }
         r = n;
+        q.m_negative = negative;
+        r.m_negative = negative;
 #endif
     }
 
-    while (q.digits() > 1 && q.m_data[0] == 0) {
-        q.m_data.erase(std::find_if_not(q.m_data.begin(), q.m_data.end(), [&](int c) -> bool {
-            return c > 0;
-        }));
-    }
+    q.checkAndFixData();
+    r.checkAndFixData();
 }
 
 BigInteger BigInteger::operator/(const BigInteger& d) const
@@ -772,9 +792,7 @@ std::string BigInteger::str() const
 
 std::string BigInteger::hex() const
 {
-    std::string s(str());
-    int offset = !s.empty() && s[0] == '-' ? 1 : 0;
-    return Base16::encode(s.begin() + offset, s.end());
+    return Base16::encode<BigInteger>(*this);
 }
 
 BigInteger::BigIntegerBitSet BigInteger::bin() const

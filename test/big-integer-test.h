@@ -101,6 +101,22 @@ TEST(BigIntegerTest, IsOnerTest)
         ASSERT_EQ(a.is1er(), PARAM(1));
     }
 }
+
+static TestData<BigInteger, std::string> HexData = {
+    //TestCase(123, "7B"),
+    //TestCase(BigInteger("237880508015677"), "D859DF2DE43D"),
+    //TestCase(BigInteger("2378805080156772382834702348329084290384023424"), "6AAB57D56570D0260D4D5C87A68C44DE304F80"),
+};
+
+TEST(BigIntegerTest, Hex)
+{
+    for (const auto& item : HexData) {
+        BigInteger a = PARAM(0);
+        std::string exp = PARAM(1);
+        ASSERT_EQ(a.hex(), exp);
+    }
+}
+
 static TestData<BigInteger, long long, BigInteger> PowerData = {
     TestCase(10, 0, 1),
     TestCase(10, 1, 10),
@@ -303,8 +319,8 @@ TEST(BigIntegerTest, Multiplication)
 }
 
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
-#if 0
     TestCase(-933, 2443, 0, -933),
+    TestCase(BigInteger("7350057016"), 16, BigInteger("459378563"), 8),
     TestCase(4, 2, 2, 0),
     TestCase(4, -2, -2, 0),
     TestCase(-4, 2, -2, 0),
@@ -324,7 +340,6 @@ static TestData<BigInteger, BigInteger, BigInteger, BigInteger> DivisionData = {
     TestCase(BigInteger("51922968580"), BigInteger("100000000"), BigInteger("519"), BigInteger("22968580")),
     TestCase(BigInteger("5192296858534827628530496329220096"), BigInteger("79228162514264337593543950336"), BigInteger(65536), BigInteger("0")),
     TestCase(BigInteger("6560926371163053827"), BigInteger("911249695"), BigInteger("7199921610"), BigInteger("26644877")),
-#endif
     TestCase(BigInteger("6560926371163053"), BigInteger("911249695"), BigInteger("7199921"), BigInteger("555888958")),
 };
 
@@ -336,6 +351,7 @@ TEST(BigIntegerTest, Division)
         BigInteger expQ = PARAM(2);
         BigInteger expR = PARAM(3);
         BigInteger q, r;
+        LOG(INFO) << a << " / " << b << " = " << expQ << " remainder: " << expR;
         a.divide(b, q, r);
         ASSERT_EQ(q, expQ);
         ASSERT_EQ(r, expR);

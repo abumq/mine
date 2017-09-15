@@ -63,13 +63,8 @@ public:
     void init(int);
     void init(unsigned long long);
     void init(const std::string&);
-    inline void checkAndFixData()
-    {
-        if (m_data.empty()) {
-            m_data.push_back(0);
-            m_negative = false;
-        }
-    }
+
+    void checkAndFixData();
 
     // assign ---------------------------------------------------------------
     BigInteger& operator=(int);
