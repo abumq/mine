@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [1.1.0] - 26-09-2017
 ### Updates
 - Moved `Base16::toRawString` to `MineCommon::byteArrayToRawString`
 - Added `MineCommon::rawStringToByteArray`
