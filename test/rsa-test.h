@@ -10,7 +10,7 @@
 #   include "src/base64.h"
 #endif
 
-#define USE_CRYPTOPP_BIG_INTEGER 0
+#define USE_CRYPTOPP_BIG_INTEGER 1
 
 #include <type_traits>
 #if USE_CRYPTOPP_BIG_INTEGER
