@@ -1,10 +1,10 @@
-
 #include "test.h"
 #include "zlib-test.h"
-#include "rsa-test.h"
 #include "aes-test.h"
 #include "base64-test.h"
 #include "base16-test.h"
+//#include "big-integer-test.h"
+#include "rsa-test.h"
 
 INITIALIZE_EASYLOGGINGPP
 
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     el::Loggers::addFlag(el::LoggingFlag::ColoredTerminalOutput);
     el::Loggers::addFlag(el::LoggingFlag::ImmediateFlush);
-    disableLogs();
+    //disableLogs();
 
     return ::testing::UnitTest::GetInstance()->Run();
 }

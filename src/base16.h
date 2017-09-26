@@ -90,22 +90,17 @@ public:
     static ByteArray fromString(const std::string& hex);
 
     ///
-    /// \brief Converts byte array to raw string.
-    /// This does not necessarily has to be base16 array
-    ///
-    static std::string toRawString(const ByteArray& byteArr);
-
-    ///
     /// \brief Encodes integer to hex
     ///
     template <typename T>
     static std::string encode(T n) noexcept
     {
         std::stringstream ss;
+        const int t16(16);
         int remainder;
         while (n != 0) {
-            remainder = n % 16;
-            n /= 16;
+            remainder = static_cast<int>(n % t16);
+            n /= t16;
             ss << kValidChars[remainder];
         }
         std::string res(ss.str());

@@ -23,6 +23,7 @@ static TestData<std::vector<int>, std::string> Base16ByteArrayEncodingTestData =
 };
 
 static TestData<std::string, unsigned long long> Base16IntTestData = {
+    TestCase("FF", 255ULL),
     TestCase("22FD3", 143315ULL),
     TestCase("35639D3C8", 14331532232ULL),
     TestCase("3D8E08048D", 264375895181ULL),
@@ -79,7 +80,7 @@ TEST(Base16Test, ConvertToByteArray)
 TEST(Base16Test, ConvertToRaw)
 {
     for (const auto& item : Base16FromStringData) {
-        std::string result = Base16::toRawString(PARAM(1));
+        std::string result = MineCommon::byteArrayToRawString(PARAM(1));
         ASSERT_EQ(PARAM(2), result);
     }
 }

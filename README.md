@@ -2,18 +2,19 @@
 
 ![banner]
 
-Mine is fast, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
+Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
 [![Build Status](https://img.shields.io/travis/muflihun/mine/master.svg)](https://travis-ci.org/muflihun/mine)
 [![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
 [![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/muflihun/mine/releases/latest)
+[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://muflihun.github.io/mine)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/MuflihunDotCom/25)
 
 # Overview
-It all started with [ripe](https://github.com/muflihun/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/muflihun/residue) with ripe to older distributions of linux, we realized that portability is an issue for ripe as _minimal_ library. So we started to implement standards forming _Mine_.
+It all started with [ripe](https://github.com/muflihun/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/muflihun/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
 
-We are very careful with our implementations and have [unit tests](/test/) in place.
+We are very careful with our implementations and have more than 50 [test cases](/test/) in-place.
 
 # Installation
 Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to your project or your local machine.
@@ -37,6 +38,41 @@ This is what we are aiming for _minimal_ crypto library.
  * It is extremely fast with compiler optimization level 1 (or higher)
  * RSA needs big number implementation, for unit tests we use [Integer from Crypto++](https://www.cryptopp.com/wiki/Integer)
  * RSA currently does not support signing & verification or reading keys from PEM files
+
+# Quick Reference
+
+### Base16
+
+ * `mine::Base16::encode(str);`
+ * `mine::Base16::encode(str.begin(), str.end());`
+ * `mine::Base16::decode(encoding);`
+
+### Base64
+
+ * `mine::Base64::encode(str);`
+ * `mine::Base64::encode(str.begin(), str.end());`
+ * `mine::Base64::decode(encoding);`
+ * `mine::Base64::decode(encoding.begin(), encoding.end());`
+ * `mine::Base64::expectedLength(n);`
+ 
+### AES
+
+ ```c++
+ std::string random256BitKey = mine::AES::generateRandomKey(256);
+ 
+ mine::AES aesManager;
+ aesManager.encrypt(b16Input, hexKey, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // takes base16, encrypts and returns base64 
+ 
+ aesManager.setKey(random256BitKey); // now use this key
+ aesManager.encr(b16Input, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // don't need key with requests
+ aesManager.decr(b64Input, mine::MineCommon::Encoding::Base64, mine::MineCommon::Encoding::Raw); // Returns raw string
+ ```
+ 
+### ZLib
+
+ * `mine::ZLib::compressString(str);`
+ * `mine::ZLib::decompressString(str);`
+ * `mine::ZLib::decompressFile(outputFile, inputFile);`
 
 # Contribution
 You can contribute to the project by testing on various platforms (e.g, Windows, Android etc)

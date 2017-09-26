@@ -5,8 +5,9 @@ project(Mine)
 option (test_main_header "Test main header (mine.h)" OFF)
 option (test_wstring_conversions "Test std::wstring (wchar_t*) conversions for encodings" ON)
 
-set (MINE_VERSION "1.0.0")
-set (MINE_SOVERSION "1.0.0")
+
+set (MINE_VERSION "1.1.0") ## Also update build.php
+set (MINE_SOVERSION "1.1.0")
 
 add_definitions (-DMINE_VERSION="${MINE_VERSION}")
 
@@ -150,6 +151,7 @@ else()
     add_executable(mine-unit-tests
         test/main.cc
         src/mine-common.cc
+        src/big-integer.cc
         src/rsa.cc
         src/aes.cc
         src/base16.cc

@@ -15,7 +15,9 @@
 //
 
 #include <algorithm>
+#include <iterator>
 #include <random>
+#include <sstream>
 #include "src/mine-common.h"
 
 using namespace mine;
@@ -73,6 +75,22 @@ ByteArray MineCommon::generateRandomBytes(const std::size_t len) noexcept
         return kRandomBytesList[uni(rng)];
     });
     return result;
+}
+
+std::string MineCommon::byteArrayToRawString(const ByteArray& input) noexcept
+{
+    std::ostringstream ss;
+    std::copy(input.begin(), input.end(), std::ostream_iterator<char>(ss));
+    return ss.str();
+}
+
+ByteArray MineCommon::rawStringToByteArray(const std::string& str) noexcept
+{
+    ByteArray byteArr;
+    for (char c : str) {
+        byteArr.push_back(static_cast<byte>(c));
+    }
+    return byteArr;
 }
 
 std::string MineCommon::version() noexcept

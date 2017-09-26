@@ -89,6 +89,16 @@ public:
     static ByteArray generateRandomBytes(const std::size_t len) noexcept;
 
     ///
+    /// \brief Converts byte array to linear string
+    ///
+    static std::string byteArrayToRawString(const ByteArray& input) noexcept;
+
+    ///
+    /// \brief Converts string to byte array
+    ///
+    static ByteArray rawStringToByteArray(const std::string& str) noexcept;
+
+    ///
     /// \brief Version of mine
     ///
     static std::string version() noexcept;

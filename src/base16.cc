@@ -14,7 +14,6 @@
 //  https://github.com/muflihun/mine
 //
 
-#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include "src/base16.h"
@@ -44,13 +43,6 @@ ByteArray Base16::fromString(const std::string& hex)
         byteArr.push_back(encode(hex.substr(i, 2).c_str()));
     }
     return byteArr;
-}
-
-std::string Base16::toRawString(const ByteArray& input)
-{
-    std::ostringstream ss;
-    std::copy(input.begin(), input.end(), std::ostream_iterator<char>(ss));
-    return ss.str();
 }
 
 void Base16::decode(char a, char b, std::ostringstream& ss)

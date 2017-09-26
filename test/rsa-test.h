@@ -7,26 +7,41 @@
 #   include "package/mine.h"
 #else
 #   include "src/rsa.h"
+#   include "src/base64.h"
 #endif
 
+#define USE_CRYPTOPP_BIG_INTEGER 1
+
 #include <type_traits>
-#include <cryptopp/integer.h>
+#if USE_CRYPTOPP_BIG_INTEGER
+#   include <cryptopp/integer.h>
+#else
+#   ifndef MINE_SINGLE_HEADER_TEST
+#      include "src/big-integer.h"
+#   endif
+#endif
 #include <cryptopp/pem-com.h> // for readPem func
-//#include <openssl/ossl_typ.h>
 
 namespace mine {
 
+#if USE_CRYPTOPP_BIG_INTEGER
 using BigInteger = CryptoPP::Integer;
 
-class Helper : public BigIntegerHelper<BigInteger>
+class Helper : public MathHelper<BigInteger>
 {
 public:
+
+    virtual BigInteger modInverse(BigInteger a, BigInteger b) const override
+    {
+        return a.InverseMod(b);
+    }
+
     virtual byte bigIntegerToByte(const BigInteger& b) const override
     {
         return static_cast<byte>(b.ConvertToLong());
     }
 
-    virtual void divideBigNumber(const BigInteger& divisor, const BigInteger& divident,
+    virtual void divideBigInteger(const BigInteger& divisor, const BigInteger& divident,
                                         BigInteger* quotient, BigInteger* remainder) const override
     {
         BigInteger::Divide(*remainder, *quotient, divisor, divident);
@@ -50,6 +65,43 @@ public:
         return h;
     }
 };
+#else
+
+class Helper : public MathHelper<BigInteger>
+{
+public:
+    virtual byte bigIntegerToByte(const BigInteger& b) const override
+    {
+        return static_cast<byte>(static_cast<int>(b));
+    }
+
+    virtual unsigned int countBits(const BigInteger& b) const override
+    {
+        return b.bitCount();
+    }
+
+    virtual BigInteger powerMod(BigInteger b, BigInteger e, const BigInteger& m) const override
+    {
+        return b.powerMod(e, m);
+    }
+
+    virtual void divideBigInteger(const BigInteger& divisor, const BigInteger& divident,
+                                        BigInteger* quotient, BigInteger* remainder) const override
+    {
+        BigInteger::divide(divisor, divident, *quotient, *remainder);
+    }
+
+    virtual std::string bigIntegerToHex(BigInteger b) const override
+    {
+        return b.hex();
+    }
+
+    virtual std::string bigIntegerToString(const BigInteger& b) const override
+    {
+        return b.str();
+    }
+};
+#endif
 
 class RSA : public GenericRSA<BigInteger, Helper> {};
 class PublicKey : public GenericPublicKey<BigInteger, Helper> {}; // you can choose to not add this line
@@ -70,31 +122,37 @@ public:
                 PEM_Load(source, keyOut, secret.data(), secret.size());
             }
         }
-        init(keyOut.GetPrime1(), keyOut.GetPrime2(), static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
+        std::stringstream ss;
+        ss << keyOut.GetPrime1();
+        std::string ssstr(ss.str());
+        BigInteger p(ssstr.c_str());
+        ss.str("");
+        ss << keyOut.GetPrime2();
+        ssstr = ss.str();
+        BigInteger q(ssstr.c_str());
+        init(p, q, static_cast<int>(keyOut.GetPublicExponent().ConvertToLong()));
     }
 };
 
 static RSA rsaManager;
 static Helper rsaHelper;
 
-// numb, expected
-static TestData<BigInteger, bool> IsPrimeData = {
-    TestCase(1, false),
-    TestCase(2, true),
-    TestCase(44, false),
-    TestCase(43, true),
-    TestCase(57, false),
-    TestCase(257, true),
+//--------------------------------------------------------------------------//
+
+// a, b, expected
+static TestData<int, int, int> GCDData = {
+    TestCase(270, 192, 6),
 };
 
-// a, b, expected mod, expected mod_inv
-static TestData<int, int, int> InvModuloData = {
-    TestCase(3, 11, 4),
-    TestCase(1, 2, 1),
-    TestCase(199, 2443, 1510),
-    TestCase(2443, 199, 76),
-    TestCase(17, 3120, 2753),
-};
+TEST(RSATest, FindGCD)
+{
+    for (const auto& item : GCDData) {
+        LOG(INFO) << "Finding GCD for " << PARAM(0) << " and " << PARAM(1);
+        ASSERT_EQ(rsaHelper.gcd(PARAM(0), PARAM(1)), PARAM(2));
+    }
+}
+
+//--------------------------------------------------------------------------//
 
 // b, e, m, exp
 static TestData<BigInteger, BigInteger, BigInteger, BigInteger> PowerModData = {
@@ -109,9 +167,49 @@ static TestData<BigInteger, BigInteger, BigInteger, BigInteger> PowerModData = {
     TestCase(7, 256, 13, 9),
 };
 
-// a, b, expected
-static TestData<int, int, int> GCDData = {
-    TestCase(270, 192, 6),
+TEST(RSATest, PowerMod)
+{
+    for (const auto& item : PowerModData) {
+        ASSERT_EQ(rsaHelper.powerMod(PARAM(0), PARAM(1), PARAM(2)), PARAM(3));
+    }
+}
+
+//--------------------------------------------------------------------------//
+
+// a, b, expected mod, expected mod_inv
+static TestData<int, int, int> InvModuloData = {
+    TestCase(3, 11, 4),
+    TestCase(1, 2, 1),
+    TestCase(199, 2443, 1510),
+    TestCase(2443, 199, 76),
+    TestCase(17, 3120, 2753),
+};
+
+TEST(RSATest, InvModulo)
+{
+    for (const auto& item : InvModuloData) {
+        ASSERT_EQ(rsaHelper.modInverse(PARAM(0), PARAM(1)), PARAM(2));
+    }
+}
+
+// msg
+static TestData<std::string> RSAEncryptionStringData = {
+    TestCase("1"),
+    TestCase("Slightly longer text"),
+};
+
+//--------------------------------------------------------------------------//
+
+// msg
+static TestData<std::wstring> RSAEncryptionData = {
+    TestCase(L"Hi"),
+    TestCase(L"G'day"),
+    TestCase(L"Hello竜"), // contains 4 byte char [\u7ADC]
+    TestCase(L"大家好"), // total 10 bytes
+    TestCase(L"Postal mark face 〠"), // contains 4 byte char [\u3020] total 21
+    TestCase(L"کیا میں آپکی مدد کر سکتاہوں"), // total 50 bytes
+    TestCase(L"Rocket 🚀 is flying"), // contains 5 byte char [\u1F680]
+    TestCase(L"Another rocket \x1F680 \x003D h"), // contains 5 byte char [\u1F680] and = sign
 };
 
 // p, q, d, e
@@ -129,60 +227,12 @@ static TestData<BigInteger, BigInteger, BigInteger, unsigned int> RawKeyData = {
     TestCase(BigInteger("10923469363857806825021760247956265275428795620548365979989112951205898332841066142803135517770434197629570824181214965091978202988425777455632583620648573"), BigInteger("10616722866603125331840450803703198445712906691762933784938310338533958220543323895829410115777559171564354942092760457591438766850006207107583419792614799"), BigInteger("100135682768296545534437842644054326140008581269369655680309979439491675932266939714929393946536056632420527170839805699312975642015803721952542018739599899051226696289188235642510788531344671276783173570477762249241138411740921476903102308841464986571851644112056574180282941203845382289637668214850639602017"), 65537),
 };
 
-// msg
-static TestData<std::wstring> RSAEncryptionData = {
-    TestCase(L"Hi"),
-    TestCase(L"G'day"),
-    TestCase(L"Hello竜"), // contains 4 byte char [\u7ADC]
-    TestCase(L"大家好"), // total 10 bytes
-    TestCase(L"Postal mark face 〠"), // contains 4 byte char [\u3020] total 21
-    TestCase(L"کیا میں آپکی مدد کر سکتاہوں"), // total 50 bytes
-    TestCase(L"Rocket 🚀 is flying"), // contains 5 byte char [\u1F680]
-    TestCase(L"Another rocket \x1F680 \x003D h"), // contains 5 byte char [\u1F680] and = sign
-};
-// msg
-static TestData<std::string> RSAEncryptionStringData = {
-    TestCase("1"),
-    TestCase("Slightly longer text"),
-};
-
-// p, q, e, cipher, msg
-static TestData<BigInteger, BigInteger, unsigned int, std::string, std::wstring> RSADecryptionData = {
-    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"), BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"), 3, "55a5f32084cdbbd3edcba573317f99678a1b85b6c455fa86476d697900ce5fd95ec599a16690d5e7c2196608477ac1006e86c74cbd25b7e4681e026774381e63", L"Apple"),
-};
-
-// p, q, e, signature, text
-static TestData<BigInteger, BigInteger, unsigned int, std::string, std::string> RSASignatureData = {
-    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"), BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"), 3, "01400ccd971dad2744c37baf7f5cf13a5590a675c90354f2002d4c6a6a7ef3d1377986e1d8f0b69676e243fae8cf6c6bbdc7f18deb0e0418fe6452c4afb1e4b5", "test"),
-};
-
-TEST(RSATest, FindGCD)
-{
-    for (const auto& item : GCDData) {
-        LOG(INFO) << "Finding GCD for " << PARAM(0) << " and " << PARAM(1);
-        ASSERT_EQ(rsaHelper.gcd(PARAM(0), PARAM(1)), PARAM(2));
-    }
-}
-
-TEST(RSATest, PowerMod)
-{
-    for (const auto& item : PowerModData) {
-        ASSERT_EQ(rsaHelper.powerMod(PARAM(0), PARAM(1), PARAM(2)), PARAM(3));
-    }
-}
-
-TEST(RSATest, InvModulo)
-{
-    for (const auto& item : InvModuloData) {
-        ASSERT_EQ(rsaHelper.modInverse(PARAM(0), PARAM(1)), PARAM(2));
-    }
-}
-
 TEST(RSATest, KeyAndEncryptionDecryption)
 {
     for (const auto& item : RawKeyData) {
         int bits = rsaHelper.countBits(PARAM(0)) + rsaHelper.countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
+        LOG(INFO) << "p=" << PARAM(0) << ", q=" << PARAM(1);
 
         KeyPair k(PARAM(0), PARAM(1), PARAM(3));
         ASSERT_EQ(k.privateKey()->p(), PARAM(0));
@@ -222,6 +272,13 @@ TEST(RSATest, KeyAndEncryptionDecryption)
     }
 }
 
+//--------------------------------------------------------------------------//
+
+// p, q, e, cipher, msg
+static TestData<BigInteger, BigInteger, unsigned int, std::string, std::wstring> RSADecryptionData = {
+    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"), BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"), 3, "55a5f32084cdbbd3edcba573317f99678a1b85b6c455fa86476d697900ce5fd95ec599a16690d5e7c2196608477ac1006e86c74cbd25b7e4681e026774381e63", L"Apple"),
+};
+
 TEST(RSATest, Decryption)
 {
     for (const auto& item : RSADecryptionData) {
@@ -241,6 +298,8 @@ TEST(RSATest, Decryption)
         }
     }
 }
+
+//--------------------------------------------------------------------------//
 
 TEST(RSATest, ManualTest)
 {
@@ -271,6 +330,8 @@ TEST(RSATest, ManualTest)
     std::string sopenssl = rsaManager.decrypt<std::string>(k.privateKey(), std::string("57E56205E3D0135E7A2E7C5062D5453E"));
     ASSERT_STREQ(sopenssl.c_str(), "Test\n");
 }
+
+//--------------------------------------------------------------------------//
 
 TEST(RSATest, KeyRead)
 {
@@ -303,9 +364,46 @@ TEST(RSATest, KeyRead)
               << " | ripe -d --rsa --in-key private2.pem --secret asdf --hex" << std::endl;
 }
 
-TEST(RSATest, Signature)
+//--------------------------------------------------------------------------//
+
+// p, q, e, signature, text, result
+static TestData<BigInteger, BigInteger, unsigned int, std::string, std::string, bool> RSASignatureVerificationData = {
+    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"),
+             BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"),
+             3,
+             "01400ccd971dad2744c37baf7f5cf13a5590a675c90354f2002d4c6a6a7ef3d1377986e1d8f0b69676e243fae8cf6c6bbdc7f18deb0e0418fe6452c4afb1e4b5",
+             "test", true),
+    TestCase(BigInteger("108215449534587396558557488943879350166773359647071667116025080873441234413887"),
+             BigInteger("91243493758612676931094271904842149664289633274572930135618242638207523081573"),
+             3,
+             "01400ccd971dad2744c37baf7f5cf13a5590a675c90354f2002d4c6a6a7ef3d1377986e1d8f0b69676e243fae8cf6c6bbdc7f18deb0e0418fe6452c4afb1e4b5",
+             "test2", false),
+};
+
+// key above is:
+/*
+
+-----BEGIN RSA PRIVATE KEY-----
+MIIBOQIBAAJBALyG49x4LERu51a4dKzs8qEV5hMCHq8e1e8pW+wr7YmdJv4uyJa/
+nehP44GvZ6e3y7SNhSNecqtZWr+P6EDV+NsCAQMCQH2vQpL6yC2fROR6+HNIocC5
+RAysFHS/OUobkp1ynlu89ALympMA4RtHjAkffl2s0/jtri7/4xZNfg7q2ofugXsC
+IQDvP8YeIYZ6kA4B7ksbpp9UAydO0nZW2gPtiNeQLM5pPwIhAMm5/MKYt9GvVo+F
+tQ50lTm8AbEKaEcv4TAgWBBIIc1lAiEAn3/ZaWuu/GAJVp7cvRm/jVdvieGkOeat
+SQXlCsiJm38CIQCGe/3XEHqLyjm1A84Jow4mfVZ2BvAvdUDKwDq1hWveQwIgQS1r
+VR2T7hvX3Mr8Y9em0DH8ZgNezGMN33X5SaN4zZ0=
+-----END RSA PRIVATE KEY-----
+
+
+-----BEGIN PUBLIC KEY-----
+MFowDQYJKoZIhvcNAQEBBQADSQAwRgJBALyG49x4LERu51a4dKzs8qEV5hMCHq8e
+1e8pW+wr7YmdJv4uyJa/nehP44GvZ6e3y7SNhSNecqtZWr+P6EDV+NsCAQM=
+-----END PUBLIC KEY-----
+
+*/
+
+TEST(RSATest, Verification)
 {
-    for (const auto& item : RSASignatureData) {
+    /*for (const auto& item : RSASignatureVerificationData) {
         int bits = rsaHelper.countBits(PARAM(0)) + rsaHelper.countBits(PARAM(1));
         LOG(INFO) << "Generating key " << bits << "-bit...";
 
@@ -317,9 +415,9 @@ TEST(RSATest, Signature)
         if (bits <= 32) {
             EXPECT_THROW(rsaManager.verify(k.publicKey(), text, sign), std::runtime_error);
         } else {
-            ASSERT_TRUE(rsaManager.verify(k.publicKey(),text, sign));
+            ASSERT_EQ(rsaManager.verify(k.publicKey(), text, sign), PARAM(5));
         }
-    }
+    }*/
 }
 
 }
