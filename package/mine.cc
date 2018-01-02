@@ -1,7 +1,7 @@
 //
 //  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Mine (1.1.0)
+//  Mine (1.1.1)
 //  Single header minimal cryptography library
 //
 //  Copyright (c) 2017-2018 Muflihun Labs
@@ -30,7 +30,7 @@
 
 using namespace mine;
 #ifndef MINE_VERSION
-#define MINE_VERSION "1.1.0"
+#define MINE_VERSION "1.1.1"
 #endif
 
 
