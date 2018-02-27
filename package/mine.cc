@@ -1165,7 +1165,7 @@ std::string ZLib::compressString(const std::string& str)
     deflateEnd(&zs);
 
     if (ret != Z_STREAM_END) {
-        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string((zs.msg != NULL ? zs.msg : "no msg"));
+        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string((zs.msg != NULL ? zs.msg : "no msg")));
     }
 
     return outstring;
@@ -1202,7 +1202,7 @@ std::string ZLib::decompressString(const std::string& str)
     inflateEnd(&zs);
 
     if (ret != Z_STREAM_END) {
-        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string((zs.msg != NULL ? zs.msg : "no msg"));
+        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string((zs.msg != NULL ? zs.msg : "no msg")));
     }
 
     return outstring;
