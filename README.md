@@ -82,7 +82,8 @@ You can contribute to the project by testing on various platforms (e.g, Windows,
 # License
 
 ```
-Copyright (c) 2017-2018 Muflihun Labs
+Copyright (c) 2017-present Muflihun Labs
+Copyright (c) 2017-present @abumusamq
 
 https://github.com/muflihun/
 https://muflihun.github.io
