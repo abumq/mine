@@ -6,7 +6,7 @@
 /// modules for ease of development
 ///
 
-$lib_version = "1.1.1";
+$lib_version = "1.1.2";
 
 $header_template = <<<EOT
 //
@@ -15,7 +15,8 @@ $header_template = <<<EOT
 //  Mine ({{version}})
 //  Single header minimal cryptography library
 //
-//  Copyright (c) 2017-2018 Muflihun Labs
+//  Copyright (c) 2017-present Muflihun Labs
+//  Copyright (c) 2017-present @abumusamq
 //
 //  This library is released under the Apache 2.0 license
 //  https://github.com/muflihun/mine/blob/master/LICENSE
@@ -43,7 +44,8 @@ $source_template = <<<EOT
 //  Mine ({{version}})
 //  Single header minimal cryptography library
 //
-//  Copyright (c) 2017-2018 Muflihun Labs
+//  Copyright (c) 2017-present Muflihun Labs
+//  Copyright (c) 2017-present @abumusamq
 //
 //  This library is released under the Apache 2.0 license
 //  https://github.com/muflihun/mine/blob/master/LICENSE
