@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.2] - 28-02-2018
+### Fixes
+- Fix crash with invalid msg from zlib
+
 ## [1.1.1] - 02-01-2018
 ### Updates
 - Updated copyright year
