@@ -1,10 +1,11 @@
 //
 //  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Mine (1.1.1)
+//  Mine (1.1.2)
 //  Single header minimal cryptography library
 //
-//  Copyright (c) 2017-2018 Muflihun Labs
+//  Copyright (c) 2017-present Muflihun Labs
+//  Copyright (c) 2017-present @abumusamq
 //
 //  This library is released under the Apache 2.0 license
 //  https://github.com/muflihun/mine/blob/master/LICENSE
@@ -30,7 +31,7 @@
 
 using namespace mine;
 #ifndef MINE_VERSION
-#define MINE_VERSION "1.1.1"
+#define MINE_VERSION "1.1.2"
 #endif
 
 
@@ -1164,7 +1165,7 @@ std::string ZLib::compressString(const std::string& str)
     deflateEnd(&zs);
 
     if (ret != Z_STREAM_END) {
-        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string(zs.msg));
+        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string((zs.msg != NULL ? zs.msg : "no msg"));
     }
 
     return outstring;
@@ -1201,7 +1202,7 @@ std::string ZLib::decompressString(const std::string& str)
     inflateEnd(&zs);
 
     if (ret != Z_STREAM_END) {
-        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string(zs.msg));
+        throw std::runtime_error("Exception during zlib decompression: (" + std::to_string(ret) + "): " + std::string((zs.msg != NULL ? zs.msg : "no msg"));
     }
 
     return outstring;
