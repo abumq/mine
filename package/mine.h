@@ -1,7 +1,7 @@
 //
 //  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Mine (1.1.3)
+//  Mine (1.1.4)
 //  Single header minimal cryptography library
 //
 //  Copyright (c) 2017-present Muflihun Labs
