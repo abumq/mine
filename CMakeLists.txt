@@ -6,8 +6,8 @@ option (test_main_header "Test main header (mine.h)" OFF)
 option (test_wstring_conversions "Test std::wstring (wchar_t*) conversions for encodings" ON)
 
 
-set (MINE_VERSION "1.1.2") ## Also update build.php
-set (MINE_SOVERSION "1.1.2")
+set (MINE_VERSION "1.1.3") ## Also update build.php
+set (MINE_SOVERSION "1.1.3")
 
 add_definitions (-DMINE_VERSION="${MINE_VERSION}")
 
@@ -41,7 +41,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++11 -O0 -L/usr/local/lib/ ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++11 -O3 -L/usr/local/lib/ ")
 
 # Check for cryptopp (static)
 set(CryptoPP_USE_STATIC_LIBS ON)

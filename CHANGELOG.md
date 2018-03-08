@@ -1,8 +1,8 @@
 # Change Log
 
-## [Unreleased]
+## [1.1.3] - 08-03-2018
 ### Fixes
-- Fixes issue 11
+- Issue 11 - (AES) Invalid padding when input is equal to block size
 
 ## [1.1.2] - 28-02-2018
 ### Fixes
