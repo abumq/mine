@@ -28,29 +28,6 @@ install(FILES
 
 include(FindPackageHandleStandardArgs)
 
-# We need C++11
-macro(require_cpp11)
-        if (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.0)
-                # CMake 3.1 has built-in CXX standard checks.
-                message("-- Setting C++11")
-                set(CMAKE_CXX_STANDARD 11)
-                set(CMAKE_CXX_STANDARD_REQUIRED on)
-        else()
-                if (CMAKE_CXX_COMPILER_ID MATCHES "GCC")
-                    message ("-- GNU CXX (-std=c++11)")
-                    list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
-                elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                    message ("-- CLang CXX (-std=c++11)")
-                    list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
-                elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-                    message ("-- GNU CXX (-std=c++11)")
-                    list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
-                else()
-                    message ("-- Requires C++11. Your compiler does not support it.")
-                endif()
-        endif()
-endmacro()
-
 # http://www.cmake.org/Wiki/CMake_RPATH_handling#Mac_OS_X_and_the_RPATH
 if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
@@ -64,9 +41,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused ")
-
-require_cpp11()
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++11 -O3 -L/usr/local/lib/ ")
 
 # Check for cryptopp (static)
 set(CryptoPP_USE_STATIC_LIBS ON)
@@ -127,13 +102,14 @@ install (TARGETS mine-cli DESTINATION bin)
 
 ########################################## Unit Testing ###################################
 
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 # Check for Easylogging++
 find_package(EASYLOGGINGPP REQUIRED)
 include_directories (${EASYLOGGINGPP_INCLUDE_DIR})
 
 find_package (gtest REQUIRED)
 
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+include_directories(${GTEST_INCLUDE_DIRS})
 
 enable_testing()
 
