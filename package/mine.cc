@@ -1,7 +1,7 @@
 //
 //  Bismillah ar-Rahmaan ar-Raheem
 //
-//  Mine (1.1.3)
+//  Mine (1.1.4)
 //  Single header minimal cryptography library
 //
 //  Copyright (c) 2017-present Muflihun Labs
@@ -31,7 +31,7 @@
 
 using namespace mine;
 #ifndef MINE_VERSION
-#define MINE_VERSION "1.1.3"
+#define MINE_VERSION "1.1.4"
 #endif
 
 
@@ -998,7 +998,7 @@ std::string AES::encrypt(const std::string& input, const std::string& key, MineC
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    if (pkcs5Padding && inputEncoding == MineCommon::Encoding::Raw && inp.size() % kBlockSize == 0) {
+    if (pkcs5Padding && inp.size() % kBlockSize == 0) {
         // input size is multiple of block size, increase
         // input size for padding
         auto sz = inp.size();
@@ -1013,7 +1013,7 @@ std::string AES::encrypt(const std::string& input, const std::string& key, std::
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    if (pkcs5Padding && inputEncoding == MineCommon::Encoding::Raw && inp.size() % kBlockSize == 0) {
+    if (pkcs5Padding && inp.size() % kBlockSize == 0) {
         // input size is multiple of block size, increase
         // input size for padding
         auto sz = inp.size();

@@ -516,7 +516,7 @@ TEST(AESTest, RawCipherDirect)
 
     for (auto& item : RawCipherData) {
         std::string expected = PARAM(2);
-        std::string output = aes.encrypt(PARAM(0), PARAM(1), MineCommon::Encoding::Base16);
+        std::string output = aes.encrypt(PARAM(0), PARAM(1), MineCommon::Encoding::Base16, MineCommon::Encoding::Base16, false);
         // case insensitive comparison because hex can be upper or lower case
         ASSERT_STRCASEEQ(expected.c_str(), output.c_str());
     }
@@ -1104,17 +1104,28 @@ TEST(AESTest, EncryptResultsForLongTextMatchesRipe)
     AES aes;
     aes.setKey(key);
 
-    auto run = [&](const std::string& inp, const std::string& exp) {
+    auto run = [&](const std::string& inp, const std::string& exp, MineCommon::Encoding enc) {
         std::string ivCopy = iv;
-        std::string output = aes.encr(inp, ivCopy, MineCommon::Encoding::Raw, MineCommon::Encoding::Base16);
+        std::string output = aes.encr(inp, ivCopy, enc, MineCommon::Encoding::Base16);
         LOG(INFO) << "Ripe: echo " << output << " | ripe -d --aes --key " << key << " --iv " << iv << " --hex";
         ASSERT_STRCASEEQ(exp.c_str(), output.c_str());
     };
 
-    run(input15, input15Enc);
-    run(input16, input16Enc);
-    run(input17, input17Enc);
-    run(input32, input32Enc);
+    run(input15, input15Enc, MineCommon::Encoding::Raw);
+    run(input16, input16Enc, MineCommon::Encoding::Raw);
+    run(input17, input17Enc, MineCommon::Encoding::Raw);
+    run(input32, input32Enc, MineCommon::Encoding::Raw);
+
+    run(Base16::encode(input15), input15Enc, MineCommon::Encoding::Base16);
+    run(Base16::encode(input16), input16Enc, MineCommon::Encoding::Base16);
+    run(Base16::encode(input17), input17Enc, MineCommon::Encoding::Base16);
+    run(Base16::encode(input32), input32Enc, MineCommon::Encoding::Base16);
+
+    run(Base64::encode(input15), input15Enc, MineCommon::Encoding::Base64);
+    run(Base64::encode(input16), input16Enc, MineCommon::Encoding::Base64);
+    run(Base64::encode(input17), input17Enc, MineCommon::Encoding::Base64);
+    run(Base64::encode(input32), input32Enc, MineCommon::Encoding::Base64);
+
 
 }
 

@@ -6,7 +6,7 @@
 /// modules for ease of development
 ///
 
-$lib_version = "1.1.3";
+$lib_version = "1.1.4";
 
 $header_template = <<<EOT
 //

@@ -6,8 +6,8 @@ option (test_main_header "Test main header (mine.h)" OFF)
 option (test_wstring_conversions "Test std::wstring (wchar_t*) conversions for encodings" ON)
 
 
-set (MINE_VERSION "1.1.3") ## Also update build.php
-set (MINE_SOVERSION "1.1.3")
+set (MINE_VERSION "1.1.4") ## Also update build.php
+set (MINE_SOVERSION "1.1.4")
 
 add_definitions (-DMINE_VERSION="${MINE_VERSION}")
 

@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.4] - 08-03-2018
+### Fixes
+- Fix cross-encoding with issue 11
+
 ## [1.1.3] - 08-03-2018
 ### Fixes
 - Issue 11 - (AES) Invalid padding when input is equal to block size
