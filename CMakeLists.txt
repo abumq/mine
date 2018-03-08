@@ -41,7 +41,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++11 -O3 -L/usr/local/lib/ ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++11 -O0 -L/usr/local/lib/ ")
 
 # Check for cryptopp (static)
 set(CryptoPP_USE_STATIC_LIBS ON)

@@ -1075,6 +1075,50 @@ TEST(AESTest, Copy)
     ASSERT_EQ(input, result);
 }
 
+TEST(AESTest, EncryptResultsForLongTextMatchesRipe)
+{
+    const std::string key = "163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF";
+    const std::string iv = "a14c54563269e9e368f56b325f04ff00";
+
+    // echo abcdefgabcdefga | ripe -e --aes --key 163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF --iv a14c54563269e9e368f56b325f04ff00
+    // echo hBbLKWDjHQ0cAEMAsr9eLg==  | ripe -d --base64 | ripe -e --hex
+    const std::string input15 = "abcdefgabcdefga";
+    const std::string input15Enc = "8416CB2960E31D0D1C004300B2BF5E2E";
+
+    // echo abcdefgabcdefgab | ripe -e --aes --key 163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF --iv a14c54563269e9e368f56b325f04ff00
+    // echo z4W6f7nyqQjcLb8QF+qYfpDI3r4mbBGDFSj4Wx2w3OU= | ripe -d --base64 | ripe -e --hex
+    const std::string input16 = "abcdefgabcdefgab";
+    const std::string input16Enc = "CF85BA7FB9F2A908DC2DBF1017EA987E90C8DEBE266C11831528F85B1DB0DCE5";
+
+    // echo abcdefgabcdefgabc | ripe -e --aes --key 163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF --iv a14c54563269e9e368f56b325f04ff00
+    // echo z4W6f7nyqQjcLb8QF+qYfpUo6XxWg/yWbdYk56VCn7M= | ripe -d --base64 | ripe -e --hex
+    const std::string input17 = "abcdefgabcdefgabc";
+    const std::string input17Enc = "CF85BA7FB9F2A908DC2DBF1017EA987E9528E97C5683FC966DD624E7A5429FB3";
+
+    // echo abcdefgabcdefgababcdefgabcdefgab | ripe -e --aes --key 163E6AC9A9EB43253AC237D849BDD22C4798393D38FBE322F7E593E318F1AEAF --iv a14c54563269e9e368f56b325f04ff00
+    // echo z4W6f7nyqQjcLb8QF+qYfp7M+oB8X/yEn0Vo1aBgAT1I7fn3ojw7Wl5ZnuhQlWJY |  ripe -d --base64 | ripe -e --hex
+    const std::string input32 = "abcdefgabcdefgababcdefgabcdefgab";
+    const std::string input32Enc = "CF85BA7FB9F2A908DC2DBF1017EA987E9ECCFA807C5FFC849F4568D5A060013D48EDF9F7A23C3B5A5E599EE850956258";
+
+
+    AES aes;
+    aes.setKey(key);
+
+    auto run = [&](const std::string& inp, const std::string& exp) {
+        std::string ivCopy = iv;
+        std::string output = aes.encr(inp, ivCopy, MineCommon::Encoding::Raw, MineCommon::Encoding::Base16);
+        LOG(INFO) << "Ripe: echo " << output << " | ripe -d --aes --key " << key << " --iv " << iv << " --hex";
+        ASSERT_STRCASEEQ(exp.c_str(), output.c_str());
+    };
+
+    run(input15, input15Enc);
+    run(input16, input16Enc);
+    run(input17, input17Enc);
+    run(input32, input32Enc);
+
+}
+
+//
 }
 
 #endif // AES_TEST_H
