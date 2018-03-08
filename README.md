@@ -16,12 +16,25 @@ Mine is fast, memory-efficient, single-header minimal cryptography implementatio
 # Overview
 It all started with [ripe](https://github.com/muflihun/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/muflihun/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
 
-We are very careful with our implementations and have more than 50 [test cases](/test/) in-place.
+We are very careful with our implementations and have over 50 [test cases](/test/) in-place.
 
-# Installation
+# Installation (API)
 Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to your project or your local machine.
 
 Alternatively, feel free to link it as shared or static library (you will need to compile yourself)
+
+# Installation (CLI Tool)
+You can either download binary for your platform via [releases](https://github.com/muflihun/mine/releases) page or using NPM
+
+```
+npm install -g mine-linux@latest
+sudo ln -s `which mine-linux` /usr/local/bin/mine
+```
+
+```
+npm install -g mine-darwin@latest
+sudo ln -s `which mine-darwin` /usr/local/bin/mine
+```
  
 # Features
 Mine supports following features:
