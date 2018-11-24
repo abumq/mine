@@ -2,13 +2,13 @@
   "name": "mine-darwin",
   "version": "1.1.4",
   "description": "Mine cryptography CLI tool (macOS)",
-  "homepage": "https://github.com/muflihun/mine",
-  "author": "Muflihun Labs <info@muflihun.com>",
+  "homepage": "https://github.com/zuhd-org/mine",
+  "author": "Zuhd Web Services <opensource@zuhd.org>",
   "license": "Apache-2.0",
   "bin": "./mine",
   "repository": {
     "type": "git",
-    "url": "http://github.com/muflihun/mine.git"
+    "url": "http://github.com/zuhd-org/mine.git"
   },
   "files": [
      "mine"
