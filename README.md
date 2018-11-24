@@ -6,12 +6,13 @@
 
 Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
-[![Build Status](https://img.shields.io/travis/muflihun/mine/master.svg)](https://travis-ci.org/muflihun/mine)
-[![Build Status](https://img.shields.io/travis/muflihun/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
-[![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/muflihun/mine/releases/latest)
+[![Build Status](https://img.shields.io/travis/zuhd-org/mine/master.svg)](https://travis-ci.org/muflihun/mine)
+[![Build Status](https://img.shields.io/travis/zuhd-org/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
+[![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/zuhd-org/mine/releases/latest)
 [![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://muflihun.github.io/mine)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/muflihun/mine/blob/master/LICENCE)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/MuflihunDotCom/25)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/zuhd-org/mine/blob/master/LICENCE)
+
+[![Donate](https://muflihun.github.io/donate.png?v2)](https://www.paypal.me/zuhd/25)
 
 # Overview
 It all started with [ripe](https://github.com/muflihun/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/muflihun/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
@@ -24,7 +25,7 @@ Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to you
 Alternatively, feel free to link it as shared or static library (you will need to compile yourself)
 
 # Installation (CLI Tool)
-You can either download binary for your platform via [releases](https://github.com/muflihun/mine/releases) page or using NPM
+You can either download binary for your platform via [releases](https://github.com/zuhd-org/mine/releases) page or using NPM
 
 ```
 npm install -g mine-linux@latest
@@ -35,7 +36,7 @@ sudo ln -s `which mine-linux` /usr/local/bin/mine
 npm install -g mine-darwin@latest
 sudo ln -s `which mine-darwin` /usr/local/bin/mine
 ```
- 
+
 # Features
 Mine supports following features:
 
@@ -44,7 +45,7 @@ Mine supports following features:
  * RSA [[RFC-3447](https://tools.ietf.org/html/rfc3447)]
  * AES [[FIPS Pub. 197](http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)]
  * ZLib (Depends upon libz)
- 
+
 This is what we are aiming for _minimal_ crypto library.
 
 # Notes
@@ -69,20 +70,20 @@ This is what we are aiming for _minimal_ crypto library.
  * `mine::Base64::decode(encoding);`
  * `mine::Base64::decode(encoding.begin(), encoding.end());`
  * `mine::Base64::expectedLength(n);`
- 
+
 ### AES
 
  ```c++
  std::string random256BitKey = mine::AES::generateRandomKey(256);
- 
+
  mine::AES aesManager;
- aesManager.encrypt(b16Input, hexKey, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // takes base16, encrypts and returns base64 
- 
+ aesManager.encrypt(b16Input, hexKey, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // takes base16, encrypts and returns base64
+
  aesManager.setKey(random256BitKey); // now use this key
  aesManager.encr(b16Input, mine::MineCommon::Encoding::Base16, mine::MineCommon::Encoding::Base64); // don't need key with requests
  aesManager.decr(b64Input, mine::MineCommon::Encoding::Base64, mine::MineCommon::Encoding::Raw); // Returns raw string
  ```
- 
+
 ### ZLib
 
  * `mine::ZLib::compressString(str);`
@@ -115,4 +116,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-  [banner]: https://raw.githubusercontent.com/muflihun/mine/develop/mine.png
+  [banner]: https://raw.githubusercontent.com/zuhd-org/mine/develop/mine.png

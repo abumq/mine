@@ -15,14 +15,14 @@ $header_template = <<<EOT
 //  Mine ({{version}})
 //  Single header minimal cryptography library
 //
-//  Copyright (c) 2017-present Muflihun Labs
+//  Copyright (c) 2017-present Zuhd Web Services
 //  Copyright (c) 2017-present @abumusamq
 //
 //  This library is released under the Apache 2.0 license
-//  https://github.com/muflihun/mine/blob/master/LICENSE
+//  https://github.com/zuhd-org/mine/blob/master/LICENSE
 //
-//  https://github.com/muflihun/mine
-//  https://muflihun.github.io/mine
+//  https://github.com/zuhd-org/mine
+//  https://zuhd.org
 //  https://muflihun.com
 //
 
@@ -120,7 +120,7 @@ foreach ($headers_list as $filename) {
 
         fclose($fd);
     }
-    
+
 }
 resolveTemplate($header_template, $includes, $lines, $lib_version, "package/mine.h");
 
@@ -163,6 +163,6 @@ foreach ($source_list as $filename) {
 
         fclose($fd);
     }
-    
+
 }
 resolveTemplate($source_template, $includes, $lines, $lib_version, "package/mine.cc");

@@ -7,13 +7,13 @@ before_install:
  - sudo apt-get -qq update
  - sudo apt-get install -y libssl-dev libgtest-dev php5-cli valgrind
  - sudo apt-get install --only-upgrade cmake
- - cmake --version 
+ - cmake --version
  - g++ --version
  # Crypto++ (We manually install it because we need Pem Pack as well)
- - wget https://raw.githubusercontent.com/muflihun/muflihun.github.io/master/downloads/cryptocpp.tar.gz
+ - wget https://muflihun.github.io/downloads/cryptocpp.tar.gz
  - tar xf cryptocpp.tar.gz
  - cd cryptopp-CRYPTOPP_5_6_5
- - wget https://raw.githubusercontent.com/muflihun/muflihun.github.io/master/downloads/pem_pack.zip
+ - wget https://muflihun.github.io/downloads/pem_pack.zip
  - unzip pem_pack.zip
  - cmake .
  - make
@@ -28,7 +28,7 @@ before_install:
  - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
  - cd ..
  ## Easylogging++
- - wget https://github.com/muflihun/easyloggingpp/archive/master.zip
+ - wget https://github.com/zuhd-org/easyloggingpp/archive/master.zip
  - unzip master.zip
  - cd easyloggingpp-master
  - cmake .
@@ -51,4 +51,3 @@ branches:
   only:
     - master
     - develop
-

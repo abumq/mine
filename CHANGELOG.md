@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.1.5] - 24-11-2018
+- License update
+
 ## [1.1.4] - 08-03-2018
 ### Fixes
 - Fix cross-encoding with issue 11
