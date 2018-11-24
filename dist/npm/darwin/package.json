@@ -1,6 +1,6 @@
 {
   "name": "mine-darwin",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Mine cryptography CLI tool (macOS)",
   "homepage": "https://github.com/zuhd-org/mine",
   "author": "Zuhd Web Services <opensource@zuhd.org>",
