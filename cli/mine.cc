@@ -5,13 +5,13 @@
 //
 //  Mine is single header minimal cryptography library
 //
-//  Copyright (c) 2017-present Zuhd Web Services
+//  Copyright (c) 2017-present Amrayn Web Services
 //
 //  This library is released under the Apache 2.0 license
-//  https://github.com/muflihun/zuhd-org/blob/master/LICENSE
+//  https://github.com/amrayn/amrayn/blob/master/LICENSE
 //
-//  https://github.com/zuhd-org/mine
-//  https://zuhd.org
+//  https://github.com/amrayn/mine
+//  https://amrayn.com
 //  https://muflihun.com
 //
 
@@ -77,7 +77,7 @@ std::string normalizeBase16(std::string enc)
 
 void displayVersion()
 {
-    std::cout << "Mine - Minimal cryptography library" << std::endl << "Version: " << MINE_VERSION << std::endl << "https://muflihun.github.io" << std::endl;
+    std::cout << "Mine - Minimal cryptography library" << std::endl << "Version: " << MINE_VERSION << std::endl << "https://amrayn.github.io" << std::endl;
 }
 
 #define TRY try {

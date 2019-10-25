@@ -6,9 +6,9 @@
 # If ${MINE_CRYPTO_USE_STATIC_LIBS} is ON then static libs are searched.
 # In these cases ${MINE_CRYPTO_LIBRARY} is also defined
 #
-# (c) 2017 Muflihun Labs
+# (c) 2017 Amrayn Web Services
 #
-# https://github.com/muflihun/mine
+# https://github.com/amrayn/mine
 # https://muflihun.com
 #
 

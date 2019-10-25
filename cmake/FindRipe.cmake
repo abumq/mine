@@ -5,9 +5,9 @@
 #
 # If ${RIPE_USE_STATIC_LIBS} is ON then static libs are preferred over shared
 #
-# (c) 2017 Muflihun Labs
+# (c) 2017 Amrayn Web Services
 #
-# https://github.com/muflihun/ripe
+# https://github.com/amrayn/ripe
 # https://muflihun.com
 #
 

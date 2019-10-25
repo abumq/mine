@@ -3,17 +3,17 @@
 </p>
 
 ![banner]
-    
+
 # Overview
 Mine is fast, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
 # License
 
 ```
-Copyright 2017 Muflihun Labs
+Copyright 2017 Amrayn Web Services
 
-https://github.com/muflihun/
-https://muflihun.github.io
+https://github.com/amrayn/
+https://amrayn.github.io
 https://muflihun.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,4 +29,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-  [banner]: https://raw.githubusercontent.com/muflihun/mine/master/mine.png?
+  [banner]: https://raw.githubusercontent.com/amrayn/mine/master/mine.png?

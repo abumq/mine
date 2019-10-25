@@ -6,16 +6,16 @@
 
 Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
-[![Build Status](https://img.shields.io/travis/zuhd-org/mine/master.svg)](https://travis-ci.org/muflihun/mine)
-[![Build Status](https://img.shields.io/travis/zuhd-org/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
-[![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/zuhd-org/mine/releases/latest)
-[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://muflihun.github.io/mine)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/zuhd-org/mine/blob/master/LICENCE)
+[![Build Status](https://img.shields.io/travis/amrayn/mine/master.svg)](https://travis-ci.org/muflihun/mine)
+[![Build Status](https://img.shields.io/travis/amrayn/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
+[![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/amrayn/mine/releases/latest)
+[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://amrayn.github.io/mine)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/amrayn/mine/blob/master/LICENCE)
 
-[![Donate](https://muflihun.github.io/donate.png?v2)](https://www.paypal.me/zuhd/25)
+[![Donate](https://amrayn.github.io/donate.png?v2)](https://amrayn.com/donate)
 
 # Overview
-It all started with [ripe](https://github.com/muflihun/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/muflihun/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
+It all started with [ripe](https://github.com/amrayn/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/amrayn/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
 
 We are very careful with our implementations and have over 50 [test cases](/test/) in-place.
 
@@ -25,7 +25,7 @@ Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to you
 Alternatively, feel free to link it as shared or static library (you will need to compile yourself)
 
 # Installation (CLI Tool)
-You can either download binary for your platform via [releases](https://github.com/zuhd-org/mine/releases) page or using NPM
+You can either download binary for your platform via [releases](https://github.com/amrayn/mine/releases) page or using NPM
 
 ```
 npm install -g mine-linux@latest
@@ -96,11 +96,11 @@ You can contribute to the project by testing on various platforms (e.g, Windows,
 # License
 
 ```
-Copyright (c) 2017-present Muflihun Labs
+Copyright (c) 2017-present Amrayn Web Services
 Copyright (c) 2017-present @abumusamq
 
-https://github.com/muflihun/
-https://muflihun.github.io
+https://github.com/amrayn/
+https://amrayn.github.io
 https://muflihun.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -116,4 +116,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-  [banner]: https://raw.githubusercontent.com/zuhd-org/mine/develop/mine.png
+  [banner]: https://raw.githubusercontent.com/amrayn/mine/develop/mine.png
