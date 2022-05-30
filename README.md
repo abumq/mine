@@ -12,7 +12,7 @@ Mine is fast, memory-efficient, single-header minimal cryptography implementatio
 [![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://amrayn.github.io/mine)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/amrayn/mine/blob/master/LICENCE)
 
-[![Donate](https://amrayn.github.io/donate.png?v2)](https://amrayn.com/donate)
+[![Donate](https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif)](https://amrayn.com/donate)
 
 # Overview
 It all started with [ripe](https://github.com/amrayn/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/amrayn/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
