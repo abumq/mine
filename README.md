@@ -6,13 +6,8 @@
 
 Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
-[![Build Status](https://img.shields.io/travis/amrayn/mine/master.svg)](https://travis-ci.org/muflihun/mine)
-[![Build Status](https://img.shields.io/travis/amrayn/mine/develop.svg)](https://travis-ci.org/muflihun/mine)
-[![Version](https://img.shields.io/github/release/muflihun/mine.svg)](https://github.com/amrayn/mine/releases/latest)
-[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://amrayn.github.io/mine)
+[![Version](https://img.shields.io/github/release/amrayn/mine.svg)](https://github.com/amrayn/mine/releases/latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/amrayn/mine/blob/master/LICENCE)
-
-[![Donate](https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif)](https://amrayn.com/donate)
 
 # Overview
 It all started with [ripe](https://github.com/amrayn/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/amrayn/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
@@ -96,12 +91,10 @@ You can contribute to the project by testing on various platforms (e.g, Windows,
 # License
 
 ```
-Copyright (c) 2017-present Amrayn Web Services
-Copyright (c) 2017-present @abumusamq
+Copyright (c) 2017-present Amrayn.com
 
 https://github.com/amrayn/
-https://amrayn.github.io
-https://muflihun.com
+https://amrayn.com
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -116,4 +109,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-  [banner]: https://raw.githubusercontent.com/amrayn/mine/develop/mine.png
+  [banner]: https://raw.githubusercontent.com/amrayn/mine/master/mine.png
