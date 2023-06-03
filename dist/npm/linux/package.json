@@ -2,13 +2,13 @@
   "name": "mine-linux",
   "version": "1.1.5",
   "description": "Mine cryptography CLI tool (linux)",
-  "homepage": "https://github.com/amrayn/mine",
-  "author": "Amrayn Web Services <opensource@amrayn.com>",
+  "homepage": "https://github.com/abumq/mine",
+  "author": "Majid Q. <abumusamq@gmail.com>",
   "license": "Apache-2.0",
   "bin": "./mine",
   "repository": {
     "type": "git",
-    "url": "http://github.com/amrayn/mine.git"
+    "url": "http://github.com/abumq/mine.git"
   },
   "files": [
      "mine"

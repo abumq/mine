@@ -5,14 +5,10 @@
 //
 //  Mine is single header minimal cryptography library
 //
-//  Copyright (c) 2017-present Amrayn Web Services
+//  Copyright (c) 2017-present @abumq (Majid Q.)
 //
 //  This library is released under the Apache 2.0 license
-//  https://github.com/amrayn/amrayn/blob/master/LICENSE
-//
-//  https://github.com/amrayn/mine
-//  https://amrayn.com
-//  https://muflihun.com
+//  https://github.com/abumq/mine/blob/master/LICENSE
 //
 
 #include <iomanip>

@@ -7,6 +7,6 @@
 
 #define PARAM(v) std::get<v>(item)
 
-using namespace muflihun::testx;
+using namespace testx;
 
 #endif // SIMPLE_TEST_X_H

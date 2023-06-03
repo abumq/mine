@@ -15,15 +15,10 @@ $header_template = <<<EOT
 //  Mine ({{version}})
 //  Single header minimal cryptography library
 //
-//  Copyright (c) 2017-present Amrayn Web Services
-//  Copyright (c) 2017-present @abumusamq
+//  Copyright (c) 2017-present @abumq (Majid Q.)
 //
 //  This library is released under the Apache 2.0 license
 //  https://github.com/amrayn/mine/blob/master/LICENSE
-//
-//  https://github.com/amrayn/mine
-//  https://amrayn.com
-//  https://muflihun.com
 //
 
 #ifndef MINE_CRYPTO_H
@@ -44,15 +39,10 @@ $source_template = <<<EOT
 //  Mine ({{version}})
 //  Single header minimal cryptography library
 //
-//  Copyright (c) 2017-present Amrayn Web Services
-//  Copyright (c) 2017-present @abumusamq
+//  Copyright (c) 2017-present @abumq (Majid Q.)
 //
 //  This library is released under the Apache 2.0 license
 //  https://github.com/amrayn/mine/blob/master/LICENSE
-//
-//  https://github.com/amrayn/mine
-//  https://amrayn.github.io/mine
-//  https://muflihun.com
 //
 {{includes}}
 #include "mine.h"

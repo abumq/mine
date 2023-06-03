@@ -6,11 +6,11 @@
 
 Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
-[![Version](https://img.shields.io/github/release/amrayn/mine.svg)](https://github.com/amrayn/mine/releases/latest)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/amrayn/mine/blob/master/LICENCE)
+[![Version](https://img.shields.io/github/release/abumq/mine.svg)](https://github.com/abumq/mine/releases/latest)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/abumq/mine/blob/master/LICENCE)
 
 # Overview
-It all started with [ripe](https://github.com/amrayn/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/amrayn/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
+It all started with [ripe](https://github.com/abumq/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/abumq/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
 
 We are very careful with our implementations and have over 50 [test cases](/test/) in-place.
 
@@ -20,7 +20,7 @@ Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to you
 Alternatively, feel free to link it as shared or static library (you will need to compile yourself)
 
 # Installation (CLI Tool)
-You can either download binary for your platform via [releases](https://github.com/amrayn/mine/releases) page or using NPM
+You can either download binary for your platform via [releases](https://github.com/abumq/mine/releases) page or using NPM
 
 ```
 npm install -g mine-linux@latest
@@ -91,10 +91,9 @@ You can contribute to the project by testing on various platforms (e.g, Windows,
 # License
 
 ```
-Copyright (c) 2017-present Amrayn.com
+Copyright 2017-present @abumq (Majid Q.)
 
-https://github.com/amrayn/
-https://amrayn.com
+https://github.com/abumq/mine
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -109,4 +108,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-  [banner]: https://raw.githubusercontent.com/amrayn/mine/master/mine.png
+  [banner]: https://raw.githubusercontent.com/abumq/mine/master/mine.png
