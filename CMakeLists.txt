@@ -41,7 +41,7 @@ if (APPLE)
     endif()
 endif()
 
-list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++11 -O3 -L/usr/local/lib/ ")
+list (APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wunused -std=c++14 -O3 -Wno-unused-command-line-argument")
 
 # Check for cryptopp (static)
 set(CryptoPP_USE_STATIC_LIBS ON)
@@ -107,9 +107,8 @@ set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 find_package(EASYLOGGINGPP REQUIRED)
 include_directories (${EASYLOGGINGPP_INCLUDE_DIR})
 
-find_package (gtest REQUIRED)
-
-include_directories(${GTEST_INCLUDE_DIRS})
+find_package (GTest REQUIRED)
+include_directories (${GTEST_INCLUDE_DIRS})
 
 enable_testing()
 
@@ -152,7 +151,7 @@ target_compile_definitions (mine-unit-tests PUBLIC
 )
 
 # Standard linking to gtest stuff.
-target_link_libraries(mine-unit-tests gtest gtest_main)
+target_link_libraries(mine-unit-tests ${GTEST_LIBRARIES})
 
 # Extra linking for the project.
 target_link_libraries(mine-unit-tests ${CRYPTOPP_LIBRARIES})

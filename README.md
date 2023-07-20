@@ -2,12 +2,23 @@
   ﷽
 </p>
 
-![banner]
+<p align="center">
+    <a href="https://github.com/abumq/mine">
+      <img width="400px" src="https://github.com/abumq/mine/raw/master/mine.png?" />
+    </a>
+    <p align="center">Minimal and single-header cryptography library (AES, RSA, Base16, Base64, ZLib)</p>
+</p>
+
+<p align="center">
+  <a aria-label="Version" href="https://github.com/abumq/mine/releases/latest">
+    <img alt="" src="https://img.shields.io/github/release/abumq/mine.svg?style=for-the-badge&labelColor=000000">
+  </a>
+  <a aria-label="License" href="https://github.com/abumq/mine/blob/master/LICENSE">
+    <img alt="Apache 2.0" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge&labelColor=220000">
+  </a>
+</p>
 
 Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
-
-[![Version](https://img.shields.io/github/release/abumq/mine.svg)](https://github.com/abumq/mine/releases/latest)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/abumq/mine/blob/master/LICENCE)
 
 # Overview
 It all started with [ripe](https://github.com/abumq/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/abumq/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
