@@ -670,7 +670,17 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding
         throw std::invalid_argument("Invalid AES key size");
     }
 
-    const std::size_t inputSize = input.size();
+    ByteArray mutableInput = input;
+
+    if (pkcs5Padding && mutableInput.size() % kBlockSize == 0) {
+        // input size is multiple of block size, increase
+        // input size for padding
+        auto sz = mutableInput.size();
+        mutableInput.resize(sz + kBlockSize);
+        std::fill(mutableInput.begin() + sz, mutableInput.end(), 16);
+    }
+
+    const std::size_t inputSize = mutableInput.size();
 
     if (*key != m_key) {
         m_keySchedule = keyExpansion(key);
@@ -685,7 +695,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, bool pkcs5Padding
         std::size_t j = 0;
         // don't use copy_n as we are setting the values
         for (; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock[j] = input[j + i];
+            inputBlock[j] = mutableInput[j + i];
         }
 
         if (pkcs5Padding && j != kBlockSize) {
@@ -758,7 +768,17 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bo
         m_key = *key;
     }
 
-    const std::size_t inputSize = input.size();
+    ByteArray mutableInput = input;
+
+    if (pkcs5Padding && mutableInput.size() % kBlockSize == 0) {
+        // input size is multiple of block size, increase
+        // input size for padding
+        auto sz = mutableInput.size();
+        mutableInput.resize(sz + kBlockSize);
+        std::fill(mutableInput.begin() + sz, mutableInput.end(), 16);
+    }
+
+    const std::size_t inputSize = mutableInput.size();
 
     ByteArray result;
     ByteArray::const_iterator nextXorWithBeg = iv.begin();
@@ -773,7 +793,7 @@ ByteArray AES::encrypt(const ByteArray& input, const Key* key, ByteArray& iv, bo
         std::size_t j = 0;
         // don't use copy_n as we are setting the values
         for (; j < kBlockSize && inputSize > j + i; ++j) {
-            inputBlock[j] = input[j + i];
+            inputBlock[j] = mutableInput[j + i];
         }
         if (pkcs5Padding && j != kBlockSize) {
             // PKCS#5 padding
@@ -855,13 +875,6 @@ std::string AES::encrypt(const std::string& input, const std::string& key, MineC
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    if (pkcs5Padding && inp.size() % kBlockSize == 0) {
-        // input size is multiple of block size, increase
-        // input size for padding
-        auto sz = inp.size();
-        inp.resize(sz + kBlockSize);
-        std::fill(inp.begin() + sz, inp.end(), 16);
-    }
     ByteArray result = encrypt(inp, &keyArr, pkcs5Padding);
     return resolveOutputMode(result, outputEncoding);
 }
@@ -870,13 +883,6 @@ std::string AES::encrypt(const std::string& input, const std::string& key, std::
 {
     Key keyArr = Base16::fromString(key);
     ByteArray inp = resolveInputMode(input, inputEncoding);
-    if (pkcs5Padding && inp.size() % kBlockSize == 0) {
-        // input size is multiple of block size, increase
-        // input size for padding
-        auto sz = inp.size();
-        inp.resize(sz + kBlockSize);
-        std::fill(inp.begin() + sz, inp.end(), 16);
-    }
     ByteArray ivec = Base16::fromString(iv);
     bool ivecGenerated = iv.empty();
     ByteArray result = encrypt(inp, &keyArr, ivec, pkcs5Padding);
