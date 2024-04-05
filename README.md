@@ -25,8 +25,6 @@ It all started with [ripe](https://github.com/abumq/ripe) that depends on third-
 
 I was very careful with my implementations and have over 50 [test cases](/test/) in-place.
 
-Please note, you need to implement BigNumber to use RSA, I use Crypto++'s implementation.
-
 # Installation (API)
 Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to your project or your local machine.
 
@@ -59,8 +57,8 @@ This is what we are aiming for _minimal_ crypto library.
 # Notes
 
  * It is natively developed on macOS and Linux operating systems
- * It is extremely fast with compiler optimization level 1 (or higher)
- * RSA needs big number implementation, for unit tests we use [Integer from Crypto++](https://www.cryptopp.com/wiki/Integer)
+ * It is fast with compiler optimization level 1 (or higher)
+ * You need to implement BigNumber to use RSA, for unit tests we use [Integer from Crypto++](https://www.cryptopp.com/wiki/Integer)
  * RSA currently does not support signing & verification or reading keys from PEM files
 
 # Quick Reference
