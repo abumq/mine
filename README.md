@@ -23,7 +23,9 @@ Mine is fast, memory-efficient, single-header minimal cryptography implementatio
 # Overview
 It all started with [ripe](https://github.com/abumq/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/abumq/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
 
-We are very careful with our implementations and have over 50 [test cases](/test/) in-place.
+I was very careful with my implementations and have over 50 [test cases](/test/) in-place.
+
+Please note, you need to implement BigNumber to use RSA, I use Crypto++'s implementation.
 
 # Installation (API)
 Simply copy `mine.h` and `mine.cc` from [`package/`](/package/) directory to your project or your local machine.
