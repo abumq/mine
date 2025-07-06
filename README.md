@@ -20,6 +20,15 @@
 
 Mine is fast, memory-efficient, single-header minimal cryptography implementation for small-medium projects that cannot afford to link to external libraries.
 
+## ⚠️ Archive Notice
+It was created purely for **educational purposes** and should **not be used in production**.  
+
+I’d like to sincerely thank everyone who showed interest, or learned something from this project. Your support means a lot to me!
+  
+If you're interested in what I'm currently building, follow me on GitHub to stay updated on new projects, tools, and ideas.  
+
+— Majid Q. ([@abumq](https://github.com/abumq))
+
 # Overview
 It all started with [ripe](https://github.com/abumq/ripe) that depends on third-party library (initially OpenSSL then Crypto++) linked statically. However after deploying [residue](https://github.com/abumq/residue) with ripe to older distributions of linux, we learnt that portability is an issue for ripe as _minimal_ library (because of it's dependencies). So we started to implement standards forming _Mine_.
 
